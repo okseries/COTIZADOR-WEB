@@ -5,6 +5,7 @@ import { useQuotationStore } from '../../store/useQuotationStore';
 import CategoryPlan from '@/presentation/plans/ui/CategoryPlan';
 import { ClientSearchProvider } from '@/presentation/client/hooks/useClientSearch';
 import CoberturasOpcionales from '@/presentation/coberturasOpcionales/ui/CoberturasOptinals';
+import PaymentOptions from '@/presentation/payments/PaymentOptions';
 
 interface Props {
     step: string;
@@ -25,16 +26,6 @@ const StepContent = ({ step, setStep }: Props) => {
     }
 
     setStep(nextStep);
-  };
-
-  const handleFinish = () => {
-    const quotationObject = getFinalObject();
-    if (isComplete()) {
-      console.log('🚀 Objeto de cotización generado:', quotationObject);
-      // Aquí harías la llamada a la API
-    } else {
-      console.error('❌ Error: No se pudo generar el objeto de cotización');
-    }
   };
 
   return (
@@ -88,23 +79,7 @@ const StepContent = ({ step, setStep }: Props) => {
           </>
         )}
         {step === "step4" && (
-          <>
-            <div className="text-lg font-medium">Opciones de Pago - En desarrollo</div>
-            <div className="flex justify-between">
-              <StepButton
-                onClick={() => setStep("step3")}
-                isNext={false}
-                isDisabled={false}
-              />
-              <button
-                className="bg-green-600 text-white px-8 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition text-base shadow"
-                onClick={handleFinish}
-                disabled={!isComplete()}
-              >
-                Generar Cotización
-              </button>
-            </div>
-          </>
+          <PaymentOptions />
         )}
       </div>
     </ClientSearchProvider>
