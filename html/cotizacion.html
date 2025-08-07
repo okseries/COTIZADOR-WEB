@@ -1,0 +1,53 @@
+<!-- cotizacion.html (pantalla del simulador de cotización) -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador de Cotización | Futuro ARS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#003E7E',
+              primaryLight: '#005BBB',
+              textColor: '#1f2937',
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-gray-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md">
+      <h1 class="text-2xl font-bold text-primary mb-6">Simulador de Cotización</h1>
+      <form class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block font-medium mb-1">Nombre</label>
+          <input type="text" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight" />
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Correo</label>
+          <input type="email" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight" />
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Plan</label>
+          <select class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight">
+            <option>Básico</option>
+            <option>Intermedio</option>
+            <option>Premium</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Dependientes</label>
+          <input type="number" min="0" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight" />
+        </div>
+        <div class="md:col-span-2">
+          <button type="submit" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primaryLight transition w-full">Calcular Cotización</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

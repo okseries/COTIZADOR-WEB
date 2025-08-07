@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paleta de Colores | Futuro ARS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .color-box:hover .copy-btn {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-10">
+  <h1 class="text-3xl font-bold text-center text-[#003E7E] mb-10">Paleta de Colores – Futuro ARS</h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+
+    <!-- Template para cada color -->
+    <div class="color-box bg-[#005BBB] rounded-xl p-4 shadow-md text-white relative">
+      <div class="font-semibold text-sm">Azul Principal</div>
+      <div class="text-lg font-bold mt-1">#005BBB</div>
+      <button onclick="copyToClipboard('#005BBB')" class="copy-btn absolute top-3 right-3 bg-white text-[#005BBB] text-xs px-2 py-1 rounded opacity-0 transition-opacity">
+        Copiar
+      </button>
+    </div>
+
+    <div class="color-box bg-[#003E7E] rounded-xl p-4 shadow-md text-white relative">
+      <div class="font-semibold text-sm">Azul Oscuro</div>
+      <div class="text-lg font-bold mt-1">#003E7E</div>
+      <button onclick="copyToClipboard('#003E7E')" class="copy-btn absolute top-3 right-3 bg-white text-[#003E7E] text-xs px-2 py-1 rounded opacity-0 transition-opacity">
+        Copiar
+      </button>
+    </div>
+
+    <div class="color-box bg-[#FFA500] rounded-xl p-4 shadow-md text-white relative">
+      <div class="font-semibold text-sm">Naranja Acento</div>
+      <div class="text-lg font-bold mt-1">#FFA500</div>
+      <button onclick="copyToClipboard('#FFA500')" class="copy-btn absolute top-3 right-3 bg-white text-[#FFA500] text-xs px-2 py-1 rounded opacity-0 transition-opacity">
+        Copiar
+      </button>
+    </div>
+
+    <div class="color-box bg-[#F5F5F5] rounded-xl p-4 shadow-md text-gray-800 relative">
+      <div class="font-semibold text-sm">Gris Claro / Fondo</div>
+      <div class="text-lg font-bold mt-1">#F5F5F5</div>
+      <button onclick="copyToClipboard('#F5F5F5')" class="copy-btn absolute top-3 right-3 bg-white text-gray-700 text-xs px-2 py-1 rounded opacity-0 transition-opacity">
+        Copiar
+      </button>
+    </div>
+
+    <div class="color-box bg-[#333333] rounded-xl p-4 shadow-md text-white relative">
+      <div class="font-semibold text-sm">Texto Principal</div>
+      <div class="text-lg font-bold mt-1">#333333</div>
+      <button onclick="copyToClipboard('#333333')" class="copy-btn absolute top-3 right-3 bg-white text-[#333333] text-xs px-2 py-1 rounded opacity-0 transition-opacity">
+        Copiar
+      </button>
+    </div>
+
+    <div class="color-box bg-[#FFFFFF] rounded-xl p-4 shadow-md text-gray-800 border relative">
+      <div class="font-semibold text-sm">Blanco</div>
+      <div class="text-lg font-bold mt-1">#FFFFFF</div>
+      <button onclick="copyToClipboard('#FFFFFF')" class="copy-btn absolute top-3 right-3 bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded opacity-0 transition-opacity">
+        Copiar
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`Color ${text} copiado al portapapeles.`);
+      });
+    }
+  </script>
+</body>
+</html>

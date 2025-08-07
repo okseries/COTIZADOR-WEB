@@ -1,9 +1,9 @@
 "use client"
-import QuotationContent from '@/presentation/quotations/ui/quotation-content'
+import DashboardContent from '@/presentation/quotations/dasboard/dashboard-content'
 import React from 'react'
 
 const DashBoardScreen = () => {
-  return <QuotationContent/>
+  return <DashboardContent/>
 }
 
 export default DashBoardScreen

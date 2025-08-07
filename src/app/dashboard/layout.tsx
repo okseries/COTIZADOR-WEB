@@ -11,10 +11,10 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-   <AuthGuard fallbackUrl="/auth/login">
+  //  <AuthGuard fallbackUrl="/auth/login">
       <AdminLayout>
         {children}
       </AdminLayout>
-    </AuthGuard>
+    // </AuthGuard>
   );
 }

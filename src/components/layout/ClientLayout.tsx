@@ -23,18 +23,16 @@ export function AdminLayout({
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+    <div className="h-screen bg-gradient-to-br from-background via-background to-muted/30 flex flex-col overflow-hidden">
 
       {/* Main Content */}
-      <div
-        className="flex flex-col transition-all duration-300 ease-in-out"
-      >
+      <div className="flex flex-col h-full">
         {/* Navbar */}
         <Navbar/>
 
         {/* Page Content */}
         <main className={cn("flex-1 overflow-hidden", className)}>
-          <div className="h-full p-4">
+          <div className="h-full p-4 overflow-hidden">
             {children}
           </div>
         </main>
