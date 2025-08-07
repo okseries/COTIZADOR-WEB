@@ -1,5 +1,6 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import {
   Tooltip,
@@ -25,6 +27,9 @@ import {
   Download,
   FileText,
   Edit,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Quotations } from "../../interface/quotation.interface";
 import QuotationTableHeader from "./table-header";
@@ -44,6 +49,46 @@ interface QuotationTableProps {
 export default function QuotationTable({data, isLoading = false}: QuotationTableProps) {
   const router = useRouter();
   const { loadExistingQuotation } = useQuotationStore();
+  
+  // Estados para búsqueda y paginación
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Filtrar datos por búsqueda
+  const filteredData = useMemo(() => {
+    if (!searchTerm) return data;
+    return data.filter(quotation => 
+      quotation.cotizacion.cliente.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      quotation.cotizacion.cliente.identification.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [data, searchTerm]);
+
+  // Calcular datos paginados
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  // Reset página cuando cambia la búsqueda
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Función para generar páginas visibles en la paginación
+  const getVisiblePages = () => {
+    const maxVisiblePages = 5;
+    const halfVisible = Math.floor(maxVisiblePages / 2);
+    
+    let startPage = Math.max(currentPage - halfVisible, 1);
+    let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(endPage - maxVisiblePages + 1, 1);
+    }
+    
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  };
 
   const handleEditQuotation = (quotation: Quotations) => {
     // Convert the quotation data to the expected format
@@ -84,17 +129,79 @@ export default function QuotationTable({data, isLoading = false}: QuotationTable
     return <EmptyState onCreateNew={onCreateNew} />;
   }
 
+  // Si no hay resultados después de filtrar
+  if (filteredData.length === 0) {
+    return (
+      <TooltipProvider>
+        <div className="h-full flex flex-col space-y-4">
+          {/* Barra de búsqueda */}
+          <Card className="px-4 py-3 shadow-sm border border-border/50 bg-white">
+            <div className="flex items-center space-x-2">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre del cliente o identificación..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1"
+              />
+              <div className="text-sm text-muted-foreground">
+                0 de {data.length} cotizaciones
+              </div>
+            </div>
+          </Card>
+
+          {/* Estado vacío para búsqueda */}
+          <Card className="px-4 shadow-lg border-0 bg-white flex-1 flex flex-col">
+            <CardContent className="p-8 flex-1 flex flex-col items-center justify-center text-center">
+              <Search className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No se encontraron resultados
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                No hay cotizaciones que coincidan con "{searchTerm}"
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setSearchTerm("")}
+                className="text-[#005BBB] border-[#005BBB] hover:bg-[#005BBB] hover:text-white"
+              >
+                Limpiar búsqueda
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
-      <div className="h-full flex flex-col">
-        <Card className="px-4 shadow-lg border-0 bg-white flex-1 flex flex-col">
+      <div className="h-full flex flex-col space-y-4">
+        {/* Barra de búsqueda */}
+        <Card className="px-4 py-3 shadow-sm border border-border/50 bg-white">
+          <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre del cliente o identificación..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
+            />
+            <div className="text-sm text-muted-foreground">
+              {filteredData.length} de {data.length} cotizaciones
+            </div>
+          </div>
+        </Card>
+
+        {/* Tabla con scroll mejorado */}
+        <Card className="px-4 shadow-lg border-0 bg-white flex-1 flex flex-col min-h-0">
           <QuotationTableHeader
-            quantity={data.length}
+            quantity={filteredData.length}
             onCreateNew={onCreateNew}
           />
 
           <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto max-h-[calc(100vh-300px)]">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b-2 border-primary/20">
@@ -122,7 +229,7 @@ export default function QuotationTable({data, isLoading = false}: QuotationTable
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((q) => {
+                  {paginatedData.map((q) => {
                     const total = q.cotizacion.planes
                       .map((p) => Number(p.resumenPago.totalPagar))
                       .reduce((a, b) => a + b, 0);
@@ -251,6 +358,48 @@ export default function QuotationTable({data, isLoading = false}: QuotationTable
                 </TableBody>
               </Table>
             </div>
+            
+            {/* Controles de paginación */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {startIndex + 1} a {Math.min(endIndex, filteredData.length)} de {filteredData.length} resultados
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {getVisiblePages().map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className="h-8 w-8 p-0"
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

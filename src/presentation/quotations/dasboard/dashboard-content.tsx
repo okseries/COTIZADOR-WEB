@@ -24,7 +24,7 @@ const DashboardContent = () => {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 justify-center items-center">
+    <div className="flex-1 p-6 space-y-6 h-full min-h-0">
       <QuotationTable data={quotationsOrder} isLoading={isLoading} />
     </div>
   )
