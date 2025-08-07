@@ -6,10 +6,11 @@ export const clienteSchema = z.object({
   identification: z.string().min(1, "La identificación es requerida"),
   name: z.string().min(1, "El nombre es requerido"),
   contact: z.string().min(1, "El contacto es requerido"),
-  email: z.string().email("Debe ser un email válido"),
+  email: z.email("Debe ser un email válido"),
   address: z.string().min(1, "La dirección es requerida"),
   office: z.string().min(1, "La oficina es requerida"),
   agent: z.string().min(1, "El agente es requerido"),
+  agentId: z.number().min(1, "Debe seleccionar un agente"), // ID del agente seleccionado
   tipoPlan: z.number().min(1, "Debe seleccionar un tipo de plan"),
 });
 

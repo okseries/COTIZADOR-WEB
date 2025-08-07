@@ -13,6 +13,7 @@ export interface Cliente {
   address: string;
   office: string;
   agent: string;
+  agentId?: number;
   tipoPlan: number;
 }
 

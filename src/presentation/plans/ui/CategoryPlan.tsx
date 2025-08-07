@@ -3,6 +3,7 @@ import { useGetAllPlans } from '../hooks/usePlans';
 import CheckBoxPlans from './CheckBoxPlans';
 import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
 import { Label } from '@/components/ui/label';
+import { LoadingSpinner } from '@/components/shared/loading';
 
 const CategoryPlan = () => {
   const {getFinalObject} = useQuotationStore();
@@ -14,7 +15,7 @@ const CategoryPlan = () => {
     console.log(getFinalObject());
 
 
-  if (isLoading) return <div>Cargando planes...</div>;
+  if (isLoading) return <LoadingSpinner className="h-10 w-10 mx-auto mb-4 mt-10 text-[#005BBB]" />;
   if (error) return <div>Error al cargar los planes: {error.message}</div>;
 
   if (!plans || plans.length === 0) {

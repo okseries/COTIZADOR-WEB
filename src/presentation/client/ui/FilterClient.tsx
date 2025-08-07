@@ -1,6 +1,6 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   FiltrarClientFormValues,
@@ -15,12 +15,14 @@ import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
 import { useClientSearch } from "../hooks/useClientSearch";
 import { useGetClient } from "../hooks/useGetClient";
 import { ClientByIdentification } from "../services/client.services";
+import { LoadingSpinner } from "@/components/shared/loading";
 
 const FilterClient = () => {
 
   const { data: plans } = usePlans();
   const { data: subPlans } = useSubPlansType();
-  const { setSearchData } = useClientSearch();
+  const { setSearchData, setClientData } = useClientSearch();
+  const [isLoading, setIsLoading] = useState( false);
 
 
   const {
@@ -40,18 +42,34 @@ const FilterClient = () => {
   });
 
   const onSubmit = async  (data: FiltrarClientFormValues) => {
+    setIsLoading(true);
     // Guardar los datos de búsqueda para que los use ClientInformation
-
     const response = await ClientByIdentification(data.identificacion, +data.tipoDocumento);
+
     setSearchData(data);
+    
+    // Guardar la información del cliente encontrado
+    if (response) {
+      setClientData(response);
+      console.log('Cliente encontrado:', response);
+      setIsLoading(false);
 
-console.log('Cliente encontrado:', response);
-
+    } else {
+      alert('Cliente no encontrado');
+      setClientData(null);
+      console.log('Cliente no encontrado');
+      setIsLoading(false);
+    }
     
     // Aquí podrías hacer una llamada a la API para buscar el cliente
     // Si no se encuentra, ClientInformation usará estos datos para prellenar el formulario
     console.log('Datos de búsqueda:', data);
   };
+
+
+  if (isLoading) {
+    return <LoadingSpinner className="h-10 w-10 mx-auto mb-4 mt-10 text-[#005BBB]" />;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

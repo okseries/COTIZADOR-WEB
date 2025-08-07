@@ -54,7 +54,7 @@ const ClientInformation = forwardRef<
   // Obtener datos del store principal de cotización
   const { cliente, setCliente } = useQuotationStore();
   // Obtener datos de búsqueda del filtro
-  const { searchData } = useClientSearch();
+  const { searchData, clientData } = useClientSearch();
 
   // Estados para los popovers
   const [openAgent, setOpenAgent] = useState(false);
@@ -79,6 +79,7 @@ const ClientInformation = forwardRef<
       address: cliente?.address || "",
       office: cliente?.office || "",
       agent: cliente?.agent || "",
+      agentId: cliente?.agentId || 0,
       tipoPlan: cliente?.tipoPlan || 0,
     },
   });
@@ -95,6 +96,7 @@ const ClientInformation = forwardRef<
         address: cliente.address,
         office: cliente.office,
         agent: cliente.agent,
+        agentId: cliente.agentId || 0,
         tipoPlan: cliente.tipoPlan,
       });
     }
@@ -106,11 +108,16 @@ const ClientInformation = forwardRef<
       // Llenar los campos que vienen del filtro de búsqueda
       setValue('identification', searchData.identificacion);
       setValue('tipoPlan', Number(searchData.tipoPoliza));
-      
-      // Aquí podrías agregar más lógica para mapear otros campos
-      // Por ejemplo, si tienes una API para buscar el cliente completo
+      setValue('clientChoosen', Number(searchData.subTipoPoliza));
     }
   }, [searchData, setValue]);
+
+  // Efecto para llenar el nombre del cliente encontrado
+  React.useEffect(() => {
+    if (clientData?.NOMBRE_COMPLETO) {
+      setValue('name', clientData.NOMBRE_COMPLETO);
+    }
+  }, [clientData, setValue]);
 
   const canal = watch("office"); // para obtener el valor seleccionado
   const { data: dynamicOptions, isLoading } = useDynamicSelectOptions(canal);
@@ -156,53 +163,6 @@ const ClientInformation = forwardRef<
     <div>
       <FilterClient />
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Campo de Identificación */}
-        <div className="grid grid-cols-2 gap-6 items-center py-2">
-          <div className="space-y-2 mb-2 flex flex-col justify-center">
-            <Label htmlFor="identification">Identificación *</Label>
-            <Controller
-              name="identification"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  id="identification"
-                  placeholder="Identificación"
-                  className={`py-5 ${errors.identification ? "border-red-500" : ""}`}
-                />
-              )}
-            />
-            {errors.identification && (
-              <p className="text-sm text-red-500">{errors.identification.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2 mb-2 flex flex-col justify-center">
-            <Label htmlFor="tipoPlan">Tipo de Plan *</Label>
-            <Controller
-              name="tipoPlan"
-              control={control}
-              render={({ field }) => (
-                <SelectSimple
-                  value={String(field.value)}
-                  onChange={(value) => field.onChange(Number(value))}
-                  id="tipoPlan"
-                  placeholder="Selecciona tipo de plan"
-                  options={[
-                    { label: "Voluntario", value: "1" },
-                    { label: "Obligatorio", value: "2" },
-                  ]}
-                  error={!!errors.tipoPlan}
-                  className="mt-1 h-10"
-                />
-              )}
-            />
-            {errors.tipoPlan && (
-              <p className="text-sm text-red-500">{errors.tipoPlan.message}</p>
-            )}
-          </div>
-        </div>
-
         <div className="grid grid-cols-2 gap-6  items-center  py-2">
           <div className="space-y-2 mb-2 flex flex-col justify-center">
             <Label htmlFor="identificacion">Nombre *</Label>
@@ -316,7 +276,7 @@ const ClientInformation = forwardRef<
           {/* Segundo Select dinámico */}
           <FormField
             control={control}
-            name="clientChoosen"
+            name="agentId"
             render={({ field }) => {
               const selected = dynamicOptions.find(
                 (item) => item.id === field.value
@@ -382,8 +342,8 @@ const ClientInformation = forwardRef<
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
-                  {errors.clientChoosen && (
-                    <p className="text-sm text-red-500">{errors.clientChoosen.message}</p>
+                  {errors.agentId && (
+                    <p className="text-sm text-red-500">{errors.agentId.message}</p>
                   )}
                 </FormItem>
               );
@@ -402,6 +362,23 @@ const ClientInformation = forwardRef<
                 )}
               </div>
             )}
+          />
+
+          {/* Campos ocultos para identificación y tipo de plan */}
+          <Controller
+            name="identification"
+            control={control}
+            render={({ field }) => <input type="hidden" {...field} />}
+          />
+          <Controller
+            name="tipoPlan"
+            control={control}
+            render={({ field }) => <input type="hidden" {...field} />}
+          />
+          <Controller
+            name="clientChoosen"
+            control={control}
+            render={({ field }) => <input type="hidden" {...field} />}
           />
         </div>
       </form>

@@ -9,11 +9,11 @@ interface Props {
 }
 
 const StepButton = ({ onClick, isNext, isDisabled }: Props) => {
-  const baseClasses = "px-8 py-2.5 rounded-lg font-semibold transition text-[#FFA500] hover:text-[#FFA500] shadow";
+  const baseClasses = "px-8 py-2.5 rounded-lg font-semibold transition text-[#FFA500] hover:text-[#003E7E] shadow";
   const nextClasses = isDisabled 
-    ? " text-[#FFA500] cursor-not-allowed" 
-    : " text-[#FFA500] hover:bg-gray-100";
-  const prevClasses = "bg-border text-[#FFA500] hover:bg-muted";
+    ? " text-[#005BBB] cursor-not-allowed" 
+    : " text-[#005BBB] hover:bg-gray-100";
+  const prevClasses = "bg-border text-[#005BBB] hover:bg-muted";
 
   return (
     <Button
