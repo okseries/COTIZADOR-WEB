@@ -10,18 +10,28 @@ import { Opcional } from '@/presentation/quotations/interface/createQuotation.in
 
 // Datos estáticos para odontología
 const odontologiaOptions = [
-  { value: "0", label: "No incluir", prima: 0 },
-  { value: "1", label: "Básica", prima: 150 },
-  { value: "2", label: "Avanzada", prima: 300 },
-  { value: "3", label: "Premium", prima: 500 }
+  { value: "0", label: "Seleccionar", prima: 0 },
+  { value: "1", label: "Nivel I", prima: 150 },
+  { value: "2", label: "Nivel II", prima: 350 },
+  { value: "3", label: "Nivel III", prima: 700 }
 ];
 
 const CoberturasOpcionales = () => {
     const { getFinalObject, updatePlanByName } = useQuotationStore();
     const { cliente, planes } = getFinalObject();
     
-    const [selectedOpcionales, setSelectedOpcionales] = useState<{[planName: string]: {[key: string]: boolean | string}}>({});
+    // Estados para filtros globales (solo para clientChoosen === 2)
+    const [globalFilters, setGlobalFilters] = useState({
+      altoCosto: false,
+      medicamentos: false,
+      habitacion: false,
+      odontologia: false
+    });
+    
+    // Estados para selecciones por plan
+    const [planSelections, setPlanSelections] = useState<{[planName: string]: {[key: string]: string}}>({});
     const [planesData, setPlanesData] = useState<{[planName: string]: CoberturasOpcional[]}>({});
+    const [isUpdating, setIsUpdating] = useState(false);
 
     // Hacer petición para cada plan
     const planQueries = planes.map(plan => ({
@@ -32,106 +42,151 @@ const CoberturasOpcionales = () => {
     // Cargar datos de las peticiones
     useEffect(() => {
       const newPlanesData: {[planName: string]: CoberturasOpcional[]} = {};
+      let hasChanges = false;
+      
       planQueries.forEach(({ planName, query }) => {
         if (query.data) {
           newPlanesData[planName] = query.data;
+          if (!planesData[planName] || JSON.stringify(planesData[planName]) !== JSON.stringify(query.data)) {
+            hasChanges = true;
+          }
         }
       });
-      setPlanesData(newPlanesData);
+      
+      if (hasChanges) {
+        setPlanesData(newPlanesData);
+      }
     }, [planQueries.map(q => q.query.data).join(',')]);
 
-    // Inicializar estados de selección
+    // Inicializar selecciones de odontología para cada plan
     useEffect(() => {
-      const initialSelection: {[planName: string]: {[key: string]: boolean | string}} = {};
+      const initialSelections: {[planName: string]: {[key: string]: string}} = {};
+      let needsUpdate = false;
+      
       planes.forEach(plan => {
-        if (!selectedOpcionales[plan.plan]) {
-          initialSelection[plan.plan] = {
-            altoCosto: false,
-            medicamentos: false,
-            habitacion: false,
-            odontologia: "0"
+        if (!planSelections[plan.plan]) {
+          // Buscar si ya hay una selección de odontología en el store
+          const odontologiaOpcional = plan.opcionales.find(opt => opt.nombre === "ODONTOLOGÍA");
+          let odontologiaValue = "0";
+          
+          if (odontologiaOpcional) {
+            const found = odontologiaOptions.find(opt => opt.label === odontologiaOpcional.descripcion);
+            if (found) {
+              odontologiaValue = found.value;
+            }
+          }
+          
+          initialSelections[plan.plan] = {
+            odontologia: odontologiaValue
           };
+          needsUpdate = true;
         }
       });
-      setSelectedOpcionales(prev => ({ ...prev, ...initialSelection }));
-    }, [planes]);
+      
+      if (needsUpdate) {
+        setPlanSelections(prev => ({ ...prev, ...initialSelections }));
+      }
+    }, [planes.length]);
 
-    const handleCheckboxChange = (planName: string, opcion: string, checked: boolean) => {
-      const newSelections = {
-        ...selectedOpcionales[planName],
-        [opcion]: checked
-      };
-      
-      setSelectedOpcionales(prev => ({
+    // Inicializar filtros globales desde el store
+    useEffect(() => {
+      if (cliente?.clientChoosen === 2 && planes.length > 0) {
+        const hasAltoCosto = planes.some(plan => plan.opcionales.some(opt => opt.nombre === "ALTO COSTO"));
+        const hasMedicamentos = planes.some(plan => plan.opcionales.some(opt => opt.nombre === "MEDICAMENTOS"));
+        const hasHabitacion = planes.some(plan => plan.opcionales.some(opt => opt.nombre === "HABITACIÓN"));
+        const hasOdontologia = planes.some(plan => plan.opcionales.some(opt => opt.nombre === "ODONTOLOGÍA"));
+        
+        setGlobalFilters({
+          altoCosto: hasAltoCosto,
+          medicamentos: hasMedicamentos,
+          habitacion: hasHabitacion,
+          odontologia: hasOdontologia
+        });
+      }
+    }, [cliente?.clientChoosen, planes.length]);
+
+    const handleGlobalFilterChange = (filter: string, checked: boolean) => {
+      setGlobalFilters(prev => ({
         ...prev,
-        [planName]: newSelections
+        [filter]: checked
       }));
-      
-      updateOpcionales(planName, newSelections);
     };
 
-    const handleSelectChange = (planName: string, value: string) => {
-      const newSelections = {
-        ...selectedOpcionales[planName],
-        odontologia: value
-      };
-      
-      setSelectedOpcionales(prev => ({
+    const handleOdontologiaChange = (planName: string, value: string) => {
+      setPlanSelections(prev => ({
         ...prev,
-        [planName]: newSelections
+        [planName]: {
+          ...prev[planName],
+          odontologia: value
+        }
       }));
-      
-      updateOpcionales(planName, newSelections);
+      updatePlanOpcionales(planName, value);
     };
 
-    const updateOpcionales = (planName: string, selections: {[key: string]: boolean | string}) => {
+    const updatePlanOpcionales = (planName: string, odontologiaValue: string) => {
+      if (isUpdating) return;
+      
       const planData = planesData[planName];
       if (!planData || !planData[0]) return;
 
+      setIsUpdating(true);
+      
       const opcionales: Opcional[] = [];
       const data = planData[0];
+      const plan = planes.find(p => p.plan === planName);
+      if (!plan) {
+        setIsUpdating(false);
+        return;
+      }
 
-      // Alto Costo
-      if (selections.altoCosto) {
+      let subTotalOpcional = 0;
+      const cantidadAfiliados = plan.afiliados.length;
+
+      // Solo agregar las coberturas que están filtradas (para clientChoosen === 2) o todas (para clientChoosen === 1)
+      if (cliente?.clientChoosen === 1 || globalFilters.altoCosto) {
+        const prima = parseFloat(data.primaCosto) || 0;
         opcionales.push({
           nombre: "ALTO COSTO",
           descripcion: data.altoCosto,
-          prima: parseFloat(data.primaCosto) || 0
+          prima: prima * cantidadAfiliados
         });
+        subTotalOpcional += prima * cantidadAfiliados;
       }
 
-      // Medicamentos
-      if (selections.medicamentos) {
+      if (cliente?.clientChoosen === 1 || globalFilters.medicamentos) {
+        const prima = parseFloat(data.medicamentoCosto) || 0;
         opcionales.push({
           nombre: "MEDICAMENTOS",
           descripcion: data.medicamento,
-          prima: parseFloat(data.medicamentoCosto) || 0
+          prima: prima * cantidadAfiliados
         });
+        subTotalOpcional += prima * cantidadAfiliados;
       }
 
-      // Habitación
-      if (selections.habitacion) {
+      if (cliente?.clientChoosen === 1 || globalFilters.habitacion) {
+        const prima = parseFloat(data.habitacionCosto) || 0;
         opcionales.push({
           nombre: "HABITACIÓN",
           descripcion: data.habitacion,
-          prima: parseFloat(data.habitacionCosto) || 0
+          prima: prima * cantidadAfiliados
         });
+        subTotalOpcional += prima * cantidadAfiliados;
       }
 
       // Odontología
-      const odontologiaSelected = odontologiaOptions.find(opt => opt.value === selections.odontologia);
-      if (odontologiaSelected && odontologiaSelected.value !== "0") {
-        opcionales.push({
-          nombre: "ODONTOLOGÍA",
-          descripcion: odontologiaSelected.label,
-          prima: odontologiaSelected.prima
-        });
+      if (cliente?.clientChoosen === 1 || globalFilters.odontologia) {
+        const odontologiaSelected = odontologiaOptions.find(opt => opt.value === odontologiaValue);
+        if (odontologiaSelected && odontologiaSelected.value !== "0") {
+          opcionales.push({
+            nombre: "ODONTOLOGÍA",
+            descripcion: odontologiaSelected.label,
+            prima: odontologiaSelected.prima * cantidadAfiliados
+          });
+          subTotalOpcional += odontologiaSelected.prima * cantidadAfiliados;
+        }
       }
 
-      // Calcular subtotal de opcionales
-      const subTotalOpcional = opcionales.reduce((sum, opt) => sum + opt.prima, 0);
-      
-      // Obtener el plan actual para mantener otros datos
+      // Actualizar el plan en el store
       const currentPlan = planes.find(p => p.plan === planName);
       if (currentPlan) {
         const subTotalAfiliado = currentPlan.resumenPago.subTotalAfiliado;
@@ -145,189 +200,145 @@ const CoberturasOpcionales = () => {
           }
         });
       }
+      
+      setTimeout(() => setIsUpdating(false), 100);
     };
 
-    const renderPlanOpcionales = (planName: string, planData: CoberturasOpcional[]) => {
+    // Actualizar todos los planes cuando cambian los filtros globales
+    useEffect(() => {
+      if (cliente?.clientChoosen === 2 && !isUpdating) {
+        const timer = setTimeout(() => {
+          planes.forEach(plan => {
+            if (planesData[plan.plan]) {
+              const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+              updatePlanOpcionales(plan.plan, odontologiaValue);
+            }
+          });
+        }, 50);
+        return () => clearTimeout(timer);
+      }
+    }, [globalFilters.altoCosto, globalFilters.medicamentos, globalFilters.habitacion, globalFilters.odontologia]);
+
+    // Actualizar planes cuando se cargan los datos por primera vez o cambia la selección de odontología
+    useEffect(() => {
+      if (!isUpdating && Object.keys(planesData).length > 0) {
+        const timer = setTimeout(() => {
+          planes.forEach(plan => {
+            if (planesData[plan.plan] && planSelections[plan.plan]) {
+              const odontologiaValue = planSelections[plan.plan].odontologia || "0";
+              // Solo actualizar si no hay opcionales ya guardados o si la odontología cambió
+              const hasOpcionales = plan.opcionales.length > 0;
+              const currentOdontologia = plan.opcionales.find(opt => opt.nombre === "ODONTOLOGÍA");
+              const expectedOdontologia = odontologiaOptions.find(opt => opt.value === odontologiaValue);
+              
+              const shouldUpdate = !hasOpcionales || 
+                (expectedOdontologia && currentOdontologia?.descripcion !== expectedOdontologia.label) ||
+                (!expectedOdontologia && currentOdontologia);
+              
+              if (shouldUpdate) {
+                updatePlanOpcionales(plan.plan, odontologiaValue);
+              }
+            }
+          });
+        }, 50);
+        return () => clearTimeout(timer);
+      }
+    }, [Object.keys(planesData).join(','), JSON.stringify(planSelections)]);
+
+    const renderPlanTable = (planName: string, planData: CoberturasOpcional[]) => {
       if (!planData || !planData[0]) return null;
       
       const data = planData[0];
-      const selections = selectedOpcionales[planName] || {};
+      const plan = planes.find(p => p.plan === planName);
+      if (!plan) return null;
 
-      if (cliente?.clientChoosen === 1) {
-        // Vista para clientChoosen = 1 (con checkboxes)
-        return (
-          <Card key={planName} className="mb-6">
-            <CardHeader>
-              <CardTitle>Coberturas Opcionales - {planName}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600 mb-4">
-                  Selecciona las coberturas opcionales que deseas incluir:
-                </p>
+      const cantidadAfiliados = plan.afiliados.length;
+      const odontologiaSelection = planSelections[planName]?.odontologia || "0";
 
-                {/* Alto Costo */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`altoCosto-${planName}`}
-                    checked={selections.altoCosto as boolean}
-                    onCheckedChange={(checked) => handleCheckboxChange(planName, 'altoCosto', checked as boolean)}
-                  />
-                  <label htmlFor={`altoCosto-${planName}`} className="text-sm font-medium">
-                    ALTO COSTO
-                  </label>
-                  <span className="text-sm text-gray-500">
-                    {data.altoCosto}
-                  </span>
-                </div>
-
-                {/* Medicamentos */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`medicamentos-${planName}`}
-                    checked={selections.medicamentos as boolean}
-                    onCheckedChange={(checked) => handleCheckboxChange(planName, 'medicamentos', checked as boolean)}
-                  />
-                  <label htmlFor={`medicamentos-${planName}`} className="text-sm font-medium">
-                    MEDICAMENTOS
-                  </label>
-                  <span className="text-sm text-gray-500">
-                    {data.medicamento}
-                  </span>
-                </div>
-
-                {/* Habitación */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`habitacion-${planName}`}
-                    checked={selections.habitacion as boolean}
-                    onCheckedChange={(checked) => handleCheckboxChange(planName, 'habitacion', checked as boolean)}
-                  />
-                  <label htmlFor={`habitacion-${planName}`} className="text-sm font-medium">
-                    HABITACIÓN
-                  </label>
-                  <span className="text-sm text-gray-500">
-                    {data.habitacion}
-                  </span>
-                </div>
-
-                {/* Odontología */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">ODONTOLOGÍA</label>
-                  <Select
-                    value={selections.odontologia as string}
-                    onValueChange={(value) => handleSelectChange(planName, value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Seleccionar cobertura" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {odontologiaOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label} {option.prima > 0 && `- DOP ${option.prima.toFixed(2)}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      return (
+        <Card key={planName} className="mb-6">
+          <CardHeader>
+            <CardTitle>Cobertura Opcionales - {planName}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
+                <div>Opcional</div>
+                <div>Prima Opcional</div>
               </div>
-            </CardContent>
-          </Card>
-        );
-      } else if (cliente?.clientChoosen === 2) {
-        // Vista para clientChoosen = 2 (tabla detallada con checkboxes)
-        return (
-          <Card key={planName} className="mb-6">
-            <CardHeader>
-              <CardTitle>Coberturas Opcionales - {planName}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Header */}
-                <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
-                  <div>Opcional</div>
-                  <div>Prima Opcional</div>
-                </div>
-                
-                {/* Alto Costo */}
-                <div className="grid grid-cols-2 gap-4 py-2 border-b items-center">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`altoCosto-${planName}`}
-                      checked={selections.altoCosto as boolean}
-                      onCheckedChange={(checked) => handleCheckboxChange(planName, 'altoCosto', checked as boolean)}
-                    />
-                    <div className="text-sm">
-                      <div className="font-medium">ALTO COSTO {data.altoCosto}</div>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium">{data.primaCosto}</div>
-                </div>
-
-                {/* Medicamentos */}
-                <div className="grid grid-cols-2 gap-4 py-2 border-b items-center">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`medicamentos-${planName}`}
-                      checked={selections.medicamentos as boolean}
-                      onCheckedChange={(checked) => handleCheckboxChange(planName, 'medicamentos', checked as boolean)}
-                    />
-                    <div className="text-sm">
-                      <div className="font-medium">MEDICAMENTOS {data.medicamento}</div>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium">{data.medicamentoCosto}</div>
-                </div>
-
-                {/* Habitación */}
-                <div className="grid grid-cols-2 gap-4 py-2 border-b items-center">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`habitacion-${planName}`}
-                      checked={selections.habitacion as boolean}
-                      onCheckedChange={(checked) => handleCheckboxChange(planName, 'habitacion', checked as boolean)}
-                    />
-                    <div className="text-sm">
-                      <div className="font-medium">HABITACIÓN {data.habitacion}</div>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium">{data.habitacionCosto}</div>
-                </div>
-
-                {/* Odontología */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">ODONTOLOGÍA</label>
-                  <Select
-                    value={selections.odontologia as string}
-                    onValueChange={(value) => handleSelectChange(planName, value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Seleccionar cobertura" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {odontologiaOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label} {option.prima > 0 && `- DOP ${option.prima.toFixed(2)}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Subtotal */}
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t font-bold">
-                  <div className="text-sm">SubTotal Opcionales</div>
+              
+              {/* Alto Costo */}
+              {(cliente?.clientChoosen === 1 || globalFilters.altoCosto) && (
+                <div className="grid grid-cols-2 gap-4 py-2 border-b">
                   <div className="text-sm">
-                    DOP {planes.find(p => p.plan === planName)?.resumenPago.subTotalOpcional.toFixed(2) || '0.00'}
+                    <div className="font-medium">ALTO COSTO {data.altoCosto}</div>
+                  </div>
+                  <div className="text-sm font-medium">{(parseFloat(data.primaCosto) * cantidadAfiliados).toFixed(2)}</div>
+                </div>
+              )}
+
+              {/* Medicamentos */}
+              {(cliente?.clientChoosen === 1 || globalFilters.medicamentos) && (
+                <div className="grid grid-cols-2 gap-4 py-2 border-b">
+                  <div className="text-sm">
+                    <div className="font-medium">MEDICAMENTOS {data.medicamento}</div>
+                  </div>
+                  <div className="text-sm font-medium">{(parseFloat(data.medicamentoCosto) * cantidadAfiliados).toFixed(2)}</div>
+                </div>
+              )}
+
+              {/* Habitación */}
+              {(cliente?.clientChoosen === 1 || globalFilters.habitacion) && (
+                <div className="grid grid-cols-2 gap-4 py-2 border-b">
+                  <div className="text-sm">
+                    <div className="font-medium">HABITACIÓN {data.habitacion}</div>
+                  </div>
+                  <div className="text-sm font-medium">{(parseFloat(data.habitacionCosto) * cantidadAfiliados).toFixed(2)}</div>
+                </div>
+              )}
+
+              {/* Odontología */}
+              {(cliente?.clientChoosen === 1 || globalFilters.odontologia) && (
+                <div className="grid grid-cols-2 gap-4 py-2 border-b">
+                  <div className="text-sm">
+                    <div className="font-medium">ODONTOLOGÍA</div>
+                    <Select
+                      value={odontologiaSelection}
+                      onValueChange={(value) => handleOdontologiaChange(planName, value)}
+                    >
+                      <SelectTrigger className="w-full mt-2">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {odontologiaOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-sm font-medium">
+                    {(() => {
+                      const selected = odontologiaOptions.find(opt => opt.value === odontologiaSelection);
+                      return selected ? (selected.prima * cantidadAfiliados).toFixed(2) : "0";
+                    })()}
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      }
+              )}
 
-      return null;
+              {/* Subtotal */}
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t font-bold">
+                <div className="text-sm">SubTotal Opcionales</div>
+                <div className="text-sm">
+                  {plan?.resumenPago.subTotalOpcional.toFixed(2) || '0.00'}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
     };
 
     if (!cliente || planes.length === 0) {
@@ -337,39 +348,89 @@ const CoberturasOpcionales = () => {
         </div>
       );
     }
-    
-  return (
-    <div className="space-y-6">
-      {planes.map(plan => {
-        const planData = planesData[plan.plan];
-        const query = planQueries.find(q => q.planName === plan.plan)?.query;
-        
-        if (query?.isLoading) {
-          return (
-            <Card key={plan.plan} className="mb-6">
-              <CardContent className="p-6">
-                <div className="text-center">Cargando coberturas para {plan.plan}...</div>
-              </CardContent>
-            </Card>
-          );
-        }
 
-        if (query?.error) {
-          return (
-            <Card key={plan.plan} className="mb-6">
-              <CardContent className="p-6">
-                <div className="text-center text-red-500">
-                  Error al cargar coberturas para {plan.plan}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        }
+    const isLoading = planQueries.some(q => q.query.isLoading);
+    const hasError = planQueries.some(q => q.query.error);
 
-        return renderPlanOpcionales(plan.plan, planData);
-      })}
-    </div>
-  );
+    if (isLoading) {
+      return (
+        <div className="text-center py-8">
+          <p>Cargando coberturas opcionales...</p>
+        </div>
+      );
+    }
+
+    if (hasError) {
+      return (
+        <div className="text-center py-8 text-red-500">
+          <p>Error al cargar las coberturas opcionales.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Filtros globales - Solo para clientChoosen === 2 */}
+        {cliente?.clientChoosen === 2 && (
+          <div className="mb-6">
+            <p className="text-sm text-gray-600 mb-4">
+              Selecciona las coberturas opcionales que deseas incluir:
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-altoCosto"
+                  checked={globalFilters.altoCosto}
+                  onCheckedChange={(checked) => handleGlobalFilterChange('altoCosto', checked as boolean)}
+                />
+                <label htmlFor="filter-altoCosto" className="text-sm font-medium">
+                  ALTO COSTO
+                </label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-medicamentos"
+                  checked={globalFilters.medicamentos}
+                  onCheckedChange={(checked) => handleGlobalFilterChange('medicamentos', checked as boolean)}
+                />
+                <label htmlFor="filter-medicamentos" className="text-sm font-medium">
+                  MEDICAMENTOS
+                </label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-habitacion"
+                  checked={globalFilters.habitacion}
+                  onCheckedChange={(checked) => handleGlobalFilterChange('habitacion', checked as boolean)}
+                />
+                <label htmlFor="filter-habitacion" className="text-sm font-medium">
+                  HABITACIÓN
+                </label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-odontologia"
+                  checked={globalFilters.odontologia}
+                  onCheckedChange={(checked) => handleGlobalFilterChange('odontologia', checked as boolean)}
+                />
+                <label htmlFor="filter-odontologia" className="text-sm font-medium">
+                  ODONTOLOGÍA
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tablas por plan */}
+        {planes.map(plan => {
+          const planData = planesData[plan.plan];
+          return renderPlanTable(plan.plan, planData);
+        })}
+      </div>
+    );
 }
 
 export default CoberturasOpcionales
