@@ -105,9 +105,9 @@ const FilterClient = () => {
                 id="tipoDocumento"
                 placeholder="Selecciona tipo doc."
                 options={[
-                  { label: "Cédula", value: "Cedula" },
-                  { label: "Pasaporte", value: "Pasaporte" },
-                  { label: "RNC", value: "Rnc" },
+                  { label: "Cédula", value: "1" },
+                  { label: "Pasaporte", value: "2" },
+                  { label: "RNC", value: "3" },
                 ]}
                 error={!!errors.tipoDocumento}
                 className="mt-1 h-10"
