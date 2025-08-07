@@ -16,12 +16,14 @@ import { useClientSearch } from "../hooks/useClientSearch";
 import { useGetClient } from "../hooks/useGetClient";
 import { ClientByIdentification } from "../services/client.services";
 import { LoadingSpinner } from "@/components/shared/loading";
+import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
 
 const FilterClient = () => {
 
   const { data: plans } = usePlans();
   const { data: subPlans } = useSubPlansType();
   const { setSearchData, setClientData } = useClientSearch();
+  const { filterData } = useQuotationStore();
   const [isLoading, setIsLoading] = useState( false);
 
 
@@ -31,6 +33,7 @@ const FilterClient = () => {
     formState: { errors },
     reset,
     setValue,
+    getValues,
   } = useForm<FiltrarClientFormValues>({
     resolver: zodResolver(filtrarClientSchema),
     defaultValues: {
@@ -40,6 +43,27 @@ const FilterClient = () => {
       identificacion: "",
     },
   });
+
+  // Efecto para cargar datos del store en el formulario (solo una vez)
+  React.useEffect(() => {
+    if (filterData) {
+      const currentValues = getValues();
+      // Solo actualizar si los valores son diferentes para evitar bucle infinito
+      if (
+        currentValues.tipoPoliza !== filterData.tipoPoliza ||
+        currentValues.subTipoPoliza !== filterData.subTipoPoliza ||
+        currentValues.tipoDocumento !== filterData.tipoDocumento ||
+        currentValues.identificacion !== filterData.identificacion
+      ) {
+        reset({
+          tipoPoliza: filterData.tipoPoliza,
+          subTipoPoliza: filterData.subTipoPoliza,
+          tipoDocumento: filterData.tipoDocumento,
+          identificacion: filterData.identificacion,
+        });
+      }
+    }
+  }, [filterData, reset, getValues]);
 
   const onSubmit = async  (data: FiltrarClientFormValues) => {
     setIsLoading(true);

@@ -52,7 +52,7 @@ const ClientInformation = forwardRef<
   ClientInformationProps
 >(({ onFormChange }, ref) => {
   // Obtener datos del store principal de cotización
-  const { cliente, setCliente } = useQuotationStore();
+  const { cliente, setCliente, filterData, setFilterData, agentOptions, setAgentOptions } = useQuotationStore();
   // Obtener datos de búsqueda del filtro
   const { searchData, clientData } = useClientSearch();
 
@@ -102,6 +102,23 @@ const ClientInformation = forwardRef<
     }
   }, [cliente, reset]);
 
+  // Efecto para cargar datos del filtro desde el store (útil al editar)
+  React.useEffect(() => {
+    if (filterData && !searchData) {
+      const currentValues = getValues();
+      // Solo actualizar si los valores son diferentes
+      if (
+        currentValues.identification !== filterData.identificacion ||
+        currentValues.tipoPlan !== Number(filterData.tipoPoliza) ||
+        currentValues.clientChoosen !== Number(filterData.subTipoPoliza)
+      ) {
+        setValue('identification', filterData.identificacion);
+        setValue('tipoPlan', Number(filterData.tipoPoliza));
+        setValue('clientChoosen', Number(filterData.subTipoPoliza));
+      }
+    }
+  }, [filterData, setValue, searchData, getValues]);
+
   // Efecto para llenar el formulario con datos de búsqueda
   React.useEffect(() => {
     if (searchData) {
@@ -109,8 +126,22 @@ const ClientInformation = forwardRef<
       setValue('identification', searchData.identificacion);
       setValue('tipoPlan', Number(searchData.tipoPoliza));
       setValue('clientChoosen', Number(searchData.subTipoPoliza));
+      
+      // Guardar también en el store para persistencia (solo si es diferente)
+      if (!filterData || 
+          filterData.tipoPoliza !== searchData.tipoPoliza ||
+          filterData.subTipoPoliza !== searchData.subTipoPoliza ||
+          filterData.tipoDocumento !== searchData.tipoDocumento ||
+          filterData.identificacion !== searchData.identificacion) {
+        setFilterData({
+          tipoPoliza: searchData.tipoPoliza,
+          subTipoPoliza: searchData.subTipoPoliza,
+          tipoDocumento: searchData.tipoDocumento,
+          identificacion: searchData.identificacion
+        });
+      }
     }
-  }, [searchData, setValue]);
+  }, [searchData, setValue, setFilterData, filterData]);
 
   // Efecto para llenar el nombre del cliente encontrado
   React.useEffect(() => {
@@ -121,6 +152,13 @@ const ClientInformation = forwardRef<
 
   const canal = watch("office"); // para obtener el valor seleccionado
   const { data: dynamicOptions, isLoading } = useDynamicSelectOptions(canal);
+
+  // Efecto para guardar las opciones de agente en el store
+  React.useEffect(() => {
+    if (dynamicOptions && dynamicOptions.length > 0 && JSON.stringify(agentOptions) !== JSON.stringify(dynamicOptions)) {
+      setAgentOptions(dynamicOptions);
+    }
+  }, [dynamicOptions, setAgentOptions, agentOptions]);
 
   // Función para guardar datos en el store
   const saveToStore = React.useCallback(() => {
