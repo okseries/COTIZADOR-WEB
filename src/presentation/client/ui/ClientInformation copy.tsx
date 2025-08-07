@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { clienteSchema, ClienteFormValues } from '../../schema/quotatio-schema'
-import useStepperStore from '../../store/useStepperStore'
-import { mockAgents, mockClients, mockOffices, mockPlanTypes } from './DataFicticio'
+import { clienteSchema, ClienteFormValues } from '../../quotations/schema/quotatio-schema'
+import useStepperStore from '../../quotations/store/useStepperStore'
+import { mockAgents, mockClients, mockOffices, mockPlanTypes } from '../../quotations/ui/stepper/DataFicticio'
 
 interface ClientInformationProps {
   onFormChange?: () => void;

@@ -1,17 +1,23 @@
+"use client"
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   FiltrarClientFormValues,
   filtrarClientSchema,
-} from "../../schema/filtrar-client.schema";
+} from "../../quotations/schema/filtrar-client.schema";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
+import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
 
 const FilterClient = () => {
+
+  const { data: plans } = usePlans();
+  const { data: subPlans } = useSubPlansType();
+
   const {
     control,
     handleSubmit,
@@ -44,11 +50,12 @@ const FilterClient = () => {
                 {...field}
                 id="tipoPoliza"
                 placeholder="Selecciona tipo"
-                options={[
-                  { label: "Vehículo", value: "vehiculo" },
-                  { label: "Hogar", value: "hogar" },
-                  { label: "Salud", value: "salud" },
-                ]}
+                options={
+                  plans?.map((plan) => ({
+                    label: plan.tipoPlanName,
+                    value: String(plan.id),
+                  })) || []
+                }
                 error={!!errors.tipoPoliza}
                 className="mt-1 h-10"
               />
@@ -70,11 +77,12 @@ const FilterClient = () => {
                 {...field}
                 id="subTipoPoliza"
                 placeholder="Selecciona sub tipo"
-                options={[
-                  { label: "Vehículo", value: "vehiculo" },
-                  { label: "Hogar", value: "hogar" },
-                  { label: "Salud", value: "salud" },
-                ]}
+                options={
+                  subPlans?.map((plan) => ({
+                    label: plan.nameCotizante,
+                    value: String(plan.id),
+                  })) || []
+                }
                 error={!!errors.subTipoPoliza}
                 className="mt-1 h-10"
               />
@@ -97,9 +105,9 @@ const FilterClient = () => {
                 id="tipoDocumento"
                 placeholder="Selecciona tipo doc."
                 options={[
-                  { label: "Cédula", value: "cedula" },
-                  { label: "Pasaporte", value: "pasaporte" },
-                  { label: "RNC", value: "rnc" },
+                  { label: "Cédula", value: "Cedula" },
+                  { label: "Pasaporte", value: "Pasaporte" },
+                  { label: "RNC", value: "Rnc" },
                 ]}
                 error={!!errors.tipoDocumento}
                 className="mt-1 h-10"

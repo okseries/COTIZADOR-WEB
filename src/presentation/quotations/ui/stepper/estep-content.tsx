@@ -1,7 +1,8 @@
 import React, { useRef } from 'react'
-import ClientInformation, { ClientInformationRef } from './ClientInformation';
+import ClientInformation, { ClientInformationRef } from '../../../client/ui/ClientInformation';
 import StepButton from './stepButtom';
 import useStepperStore from '../../store/useStepperStore';
+import CategoryPlan from '@/presentation/plans/ui/CategoryPlan';
 
 interface Props {
     step: string;
@@ -12,17 +13,20 @@ const StepContent = ({ step, setStep }: Props) => {
   const { isStepValid, generateQuotationObject } = useStepperStore();
   const clientInfoRef = useRef<ClientInformationRef>(null);
 
+
+
   const handleNext = async (nextStep: string) => {
-    if (step === "step1" && clientInfoRef.current) {
-      // Validar y guardar los datos del cliente antes de avanzar
-      const isValid = await clientInfoRef.current.validateAndSave();
-      if (isValid) {
-        setStep(nextStep);
-      }
-    } else if (isStepValid(step)) {
+  if (step === "step1") {
+    const isValid = await clientInfoRef.current?.validateAndSave();
+    alert(`Paso 1 validado: ${isValid}`);
+    if (isValid) {
       setStep(nextStep);
     }
-  };
+    return; // evita continuar si no es válido
+  }
+
+  setStep(nextStep);
+};
 
   const handleFinish = () => {
     const quotationObject = generateQuotationObject();
@@ -40,9 +44,9 @@ const StepContent = ({ step, setStep }: Props) => {
           <>
             <ClientInformation ref={clientInfoRef} />
             <div className="flex justify-end">
-              <StepButton 
-                onClick={() => handleNext("step2")} 
-                isNext={true} 
+              <StepButton
+                onClick={() => handleNext("step2")}
+                isNext={true}
                 isDisabled={false}
               />
             </div>
@@ -50,17 +54,17 @@ const StepContent = ({ step, setStep }: Props) => {
         )}
         {step === "step2" && (
           <>
-            <div className="text-lg font-medium">Categoría Plan - En desarrollo</div>
+            <CategoryPlan/>
             <div className="flex justify-between">
-              <StepButton 
-                onClick={() => setStep("step1")} 
-                isNext={false} 
-                isDisabled={false} 
+              <StepButton
+                onClick={() => setStep("step1")}
+                isNext={false}
+                isDisabled={false}
               />
-              <StepButton 
-                onClick={() => handleNext("step3")} 
-                isNext={true} 
-                isDisabled={!isStepValid("step2")} 
+              <StepButton
+                onClick={() => handleNext("step3")}
+                isNext={true}
+                isDisabled={!isStepValid("step2")}
               />
             </div>
           </>
@@ -69,15 +73,15 @@ const StepContent = ({ step, setStep }: Props) => {
           <>
             <div className="text-lg font-medium">Coberturas Opcionales - En desarrollo</div>
             <div className="flex justify-between">
-              <StepButton 
-                onClick={() => setStep("step2")} 
-                isNext={false} 
-                isDisabled={false} 
+              <StepButton
+                onClick={() => setStep("step2")}
+                isNext={false}
+                isDisabled={false}
               />
-              <StepButton 
-                onClick={() => handleNext("step4")} 
-                isNext={true} 
-                isDisabled={!isStepValid("step3")} 
+              <StepButton
+                onClick={() => handleNext("step4")}
+                isNext={true}
+                isDisabled={!isStepValid("step3")}
               />
             </div>
           </>
@@ -86,10 +90,10 @@ const StepContent = ({ step, setStep }: Props) => {
           <>
             <div className="text-lg font-medium">Opciones de Pago - En desarrollo</div>
             <div className="flex justify-between">
-              <StepButton 
-                onClick={() => setStep("step3")} 
-                isNext={false} 
-                isDisabled={false} 
+              <StepButton
+                onClick={() => setStep("step3")}
+                isNext={false}
+                isDisabled={false}
               />
               <button
                 className="bg-green-600 text-white px-8 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition text-base shadow"

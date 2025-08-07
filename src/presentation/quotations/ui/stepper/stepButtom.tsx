@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ArrowBigLeft, ArrowRight } from "lucide-react";
 import React from "react";
 
 interface Props {
@@ -8,11 +9,11 @@ interface Props {
 }
 
 const StepButton = ({ onClick, isNext, isDisabled }: Props) => {
-  const baseClasses = "px-8 py-2.5 rounded-lg font-semibold transition text-base shadow";
+  const baseClasses = "px-8 py-2.5 rounded-lg font-semibold transition text-[#FFA500] hover:text-[#FFA500] shadow";
   const nextClasses = isDisabled 
-    ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-    : "bg-primary text-white hover:bg-primary-dark";
-  const prevClasses = "bg-border text-foreground hover:bg-muted";
+    ? " text-[#FFA500] cursor-not-allowed" 
+    : " text-[#FFA500] hover:bg-gray-100";
+  const prevClasses = "bg-border text-[#FFA500] hover:bg-muted";
 
   return (
     <Button
@@ -20,8 +21,11 @@ const StepButton = ({ onClick, isNext, isDisabled }: Props) => {
       className={`${baseClasses} ${isNext ? nextClasses : prevClasses}`}
       onClick={onClick}
       disabled={isDisabled}
+      
     >
       {isNext ? "Siguiente" : "Anterior"}
+
+      <ArrowRight className={`ml-2 ${!isNext ? 'rotate-180' : ''}`} />
     </Button>
   );
 };
