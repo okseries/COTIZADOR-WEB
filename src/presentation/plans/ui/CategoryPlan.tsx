@@ -20,18 +20,19 @@ const CategoryPlan = () => {
 
   // Sincronizar con el store
   useEffect(() => {
-    const currentPlans = getFinalObject().planes || [];
+    const currentPlanes = getFinalObject().planes || [];
     const newSelectedPlans = new Map<number, PlanInterface>();
     
-    plans?.forEach(plan => {
-      const existsInStore = currentPlans.some(quotationPlan => quotationPlan.plan === plan.plan_name);
-      if (existsInStore) {
-        newSelectedPlans.set(plan.id, plan);
+    // Solo agregar a selectedPlans los planes que están en el store Y existen en la lista de planes
+    currentPlanes.forEach(quotationPlan => {
+      const planFromAPI = plans?.find(plan => plan.plan_name === quotationPlan.plan);
+      if (planFromAPI) {
+        newSelectedPlans.set(planFromAPI.id, planFromAPI);
       }
     });
     
     setSelectedPlans(newSelectedPlans);
-  }, [plans, getFinalObject]);
+  }, [plans]); // Remover getFinalObject de las dependencias para evitar re-renders innecesarios
 
   const handlePlanChange = (plan: PlanInterface, checked: boolean) => {
     const newSelectedPlans = new Map(selectedPlans);
@@ -60,17 +61,18 @@ const CategoryPlan = () => {
     }
     
     setSelectedPlans(newSelectedPlans);
+    console.log('Planes seleccionados:', Array.from(newSelectedPlans.keys()));
   };
 
-  const handleAddAfiliado = (plan: PlanInterface, afiliado: Afiliado) => {
-    const currentPlans = getFinalObject().planes || [];
-    const existingPlan = currentPlans.find(p => p.plan === plan.plan_name);
+  const handleAddAfiliado = (planName: string, afiliado: Afiliado) => {
+    const currentPlanes = getFinalObject().planes || [];
+    const existingPlan = currentPlanes.find(p => p.plan === planName);
     
     if (existingPlan) {
       const updatedAfiliados = [...existingPlan.afiliados, afiliado];
       const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
       
-      updatePlanByName(plan.plan_name, {
+      updatePlanByName(planName, {
         afiliados: updatedAfiliados,
         cantidadAfiliados: updatedAfiliados.length,
         resumenPago: {
@@ -83,8 +85,8 @@ const CategoryPlan = () => {
   };
 
   const handleRemoveAfiliado = (plan: PlanInterface, afiliadoIndex: number) => {
-    const currentPlans = getFinalObject().planes || [];
-    const existingPlan = currentPlans.find(p => p.plan === plan.plan_name);
+    const currentPlanes = getFinalObject().planes || [];
+    const existingPlan = currentPlanes.find(p => p.plan === plan.plan_name);
     
     if (existingPlan) {
       const updatedAfiliados = existingPlan.afiliados.filter((_, index) => index !== afiliadoIndex);
@@ -125,36 +127,39 @@ const CategoryPlan = () => {
         ))}
       </div>
 
-      {/* Formularios para agregar afiliados */}
-      <div className="space-y-4">
-        {Array.from(selectedPlans.values()).map((plan) => (
+      {/* Formulario único para agregar afiliados - Solo mostrar si hay planes seleccionados */}
+      {selectedPlans.size > 0 && (
+        <div className="space-y-4">
           <AddAfiliadoForm
-            key={`form-${plan.id}`}
-            plan={plan}
-            onAddAfiliado={(afiliado) => handleAddAfiliado(plan, afiliado)}
+            selectedPlans={Array.from(selectedPlans.values())}
+            onAddAfiliado={handleAddAfiliado}
           />
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* Lista de afiliados por plan */}
-      <div className="space-y-4">
-        {currentQuotationPlans.map((quotationPlan) => {
-          const originalPlan = plans?.find(p => p.plan_name === quotationPlan.plan);
-          if (!originalPlan) return null;
-          
-          return (
-            <AfiliadosList
-              key={`list-${quotationPlan.plan}`}
-              planName={quotationPlan.plan}
-              afiliados={quotationPlan.afiliados}
-              onRemoveAfiliado={(index) => handleRemoveAfiliado(originalPlan, index)}
-            />
-          );
-        })}
-      </div>
+      {/* Lista de afiliados por plan - Solo mostrar si hay afiliados */}
+      {currentQuotationPlans.length > 0 && (
+        <div className="space-y-4">
+          {currentQuotationPlans.map((quotationPlan) => {
+            const originalPlan = plans?.find(p => p.plan_name === quotationPlan.plan);
+            if (!originalPlan || quotationPlan.afiliados.length === 0) return null;
+            
+            return (
+              <AfiliadosList
+                key={`list-${quotationPlan.plan}`}
+                planName={quotationPlan.plan}
+                afiliados={quotationPlan.afiliados}
+                onRemoveAfiliado={(index) => handleRemoveAfiliado(originalPlan, index)}
+              />
+            );
+          })}
+        </div>
+      )}
 
-      {/* Resumen */}
-      <PlanesResumen planes={currentQuotationPlans} />
+      {/* Resumen - Solo mostrar si hay planes con afiliados */}
+      {currentQuotationPlans.length > 0 && (
+        <PlanesResumen planes={currentQuotationPlans} />
+      )}
     </div>
   )
 }
