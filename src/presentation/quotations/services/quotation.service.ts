@@ -1,0 +1,67 @@
+import apiClient from '../../../../core/apiclient';
+import { Quotations } from '../interface/quotation.interface';
+
+export interface QuotationListResponse {
+  data: Quotations[];
+  total: number;
+}
+
+class QuotationService {
+  /**
+   * Obtener cotizaciones por usuario
+   */
+  async getQuotationsByUser(userName: string): Promise<QuotationListResponse> {
+    try {
+      const response = await apiClient.get<Quotations[]>(`/cotizaciones/${userName}`);
+      
+      return {
+        data: response.data || [],
+        total: response.data?.length || 0
+      };
+    } catch (error: any) {
+      console.error('Error al obtener cotizaciones:', error);
+      
+      if (error.response?.status === 401) {
+        throw new Error('No autorizado. Por favor, inicia sesión nuevamente.');
+      }
+      
+      if (error.response?.status === 404) {
+        // Si no hay cotizaciones, retornar array vacío en lugar de error
+        return {
+          data: [],
+          total: 0
+        };
+      }
+      
+      if (error.response?.status >= 500) {
+        throw new Error('Error del servidor. Inténtalo de nuevo más tarde.');
+      }
+      
+      throw new Error('Error al cargar las cotizaciones. Inténtalo de nuevo.');
+    }
+  }
+
+  /**
+   * Obtener una cotización específica por ID
+   */
+  async getQuotationById(id: string): Promise<Quotations> {
+    try {
+      const response = await apiClient.get<Quotations>(`/cotizaciones/detalle/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error al obtener cotización:', error);
+      
+      if (error.response?.status === 401) {
+        throw new Error('No autorizado. Por favor, inicia sesión nuevamente.');
+      }
+      
+      if (error.response?.status === 404) {
+        throw new Error('Cotización no encontrada.');
+      }
+      
+      throw new Error('Error al cargar la cotización.');
+    }
+  }
+}
+
+export const quotationService = new QuotationService();

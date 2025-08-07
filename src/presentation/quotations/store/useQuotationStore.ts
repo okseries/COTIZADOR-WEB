@@ -13,6 +13,7 @@ interface QuotationState {
   updatePlanByName: (planName: string, update: Partial<Plan>) => void;
   removePlan: (planName: string) => void;
   clearQuotation: () => void;
+  loadExistingQuotation: (quotationRequest: QuotationRequest) => void;
   getFinalObject: () => QuotationRequest;
   isComplete: () => boolean;
 }
@@ -49,6 +50,13 @@ export const useQuotationStore = create<QuotationState>()(
           planes: state.planes.filter((p) => p.plan !== planName),
         })),
       clearQuotation: () => set({ user: null, cliente: null, planes: [] }),
+      loadExistingQuotation: (quotationRequest) => {
+        set({
+          user: quotationRequest.user,
+          cliente: quotationRequest.cliente,
+          planes: quotationRequest.planes || []
+        });
+      },
       getFinalObject: () => {
         const { user, cliente, planes } = get();
         return { user, cliente, planes };

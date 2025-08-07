@@ -85,7 +85,7 @@ export const PlanPaymentCard: React.FC<PlanPaymentCardProps> = ({
             <label className="text-sm font-medium text-gray-600">
               Total a Pagar
             </label>
-            <div className="text-lg font-bold text-blue-600">
+            <div className="text-lg font-bold text-[#005BBB]">
               {formatCurrency(totalPagar)}
             </div>
           </div>
@@ -93,8 +93,8 @@ export const PlanPaymentCard: React.FC<PlanPaymentCardProps> = ({
 
         {/* Detalles adicionales */}
         {selectedPeriod !== 'Mensual' && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <div className="text-sm text-blue-700">
+          <div className="mt-4 p-3 bg-[#005BBB]/10 rounded-lg">
+            <div className="text-sm text-[#005BBB]">
               <strong>Cálculo:</strong> {formatCurrency(total)} × {multiplicador} meses = {formatCurrency(totalPagar)}
             </div>
           </div>

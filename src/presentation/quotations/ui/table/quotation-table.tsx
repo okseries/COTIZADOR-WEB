@@ -13,6 +13,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 import {
   Tooltip,
@@ -23,12 +24,14 @@ import {
 import {
   Download,
   FileText,
+  Edit,
 } from "lucide-react";
 import { Quotations } from "../../interface/quotation.interface";
 import QuotationTableHeader from "./table-header";
 import Link from "next/link";
 import EmptyState from "./empty-table";
 import { useRouter } from "next/navigation";
+import { useQuotationStore } from "../../store/useQuotationStore";
 import QuotationTableSkeleton from "./quotation-skeleton";
 
 interface QuotationTableProps {
@@ -40,6 +43,32 @@ interface QuotationTableProps {
 
 export default function QuotationTable({data, isLoading = false}: QuotationTableProps) {
   const router = useRouter();
+  const { loadExistingQuotation } = useQuotationStore();
+
+  const handleEditQuotation = (quotation: Quotations) => {
+    // Convert the quotation data to the expected format
+    const quotationRequest = {
+      user: quotation.cotizacion.user,
+      cliente: quotation.cotizacion.cliente,
+      planes: quotation.cotizacion.planes.map(plane => ({
+        ...plane,
+        afiliados: plane.afiliados.map(afiliado => ({
+          ...afiliado,
+          subtotal: String(afiliado.subtotal) // Ensure subtotal is a string
+        })),
+        opcionales: plane.opcionales.map(opcional => ({
+          nombre: opcional.nombre,
+          descripcion: opcional.descripcion,
+          prima: opcional.prima
+        }))
+      }))
+    };
+    
+    // Load the existing quotation data into the store
+    loadExistingQuotation(quotationRequest);
+    // Navigate to the quotation form (Step 1) to edit
+    router.push('/dashboard/cotizacion');
+  };
 
 
   if (isLoading) {
@@ -178,18 +207,43 @@ export default function QuotationTable({data, isLoading = false}: QuotationTable
                           </Tooltip>
                         </TableCell>
                         <TableCell className="text-center py-4">
-                          <Link
-                            href={q.pdf}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-foreground hover:text-primary"
-                          >
-                            <Download className="w-4 h-4 text-accent" />
-                            <span>Descargar</span>
-                            <span className="text-destructive font-medium">
-                              PDF
-                            </span>
-                          </Link>
+                          <div className="flex items-center justify-center gap-2">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditQuotation(q)}
+                                  className="h-8 w-8 p-0 hover:bg-[#005BBB]/10 hover:text-[#005BBB]"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Editar cotización
+                              </TooltipContent>
+                            </Tooltip>
+                            <Link
+                              href={q.pdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 hover:bg-[#FFA500]/10 hover:text-[#FFA500]"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Descargar PDF
+                                </TooltipContent>
+                              </Tooltip>
+                            </Link>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

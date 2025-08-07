@@ -34,12 +34,12 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Total General */}
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
+        <div className="p-4 bg-gradient-to-r from-[#005BBB]/10 to-[#005BBB]/20 rounded-lg">
           <div className="flex justify-between items-center">
             <span className="text-lg font-medium text-gray-700">
               Total General a Pagar:
             </span>
-            <span className="text-2xl font-bold text-blue-600">
+            <span className="text-2xl font-bold text-[#005BBB]">
               {formatCurrency(totalGeneral)}
             </span>
           </div>

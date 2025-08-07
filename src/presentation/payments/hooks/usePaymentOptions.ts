@@ -4,6 +4,7 @@ import { useQuotationStore } from '../../quotations/store/useQuotationStore';
 import { useAuth } from '../../auth/store/useAuth.store';
 import { paymentService } from '../services/payment.service';
 import { Plan } from '../../quotations/interface/createQuotation.interface';
+import { useQueryClient } from '@tanstack/react-query';
 
 export type PeriodoPago = 'Mensual' | 'Trimestral' | 'Semestral' | 'Anual';
 
@@ -26,7 +27,8 @@ export const MULTIPLICADORES: Record<PeriodoPago, number> = {
 
 export const usePaymentOptions = () => {
   const { user: authUser } = useAuth();
-  const { cliente, planes, updatePlanByName } = useQuotationStore();
+  const { cliente, planes, updatePlanByName, clearQuotation } = useQuotationStore();
+  const queryClient = useQueryClient();
   const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -180,7 +182,15 @@ export const usePaymentOptions = () => {
       // Descargar PDF
       downloadPDF(response.pdfBase64, response.filename);
       
-      // Limpiar store después de éxito
+      // Resetear el store después del éxito
+      clearQuotation();
+      
+      // Invalidar cache de cotizaciones para que se actualice la tabla
+      queryClient.invalidateQueries({
+        queryKey: ['quotations', userName]
+      });
+      
+      // Redirigir al dashboard después de un breve delay
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 1000);
@@ -190,7 +200,7 @@ export const usePaymentOptions = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [authUser, cliente, paymentPlans, downloadPDF]);
+  }, [authUser, cliente, paymentPlans, downloadPDF, clearQuotation, queryClient]);
 
   return {
     paymentPlans,

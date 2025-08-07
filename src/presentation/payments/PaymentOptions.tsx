@@ -36,7 +36,7 @@ export const PaymentOptions: React.FC = () => {
         <Card>
           <CardContent className="flex items-center justify-center py-8">
             <div className="text-center space-y-4">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="w-8 h-8 border-2 border-[#005BBB] border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-gray-600">Cargando información de pagos...</p>
             </div>
           </CardContent>
@@ -51,7 +51,7 @@ export const PaymentOptions: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
-            <CreditCard className="w-6 h-6 text-blue-600" />
+            <CreditCard className="w-6 h-6 text-[#005BBB]" />
             Opciones de Pago
           </CardTitle>
           <p className="text-gray-600">
