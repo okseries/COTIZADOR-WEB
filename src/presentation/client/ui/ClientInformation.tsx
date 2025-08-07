@@ -136,9 +136,8 @@ const ClientInformation = forwardRef<
       // Mostrar errores específicos para debug
       const currentErrors = errors;
       console.log("Errores de validación:", currentErrors);
-      alert(`Formulario inválido. Errores: ${Object.keys(currentErrors).join(", ")}`);
+      // alert(`Formulario inválido. Errores: ${Object.keys(currentErrors).join(", ")}`);
     } else {
-      alert("Formulario válido");
     }
     
     if (isValid) {

@@ -26,8 +26,8 @@ const PlanesResumen = ({ planes }: Props) => {
         <div className="space-y-4">
           {/* Header */}
           <div className="grid grid-cols-3 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
-            <div>Total Planes</div>
-            <div>Cantidad</div>
+            <div>Planes</div>
+            {/* <div>Cantidad</div> */}
             <div>Total Monto</div>
           </div>
           
@@ -39,7 +39,7 @@ const PlanesResumen = ({ planes }: Props) => {
             return (
               <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b last:border-b-0">
                 <div className="text-sm font-medium">{plan.plan}</div>
-                <div className="text-sm">{plan.afiliados.length}</div>
+                {/* <div className="text-sm">{plan.afiliados.length}</div> */}
                 <div className="text-sm font-medium">DOP{planTotal.toFixed(2)}</div>
               </div>
             )
@@ -49,7 +49,7 @@ const PlanesResumen = ({ planes }: Props) => {
           {planes.length > 1 && (
             <div className="grid grid-cols-3 gap-4 pt-2 border-t font-bold">
               <div className="text-sm">TOTAL</div>
-              <div className="text-sm">{totalAfiliados}</div>
+              {/* <div className="text-sm">{totalAfiliados}</div> */}
               <div className="text-sm">DOP{totalMonto.toFixed(2)}</div>
             </div>
           )}
