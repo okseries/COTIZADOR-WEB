@@ -14,7 +14,9 @@ const PlanesResumen = ({ planes }: Props) => {
   const totalMonto = planes.reduce((acc, plan) => {
     const planTotal = plan.afiliados.reduce((planAcc, afiliado) => 
       planAcc + parseFloat(afiliado.subtotal || '0'), 0)
-    return acc + planTotal
+    const opcionalesTotal = plan.opcionales.reduce((optAcc, opcional) => 
+      optAcc + opcional.prima, 0)
+    return acc + planTotal + opcionalesTotal
   }, 0)
 
   return (
@@ -25,32 +27,38 @@ const PlanesResumen = ({ planes }: Props) => {
       <CardContent>
         <div className="space-y-4">
           {/* Header */}
-          <div className="grid grid-cols-3 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
+          <div className="grid grid-cols-4 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
             <div>Planes</div>
-            {/* <div>Cantidad</div> */}
-            <div>Total Monto</div>
+            <div>Subtotal Afiliados</div>
+            <div>Subtotal Opcionales</div>
+            <div>Total</div>
           </div>
           
           {/* Planes */}
           {planes.map((plan, index) => {
-            const planTotal = plan.afiliados.reduce((acc, afiliado) => 
+            const planTotalAfiliados = plan.afiliados.reduce((acc, afiliado) => 
               acc + parseFloat(afiliado.subtotal || '0'), 0)
+            const planTotalOpcionales = plan.opcionales.reduce((acc, opcional) => 
+              acc + opcional.prima, 0)
+            const planTotal = planTotalAfiliados + planTotalOpcionales
             
             return (
-              <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b last:border-b-0">
+              <div key={index} className="grid grid-cols-4 gap-4 py-2 border-b last:border-b-0">
                 <div className="text-sm font-medium">{plan.plan}</div>
-                {/* <div className="text-sm">{plan.afiliados.length}</div> */}
-                <div className="text-sm font-medium">DOP{planTotal.toFixed(2)}</div>
+                <div className="text-sm">DOP {planTotalAfiliados.toFixed(2)}</div>
+                <div className="text-sm">DOP {planTotalOpcionales.toFixed(2)}</div>
+                <div className="text-sm font-medium">DOP {planTotal.toFixed(2)}</div>
               </div>
             )
           })}
           
           {/* Total general */}
           {planes.length > 1 && (
-            <div className="grid grid-cols-3 gap-4 pt-2 border-t font-bold">
+            <div className="grid grid-cols-4 gap-4 pt-2 border-t font-bold">
               <div className="text-sm">TOTAL</div>
-              {/* <div className="text-sm">{totalAfiliados}</div> */}
-              <div className="text-sm">DOP{totalMonto.toFixed(2)}</div>
+              <div className="text-sm">DOP {planes.reduce((acc, plan) => acc + plan.afiliados.reduce((planAcc, afiliado) => planAcc + parseFloat(afiliado.subtotal || '0'), 0), 0).toFixed(2)}</div>
+              <div className="text-sm">DOP {planes.reduce((acc, plan) => acc + plan.opcionales.reduce((optAcc, opcional) => optAcc + opcional.prima, 0), 0).toFixed(2)}</div>
+              <div className="text-sm">DOP {totalMonto.toFixed(2)}</div>
             </div>
           )}
         </div>

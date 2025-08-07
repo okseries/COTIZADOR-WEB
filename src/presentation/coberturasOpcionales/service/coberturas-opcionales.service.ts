@@ -8,7 +8,7 @@ export const GetCoberturasOpcionales = async (
 ) => {
   try {
     const { data } = await apiClient.get<CoberturasOpcional[]>(
-      `/opcionales-planes${planName}/${idTipoPlan}/${idCotizante}`
+      `/opcionales-planes/${encodeURIComponent(planName)}/${idTipoPlan}/${idCotizante}`
     );
     return data;
   } catch (error) {
