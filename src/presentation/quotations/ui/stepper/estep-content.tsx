@@ -4,6 +4,7 @@ import StepButton from './stepButtom';
 import { useQuotationStore } from '../../store/useQuotationStore';
 import CategoryPlan from '@/presentation/plans/ui/CategoryPlan';
 import { ClientSearchProvider } from '@/presentation/client/hooks/useClientSearch';
+import CoberturasOpcionales from '@/presentation/coberturasOpcionales/ui/CoberturasOptinals';
 
 interface Props {
     step: string;
@@ -70,7 +71,8 @@ const StepContent = ({ step, setStep }: Props) => {
         )}
         {step === "step3" && (
           <>
-            <div className="text-lg font-medium">Coberturas Opcionales - En desarrollo</div>
+            <CoberturasOpcionales/>
+            
             <div className="flex justify-between">
               <StepButton
                 onClick={() => setStep("step2")}
