@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Cliente, Plan } from '../interface/createQuotation.interface';
+import { Cliente, Plan, QuotationRequest } from '../interface/createQuotation.interface';
 
 interface QuotationState {
   user: string | null;
@@ -13,7 +13,7 @@ interface QuotationState {
   updatePlanByName: (planName: string, update: Partial<Plan>) => void;
   removePlan: (planName: string) => void;
   clearQuotation: () => void;
-  getFinalObject: () => any;
+  getFinalObject: () => QuotationRequest;
   isComplete: () => boolean;
 }
 

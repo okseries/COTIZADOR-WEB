@@ -27,27 +27,16 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { forwardRef, use, useImperativeHandle, useState } from "react";
+import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-import useStepperStore from "../../quotations/store/useStepperStore";
-import {
-  mockAgents,
-  mockClients,
-  mockOffices,
-  mockPlanTypes,
-} from "../../quotations/ui/stepper/DataFicticio";
 import { Label } from "@/components/ui/label";
 import FilterClient from "./FilterClient";
 import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
-import {
-  Intermediario,
-  Promotor,
-  Sucursal,
-} from "@/presentation/helpers/auxs.service";
 import { useDynamicSelectOptions } from "@/presentation/client/hooks/useDynamicSelectOptions";
 import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
 import { ClienteFormValues, clienteSchema } from "../schema/ClientInfo.schema";
+import { useClientSearch } from "../hooks/useClientSearch";
 
 interface ClientInformationProps {
   onFormChange?: () => void;
@@ -62,7 +51,10 @@ const ClientInformation = forwardRef<
   ClientInformationRef,
   ClientInformationProps
 >(({ onFormChange }, ref) => {
-  const { clientData, setClientData } = useStepperStore();
+  // Obtener datos del store principal de cotización
+  const { cliente, setCliente } = useQuotationStore();
+  // Obtener datos de búsqueda del filtro
+  const { searchData } = useClientSearch();
 
   // Estados para los popovers
   const [openAgent, setOpenAgent] = useState(false);
@@ -79,39 +71,75 @@ const ClientInformation = forwardRef<
   } = useForm<ClienteFormValues>({
     resolver: zodResolver(clienteSchema),
     defaultValues: {
-      clientChoosen: 0,
-      identification: "",
-      name: "",
-      contact: "",
-      email: "",
-      address: "",
-      office: "",
-      agent: "",
-      tipoPlan: 0,
+      clientChoosen: cliente?.clientChoosen || 0,
+      identification: cliente?.identification || "",
+      name: cliente?.name || "",
+      contact: cliente?.contact || "",
+      email: cliente?.email || "",
+      address: cliente?.address || "",
+      office: cliente?.office || "",
+      agent: cliente?.agent || "",
+      tipoPlan: cliente?.tipoPlan || 0,
     },
   });
-  const setCliente = useQuotationStore((state) => state.setCliente);
+
+  // Efecto para resetear el formulario cuando cambien los datos del store
+  React.useEffect(() => {
+    if (cliente) {
+      reset({
+        clientChoosen: cliente.clientChoosen,
+        identification: cliente.identification,
+        name: cliente.name,
+        contact: cliente.contact,
+        email: cliente.email,
+        address: cliente.address,
+        office: cliente.office,
+        agent: cliente.agent,
+        tipoPlan: cliente.tipoPlan,
+      });
+    }
+  }, [cliente, reset]);
+
+  // Efecto para llenar el formulario con datos de búsqueda
+  React.useEffect(() => {
+    if (searchData) {
+      // Llenar los campos que vienen del filtro de búsqueda
+      setValue('identification', searchData.identificacion);
+      setValue('tipoPlan', Number(searchData.tipoPoliza));
+      
+      // Aquí podrías agregar más lógica para mapear otros campos
+      // Por ejemplo, si tienes una API para buscar el cliente completo
+    }
+  }, [searchData, setValue]);
 
   const canal = watch("office"); // para obtener el valor seleccionado
   const { data: dynamicOptions, isLoading } = useDynamicSelectOptions(canal);
 
   // Función para guardar datos en el store
   const saveToStore = React.useCallback(() => {
-    const formData = getValues(); // <-- usa getValues del hook actual
-    setClientData(formData);
-    setCliente(formData); // si también quieres guardarlo en `useQuotationStore`
-  }, [setClientData, setCliente]);
+    const formData = getValues();
+    setCliente(formData);
+  }, [getValues, setCliente]);
 
   // Función para validar y guardar
   const validateAndSave = React.useCallback(async () => {
     const isValid = await trigger();
+    
+    if (!isValid) {
+      // Mostrar errores específicos para debug
+      const currentErrors = errors;
+      console.log("Errores de validación:", currentErrors);
+      alert(`Formulario inválido. Errores: ${Object.keys(currentErrors).join(", ")}`);
+    } else {
+      alert("Formulario válido");
+    }
     
     if (isValid) {
       saveToStore();
       return true;
     }
     return false;
-  }, [trigger, saveToStore]);
+  }, [trigger, saveToStore, errors]);
 
   // Exponer las funciones al padre
   useImperativeHandle(ref, () => ({
@@ -120,77 +148,61 @@ const ClientInformation = forwardRef<
   }));
 
   const onSubmit = (data: ClienteFormValues) => {
+    setCliente(data);
     alert("Datos guardados correctamente");
-    setClientData(data);
-    setCliente({
-      clientChoosen: data.clientChoosen,
-      identification: data.identification,
-      name: data.name,
-      contact: data.contact,
-      email: data.email,
-      address: data.address,
-      office: data.office,
-      agent: data.agent,
-      tipoPlan: data.tipoPlan,
-    });
   };
-
-  // const form = useForm<ClienteFormValues>({
-  //   resolver: zodResolver(clienteSchema),
-  //   mode: 'onChange',
-  //   defaultValues: {
-  //     clientChoosen: clientData.clientChoosen || 0,
-  //     identification: clientData.identification || '',
-  //     name: clientData.name || '',
-  //     contact: clientData.contact || '',
-  //     email: clientData.email || '',
-  //     address: clientData.address || '',
-  //     office: clientData.office || '',
-  //     agent: clientData.agent || '',
-  //     tipoPlan: clientData.tipoPlan || 0,
-  //   }
-  // });
-
-  // // Auto-completar datos cuando se selecciona un cliente
-  // const handleClientSelect = React.useCallback((clientId: number) => {
-  //   if (clientId > 0) {
-  //     const client = mockClients.find(c => c.id === clientId);
-  //     if (client) {
-  //       form.setValue('identification', client.identification);
-  //       form.setValue('name', client.name);
-  //       form.setValue('contact', client.contact);
-  //       form.setValue('email', client.email);
-  //       form.setValue('address', client.address);
-  //     }
-  //   }
-  // }, [form]);
-
-  // // Función para guardar datos en el store
-  // const saveToStore = React.useCallback(() => {
-  //   const formData = form.getValues();
-  //   setClientData(formData);
-  // }, [form, setClientData]);
-
-  // // Función para validar y guardar
-  // const validateAndSave = React.useCallback(async () => {
-  //   const isValid = await form.trigger();
-  //   if (isValid) {
-  //     saveToStore();
-  //     return true;
-  //   }
-  //   return false;
-  // }, [form, saveToStore]);
-
-  // // Exponer las funciones a través de ref
-  // useImperativeHandle(ref, () => ({
-  //   saveToStore,
-  //   validateAndSave
-  // }), [saveToStore, validateAndSave]);
 
   return (
     <div>
       <FilterClient />
       <form onSubmit={handleSubmit(onSubmit)}>
+        {/* Campo de Identificación */}
+        <div className="grid grid-cols-2 gap-6 items-center py-2">
+          <div className="space-y-2 mb-2 flex flex-col justify-center">
+            <Label htmlFor="identification">Identificación *</Label>
+            <Controller
+              name="identification"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="identification"
+                  placeholder="Identificación"
+                  className={`py-5 ${errors.identification ? "border-red-500" : ""}`}
+                />
+              )}
+            />
+            {errors.identification && (
+              <p className="text-sm text-red-500">{errors.identification.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2 mb-2 flex flex-col justify-center">
+            <Label htmlFor="tipoPlan">Tipo de Plan *</Label>
+            <Controller
+              name="tipoPlan"
+              control={control}
+              render={({ field }) => (
+                <SelectSimple
+                  value={String(field.value)}
+                  onChange={(value) => field.onChange(Number(value))}
+                  id="tipoPlan"
+                  placeholder="Selecciona tipo de plan"
+                  options={[
+                    { label: "Voluntario", value: "1" },
+                    { label: "Obligatorio", value: "2" },
+                  ]}
+                  error={!!errors.tipoPlan}
+                  className="mt-1 h-10"
+                />
+              )}
+            />
+            {errors.tipoPlan && (
+              <p className="text-sm text-red-500">{errors.tipoPlan.message}</p>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-6  items-center  py-2">
           <div className="space-y-2 mb-2 flex flex-col justify-center">
             <Label htmlFor="identificacion">Nombre *</Label>
@@ -256,14 +268,22 @@ const ClientInformation = forwardRef<
           </div>
 
           <div className="space-y-2 mb-2 flex flex-col justify-center">
-            <Label htmlFor="identificacion">Dirección *</Label>
+            <Label htmlFor="address">Dirección *</Label>
             <Controller
               name="address"
               control={control}
               render={({ field }) => (
-                <Input {...field} id="address" placeholder="Dirección" />
+                <Input 
+                  {...field} 
+                  id="address" 
+                  placeholder="Dirección"
+                  className={`py-5 ${errors.address ? "border-red-500" : ""}`}
+                />
               )}
             />
+            {errors.address && (
+              <p className="text-sm text-red-500">{errors.address.message}</p>
+            )}
           </div>
         </div>
 
@@ -288,6 +308,9 @@ const ClientInformation = forwardRef<
                 />
               )}
             />
+            {errors.office && (
+              <p className="text-sm text-red-500">{errors.office.message}</p>
+            )}
           </div>
 
           {/* Segundo Select dinámico */}
@@ -301,7 +324,7 @@ const ClientInformation = forwardRef<
 
               return (
                 <FormItem className="flex flex-col ">
-                  <FormLabel>Seleccione el agente</FormLabel>
+                  <FormLabel>Seleccione el agente *</FormLabel>
                   <Popover open={openAgent} onOpenChange={setOpenAgent}>
                     <PopoverTrigger asChild>
                       <FormControl className="py-5">
@@ -314,10 +337,6 @@ const ClientInformation = forwardRef<
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          {/* {selected
-                            ? `${selected.label} - ${selected.subLabel ?? ""}`
-                            : "Seleccionar..."} */}
-
                           {selected ? `${selected.label}` : "Seleccionar..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -334,10 +353,11 @@ const ClientInformation = forwardRef<
                             {dynamicOptions.map((item) => (
                               <CommandItem
                                 key={item.id}
-                                // value={`${item.label} ${item.subLabel ?? ""}`}
-                                value={`${item.label}?? ""}`}
+                                value={`${item.label}`}
                                 onSelect={() => {
                                   field.onChange(item.id);
+                                  // También actualizar el campo agent con el nombre
+                                  setValue("agent", item.label);
                                   setOpenAgent(false);
                                 }}
                               >
@@ -353,11 +373,6 @@ const ClientInformation = forwardRef<
                                   <span className="font-medium">
                                     {item.label}
                                   </span>
-                                  {/* {item.subLabel && (
-                                    <span className="text-sm text-muted-foreground">
-                                      {item.subLabel}
-                                    </span>
-                                  )} */}
                                 </div>
                               </CommandItem>
                             ))}
@@ -367,9 +382,26 @@ const ClientInformation = forwardRef<
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
+                  {errors.clientChoosen && (
+                    <p className="text-sm text-red-500">{errors.clientChoosen.message}</p>
+                  )}
                 </FormItem>
               );
             }}
+          />
+
+          {/* Campo oculto para agent */}
+          <Controller
+            name="agent"
+            control={control}
+            render={({ field }) => (
+              <div>
+                <input type="hidden" {...field} />
+                {errors.agent && (
+                  <p className="text-sm text-red-500">{errors.agent.message}</p>
+                )}
+              </div>
+            )}
           />
         </div>
       </form>

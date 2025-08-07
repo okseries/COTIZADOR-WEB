@@ -12,11 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
 import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
+import { useClientSearch } from "../hooks/useClientSearch";
+import { useGetClient } from "../hooks/useGetClient";
+import { ClientByIdentification } from "../services/client.services";
 
 const FilterClient = () => {
 
   const { data: plans } = usePlans();
   const { data: subPlans } = useSubPlansType();
+  const { setSearchData } = useClientSearch();
+
 
   const {
     control,
@@ -34,8 +39,22 @@ const FilterClient = () => {
     },
   });
 
+  const onSubmit = async  (data: FiltrarClientFormValues) => {
+    // Guardar los datos de búsqueda para que los use ClientInformation
+
+    const response = await ClientByIdentification(data.identificacion, +data.tipoDocumento);
+    setSearchData(data);
+
+console.log('Cliente encontrado:', response);
+
+    
+    // Aquí podrías hacer una llamada a la API para buscar el cliente
+    // Si no se encuentra, ClientInformation usará estos datos para prellenar el formulario
+    console.log('Datos de búsqueda:', data);
+  };
+
   return (
-    <form onSubmit={handleSubmit(() => {})}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       {/* filtrar cliente */}
       <div className="grid grid-cols-5 gap-6  items-center  py-2">
         <div className="space-y-2 flex flex-col justify-center">

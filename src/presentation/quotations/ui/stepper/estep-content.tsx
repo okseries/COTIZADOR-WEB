@@ -1,8 +1,9 @@
 import React, { useRef } from 'react'
 import ClientInformation, { ClientInformationRef } from '../../../client/ui/ClientInformation';
 import StepButton from './stepButtom';
-import useStepperStore from '../../store/useStepperStore';
+import { useQuotationStore } from '../../store/useQuotationStore';
 import CategoryPlan from '@/presentation/plans/ui/CategoryPlan';
+import { ClientSearchProvider } from '@/presentation/client/hooks/useClientSearch';
 
 interface Props {
     step: string;
@@ -10,27 +11,24 @@ interface Props {
 }
 
 const StepContent = ({ step, setStep }: Props) => {
-  const { isStepValid, generateQuotationObject } = useStepperStore();
+  const { getFinalObject, isComplete } = useQuotationStore();
   const clientInfoRef = useRef<ClientInformationRef>(null);
 
-
-
   const handleNext = async (nextStep: string) => {
-    setStep(nextStep);
-  if (step === "step1") {
-    const isValid = await clientInfoRef.current?.validateAndSave();
-    alert(`Paso 1 validado: ${isValid}`);
-    if (isValid) {
+    if (step === "step1") {
+      const isValid = await clientInfoRef.current?.validateAndSave();
+      if (isValid) {
+        setStep(nextStep);
+      }
+      return; // evita continuar si no es válido
     }
-    return; // evita continuar si no es válido
-  }
 
-  setStep(nextStep);
-};
+    setStep(nextStep);
+  };
 
   const handleFinish = () => {
-    const quotationObject = generateQuotationObject();
-    if (quotationObject) {
+    const quotationObject = getFinalObject();
+    if (isComplete()) {
       console.log('🚀 Objeto de cotización generado:', quotationObject);
       // Aquí harías la llamada a la API
     } else {
@@ -39,19 +37,20 @@ const StepContent = ({ step, setStep }: Props) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-10 h-[500px] flex flex-col gap-8 border border-border overflow-auto">
-        {step === "step1" && (
-          <>
-            <ClientInformation ref={clientInfoRef} />
-            <div className="flex justify-end">
-              <StepButton
-                onClick={() => handleNext("step2")}
-                isNext={true}
-                isDisabled={false}
-              />
-            </div>
-          </>
-        )}
+    <ClientSearchProvider>
+      <div className="bg-white rounded-2xl shadow-lg p-10 h-[500px] flex flex-col gap-8 border border-border overflow-auto">
+          {step === "step1" && (
+            <>
+              <ClientInformation ref={clientInfoRef} />
+              <div className="flex justify-end">
+                <StepButton
+                  onClick={() => handleNext("step2")}
+                  isNext={true}
+                  isDisabled={false}
+                />
+              </div>
+            </>
+          )}
         {step === "step2" && (
           <>
             <CategoryPlan/>
@@ -64,7 +63,7 @@ const StepContent = ({ step, setStep }: Props) => {
               <StepButton
                 onClick={() => handleNext("step3")}
                 isNext={true}
-                isDisabled={!isStepValid("step2")}
+                isDisabled={false}
               />
             </div>
           </>
@@ -81,7 +80,7 @@ const StepContent = ({ step, setStep }: Props) => {
               <StepButton
                 onClick={() => handleNext("step4")}
                 isNext={true}
-                isDisabled={!isStepValid("step3")}
+                isDisabled={false}
               />
             </div>
           </>
@@ -98,7 +97,7 @@ const StepContent = ({ step, setStep }: Props) => {
               <button
                 className="bg-green-600 text-white px-8 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition text-base shadow"
                 onClick={handleFinish}
-                disabled={!isStepValid("step4")}
+                disabled={!isComplete()}
               >
                 Generar Cotización
               </button>
@@ -106,6 +105,7 @@ const StepContent = ({ step, setStep }: Props) => {
           </>
         )}
       </div>
+    </ClientSearchProvider>
   )
 }
 

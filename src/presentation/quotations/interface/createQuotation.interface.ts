@@ -1,6 +1,6 @@
 export interface QuotationRequest {
-  user: string;
-  cliente: Cliente;
+  user: string | null;
+cliente: Cliente | null;
   planes: Plan[];
 }
 
