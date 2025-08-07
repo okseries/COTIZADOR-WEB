@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import {
   FiltrarClientFormValues,
   filtrarClientSchema,
-} from "../../quotations/schema/filtrar-client.schema";
+} from "../schema/filtrar-client.schema";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

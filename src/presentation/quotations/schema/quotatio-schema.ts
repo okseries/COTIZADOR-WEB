@@ -1,3 +1,4 @@
+import { clienteSchema } from "@/presentation/client/schema/ClientInfo.schema";
 import { z } from "zod";
 
 // Schema para afiliados
@@ -34,18 +35,7 @@ export const planSchema = z.object({
   tipo: z.string().min(1, "El tipo es requerido"),
 });
 
-// Schema para cliente
-export const clienteSchema = z.object({
-  clientChoosen: z.number().min(1, "Debe seleccionar un cliente"),
-  identification: z.string().min(1, "La identificación es requerida"),
-  name: z.string().min(1, "El nombre es requerido"),
-  contact: z.string().min(1, "El contacto es requerido"),
-  email: z.email("Debe ser un email válido"),
-  address: z.string().min(1, "La dirección es requerida"),
-  office: z.string().min(1, "La oficina es requerida"),
-  agent: z.string().min(1, "El agente es requerido"),
-  tipoPlan: z.number().min(1, "Debe seleccionar un tipo de plan"),
-});
+
 
 // Schema principal para cotización
 export const quotationSchema = z.object({
@@ -55,7 +45,6 @@ export const quotationSchema = z.object({
 });
 
 export type QuotationFormValues = z.infer<typeof quotationSchema>;
-export type ClienteFormValues = z.infer<typeof clienteSchema>;
 export type PlanFormValues = z.infer<typeof planSchema>;
 export type AfiliadoFormValues = z.infer<typeof afiliadoSchema>;
 export type OpcionalFormValues = z.infer<typeof opcionalSchema>;

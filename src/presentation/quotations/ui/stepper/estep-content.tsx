@@ -16,11 +16,11 @@ const StepContent = ({ step, setStep }: Props) => {
 
 
   const handleNext = async (nextStep: string) => {
+    setStep(nextStep);
   if (step === "step1") {
     const isValid = await clientInfoRef.current?.validateAndSave();
     alert(`Paso 1 validado: ${isValid}`);
     if (isValid) {
-      setStep(nextStep);
     }
     return; // evita continuar si no es válido
   }

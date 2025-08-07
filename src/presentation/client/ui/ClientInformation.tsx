@@ -29,10 +29,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { forwardRef, use, useImperativeHandle, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import {
-  clienteSchema,
-  ClienteFormValues,
-} from "../../quotations/schema/quotatio-schema";
+
 import useStepperStore from "../../quotations/store/useStepperStore";
 import {
   mockAgents,
@@ -50,6 +47,7 @@ import {
 } from "@/presentation/helpers/auxs.service";
 import { useDynamicSelectOptions } from "@/presentation/client/hooks/useDynamicSelectOptions";
 import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { ClienteFormValues, clienteSchema } from "../schema/ClientInfo.schema";
 
 interface ClientInformationProps {
   onFormChange?: () => void;
@@ -68,8 +66,6 @@ const ClientInformation = forwardRef<
 
   // Estados para los popovers
   const [openAgent, setOpenAgent] = useState(false);
-  const [openOffice, setOpenOffice] = useState(false);
-  const [openPlanType, setOpenPlanType] = useState(false);
 
   const {
     control,
@@ -109,6 +105,7 @@ const ClientInformation = forwardRef<
   // Función para validar y guardar
   const validateAndSave = React.useCallback(async () => {
     const isValid = await trigger();
+    
     if (isValid) {
       saveToStore();
       return true;
@@ -123,6 +120,7 @@ const ClientInformation = forwardRef<
   }));
 
   const onSubmit = (data: ClienteFormValues) => {
+    alert("Datos guardados correctamente");
     setClientData(data);
     setCliente({
       clientChoosen: data.clientChoosen,

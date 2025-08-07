@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
-import { ClienteFormValues, PlanFormValues, QuotationFormValues } from '../schema/quotatio-schema';
+import {  PlanFormValues, QuotationFormValues } from '../schema/quotatio-schema';
+import { ClienteFormValues } from '@/presentation/client/schema/ClientInfo.schema';
 
 interface StepperState {
   // Estado actual del stepper
