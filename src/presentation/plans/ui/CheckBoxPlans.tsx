@@ -10,16 +10,19 @@ interface Props {
   onChange?: (checked: boolean) => void
 }
 
-const CheckBoxPlans = ({ plan, isChecked= false, onChange }: Props) => {
+const CheckBoxPlans = ({ plan, isChecked = false, onChange }: Props) => {
+  const handleCheckedChange = (checked: boolean | string) => {
+    onChange?.(Boolean(checked))
+  }
+
   return (
-     <div className="flex flex-col gap-6">
-     
-      <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
+    <div className="flex flex-col gap-6">
+      <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950 cursor-pointer">
         <Checkbox
-          id="toggle-2"
-          defaultChecked={isChecked}
+          id={`plan-${plan.id}`}
+          checked={isChecked}
           className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
-          onCheckedChange={onChange}
+          onCheckedChange={handleCheckedChange}
         />
         <div className="grid gap-1.5 font-normal">
           <p className="text-sm leading-none font-medium">
