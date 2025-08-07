@@ -26,7 +26,7 @@ const PlanesResumen = ({ planes }: Props) => {
         <div className="space-y-4">
           {/* Header */}
           <div className="grid grid-cols-3 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
-            <div>Total Afiliado</div>
+            <div>Total Planes</div>
             <div>Cantidad</div>
             <div>Total Monto</div>
           </div>

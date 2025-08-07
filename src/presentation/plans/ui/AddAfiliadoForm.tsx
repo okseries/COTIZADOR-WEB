@@ -128,7 +128,7 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
           </Label>
           <Select value={parentescoId} onValueChange={setParentescoId}>
             <SelectTrigger className={`h-10 ${errors.parentesco ? 'border-red-500' : ''}`}>
-              <SelectValue placeholder="Seleccionar parentesco" />
+              <SelectValue placeholder="Seleccionar" />
             </SelectTrigger>
             <SelectContent>
               {parentescos?.map((parentesco) => (
@@ -170,7 +170,7 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
             {loadingPrima ? (
               <LoadingSpinner className="h-4 w-4 mr-2" />
             ) : (
-              `DOP ${prima ? prima.toFixed(2) : shouldFetchPrima ? '0.00' : '--'}`
+              `RD$ ${prima ? prima.toFixed(2) : shouldFetchPrima ? '0.00' : '--'}`
             )}
           </div>
         </div>
