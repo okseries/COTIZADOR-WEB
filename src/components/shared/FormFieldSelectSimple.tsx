@@ -39,7 +39,7 @@ export function SelectSimple({
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
         id={id}
-        className={`w-full ${error ? "border-red-500" : ""} ${className}`}
+        className={`w-full py-5 ${error ? "border-red-500" : ""} ${className}`}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
