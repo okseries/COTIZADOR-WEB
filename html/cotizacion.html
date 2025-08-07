@@ -1,53 +1,135 @@
-<!-- cotizacion.html (pantalla del simulador de cotización) -->
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simulador de Cotización | Futuro ARS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: '#003E7E',
-              primaryLight: '#005BBB',
-              textColor: '#1f2937',
-            },
-          },
-        },
-      };
-    </script>
-  </head>
-  <body class="bg-gray-100 min-h-screen p-6">
-    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md">
-      <h1 class="text-2xl font-bold text-primary mb-6">Simulador de Cotización</h1>
-      <form class="grid md:grid-cols-2 gap-6">
-        <div>
-          <label class="block font-medium mb-1">Nombre</label>
-          <input type="text" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight" />
-        </div>
-        <div>
-          <label class="block font-medium mb-1">Correo</label>
-          <input type="email" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight" />
-        </div>
-        <div>
-          <label class="block font-medium mb-1">Plan</label>
-          <select class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight">
-            <option>Básico</option>
-            <option>Intermedio</option>
-            <option>Premium</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-medium mb-1">Dependientes</label>
-          <input type="number" min="0" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-primaryLight" />
-        </div>
-        <div class="md:col-span-2">
-          <button type="submit" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primaryLight transition w-full">Calcular Cotización</button>
-        </div>
-      </form>
-    </div>
-  </body>
-</html>
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { AuthResponse } from '../interface/auth.interface'
+import { jwtDecode } from 'jwt-decode'
+
+export interface User {
+  exp: number;
+  aud: string;
+  data: {
+    id: string;
+    user: string;
+    nombre: string;
+    apellido: string;
+    email: string;
+  };
+}
+
+interface AuthState {
+  // Estado de cliente
+  user: User | null
+  isAuthenticated: boolean
+  isChecking: boolean
+  token: string | null
+  
+  // Acciones para actualizar el estado local
+  setUser: (user: User | null) => void
+  setToken: (token: string | null) => void
+  setAuthenticated: (isAuth: boolean) => void
+  setChecking: (checking: boolean) => void
+  logout: () => void
+  initializeAuth: () => void
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      // Estado inicial
+      user: { exp: 0, aud: '', data: { id: '1', user: 'malfry.perez', nombre: 'malfry', apellido: 'natanael', email: 'malfryrd@gmail.com' } },
+      isAuthenticated: true,
+      isChecking: false, // Inicia en true mientras verifica
+      token: null,
+
+      // Acciones para el estado local
+      setUser: (user) => set({ user }),
+      setToken: (token) => set({ token }),
+      setAuthenticated: (isAuth) => set({ isAuthenticated: isAuth }),
+      setChecking: (checking) => set({ isChecking: checking }),
+      
+      logout: () => {
+        // Limpiar localStorage
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("access_token")
+        }
+        set({
+          user: null,
+          isAuthenticated: false,
+          token: null
+        })
+      },
+
+      // Función para inicializar el estado de autenticación al cargar la app
+      initializeAuth: () => {
+        set({ isChecking: true })
+        
+        if (typeof window !== "undefined") {
+          const token = localStorage.getItem("access_token")
+          if (token) {
+            try {
+              const decodedUser = jwtDecode<User>(token)
+              
+              // Verificar si el token no ha expirado
+              const currentTime = Date.now() / 1000
+              if (decodedUser.exp > currentTime) {
+                set({
+                  user: decodedUser,
+                  token: token,
+                  isAuthenticated: true,
+                  isChecking: false
+                })
+              } else {
+                // Token expirado, limpiar
+                localStorage.removeItem("access_token")
+                set({
+                  user: null,
+                  token: null,
+                  isAuthenticated: false,
+                  isChecking: false
+                })
+              }
+            } catch (error) {
+              // Token inválido, limpiar
+              localStorage.removeItem("access_token")
+              set({
+                user: null,
+                token: null,
+                isAuthenticated: false,
+                isChecking: false
+              })
+            }
+          } else {
+            // No hay token
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              isChecking: false
+            })
+          }
+        }
+      }
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      // Persistir todos los datos de autenticación
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        token: state.token
+      })
+    }
+  )
+)
+
+// Hook optimizado para leer estado de auth
+export const useAuth = () => {
+  const { user, isAuthenticated, isChecking, token } = useAuthStore()
+  return { user, isAuthenticated, isChecking, token }
+}
+
+//Hook para acciones de auth (sin persistir)
+export const useAuthActions = () => {
+  const { setUser, setToken, setAuthenticated, setChecking, logout, initializeAuth } = useAuthStore()
+  return { setUser, setToken, setAuthenticated, setChecking, logout, initializeAuth }
+}
