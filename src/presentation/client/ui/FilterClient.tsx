@@ -16,11 +16,15 @@ import { LoadingSpinner } from "@/components/shared/loading";
 import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
 import { IdentificationInput } from "./IdentificationInput";
 import { getCleanIdentification } from "../helpers/indentification-format";
+import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 
 const FilterClient = () => {
   const { setSearchData, setClientData } = useClientSearch();
   const { filterData } = useQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [openAlertDialog, setOpenAlertDialog] = useState(false);
+  const [alertDialogMessage, setAlertDialogMessage] = useState("");
+  const [alertDialogTitle, setAlertDialogTitle] = useState("");
 
   const {
     control,
@@ -95,7 +99,9 @@ const FilterClient = () => {
         setClientData(response);
         console.log("✅ Cliente encontrado:", response);
       } else {
-        alert("Cliente no encontrado");
+        setAlertDialogTitle("Cliente no encontrado");
+        setAlertDialogMessage(`No se encontró ningún cliente con la identificación: ${cleanIdentification}`);
+        setOpenAlertDialog(true);
         setClientData(null);
         console.log("❌ Cliente no encontrado");
       }
@@ -147,7 +153,6 @@ const FilterClient = () => {
             {/* Botón de búsqueda */}
             <div className="flex justify-start">
               <Button
-              
                 type="submit"
                 disabled={isLoading}
                 className="h-10.5 px-6 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2"
@@ -168,6 +173,14 @@ const FilterClient = () => {
           </div>
         </form>
       </CardContent>
+      {openAlertDialog && (
+        <ThemedAlertDialog
+          onClose={() => setOpenAlertDialog(false)}
+          open={openAlertDialog}
+          title={alertDialogTitle}
+          message={alertDialogMessage}
+        />
+      )}
     </Card>
   );
 };

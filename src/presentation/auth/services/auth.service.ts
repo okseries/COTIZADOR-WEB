@@ -13,20 +13,57 @@ export const authService = {
    */
   async login(payload: loginPayload): Promise<AuthResponse> {
     try {
-      const { data } = await apiClient.post<AuthResponse>("/login", payload);
+      console.log("=== AUTH SERVICE LOGIN ===");
+      console.log("Enviando credenciales:", payload);
+      
+      const response = await apiClient.post<AuthResponse>("/login", payload);
+      console.log("Respuesta completa:", response);
+      console.log("Status:", response.status);
+      console.log("Data:", response.data);
 
+      const { data } = response;
+
+      // Verificar si la respuesta contiene un error, incluso con status 200/201
+      if (data && typeof data === 'object' && 'ERROR' in data) {
+        const errorMessage = (data as { ERROR: string }).ERROR;
+        console.log("Error detectado en respuesta exitosa:", errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      // Verificar que tenemos un token válido
+      if (!data.token) {
+        console.error("No se recibió token en la respuesta");
+        throw new Error('No se recibió token de autenticación');
+      }
+
+      console.log("Login exitoso, token recibido");
       return data; // Retorna todo el objeto { token: "..." }
     } catch (error: unknown) {
-      // Si el error ya tiene un mensaje personalizado (del servidor), usarlo
-      if (typeof error === "object" && error !== null && "message" in error && !("response" in error)) {
+      console.log("=== ERROR EN AUTH SERVICE ===");
+      console.log("Error capturado:", error);
+      
+      // Si el error ya es un Error object, simplemente re-lanzarlo
+      if (error instanceof Error) {
+        console.log("Re-lanzando error existente:", error.message);
         throw error;
       }
-      // Manejo más específico de errores de red/HTTP
+
+      // Manejo de errores de red/HTTP
       let message = "Error al conectar con el servidor";
       if (typeof error === "object" && error !== null && "response" in error) {
         const response = (error as { response?: { data?: { ERROR?: string, message?: string, error?: string } } }).response;
-        message = response?.data?.ERROR || response?.data?.message || response?.data?.error || message;
+        console.log("Error response data:", response?.data);
+        
+        if (response?.data?.ERROR) {
+          message = response.data.ERROR;
+        } else if (response?.data?.message) {
+          message = response.data.message;
+        } else if (response?.data?.error) {
+          message = response.data.error;
+        }
       }
+      
+      console.log("Lanzando error final:", message);
       throw new Error(message);
     }
   },

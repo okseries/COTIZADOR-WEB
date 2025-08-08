@@ -76,7 +76,7 @@ const FilterClientOld = () => {
       setIsLoading(false);
 
     } else {
-      alert('Cliente no encontrado');
+      alert('Cliente no encontradoasfasfasfasfasfas');
       setClientData(null);
       console.log('Cliente no encontrado');
       setIsLoading(false);

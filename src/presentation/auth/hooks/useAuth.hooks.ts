@@ -23,15 +23,21 @@ export const useLogin = () => {
     },
     
     onSuccess: (data: AuthResponse) => {
+      console.log("=== LOGIN SUCCESS ===");
+      console.log("Respuesta del servidor:", data);
+      
       // Verificar que tenemos un token válido antes de proceder
       if (!data.token || typeof data.token !== 'string') {
+        console.error("Token inválido recibido:", data.token);
         setChecking(false);
-        return;
+        throw new Error('Token de autenticación inválido');
       }
 
       try {
         // Decodificar el token para obtener información del usuario
         const decodedUser = jwtDecode<User>(data.token);
+        console.log("Usuario decodificado:", decodedUser);
+        
         // Guardar en localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("access_token", data.token)
@@ -43,17 +49,26 @@ export const useLogin = () => {
         setAuthenticated(true)
         setChecking(false)
         
+        console.log("Autenticación exitosa, redirigiendo...");
         // Redirigir al dashboard
         router.push('/dashboard')
         
-      } catch {
-                setChecking(false);
-                // Aquí podrías mostrar un error específico de token inválido
+      } catch (error) {
+        console.error("Error decodificando token:", error);
+        setChecking(false);
+        // Lanzar error específico para token inválido
+        throw new Error('Token de autenticación inválido')
       }
     },
     
-    onError: () => {
+    onError: (error: any) => {
+      console.log("=== LOGIN ERROR ===");
+      console.log("Error recibido:", error);
+      console.log("Tipo de error:", typeof error);
+      console.log("Error message:", error?.message);
+      
       setChecking(false)
+      // No re-lanzar el error aquí, React Query ya lo maneja
     }
   })
 }
