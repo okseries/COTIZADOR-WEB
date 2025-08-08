@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -85,16 +84,16 @@ const ClientInformation = forwardRef<
     },
   });
 
+  // Función para guardar datos en el store
+  const saveToStore = React.useCallback(() => {
+    const formData = getValues();
+    setCliente(formData);
+  }, [getValues, setCliente]);
+
   // Efecto para resetear el formulario cuando cambien los datos del store
   React.useEffect(() => {
     if (cliente) {
-      // Si hay clientData disponible, usar ese nombre en lugar del del store
       const nameToUse = clientData?.NOMBRE_COMPLETO || cliente.name;
-      
-      console.log('=== RESET FORMULARIO ===');
-      console.log('cliente.name:', cliente.name);
-      console.log('clientData?.NOMBRE_COMPLETO:', clientData?.NOMBRE_COMPLETO);
-      console.log('nameToUse:', nameToUse);
       
       reset({
         clientChoosen: cliente.clientChoosen,
@@ -114,10 +113,8 @@ const ClientInformation = forwardRef<
   // Efecto para llenar el formulario con datos de búsqueda (solo identificación)
   React.useEffect(() => {
     if (searchData) {
-      // Solo llenar la identificación desde el filtro
       setValue('identification', searchData.identificacion);
       
-      // Guardar los datos del filtro para persistencia
       if (!filterData || 
           filterData.tipoDocumento !== searchData.tipoDocumento ||
           filterData.identificacion !== searchData.identificacion) {
@@ -129,10 +126,18 @@ const ClientInformation = forwardRef<
     }
   }, [searchData, setValue, setFilterData, filterData]);
 
-  const canal = watch("office"); // para obtener el valor seleccionado
-  const { data: dynamicOptions, isLoading } = useDynamicSelectOptions(canal);
-  
-  // Obtener opciones de planes
+  // Efecto para llenar el nombre del cliente encontrado
+  React.useEffect(() => {
+    if (clientData?.NOMBRE_COMPLETO) {
+      setValue('name', clientData.NOMBRE_COMPLETO);
+      setTimeout(() => {
+        saveToStore();
+      }, 100);
+    }
+  }, [clientData, setValue, saveToStore]);
+
+  const canal = watch("office");
+  const { data: dynamicOptions = [] } = useDynamicSelectOptions(canal);
   const { data: plans } = usePlans();
   const { data: subPlans } = useSubPlansType();
 
@@ -143,37 +148,9 @@ const ClientInformation = forwardRef<
     }
   }, [dynamicOptions, setAgentOptions, agentOptions]);
 
-  // Función para guardar datos en el store
-  const saveToStore = React.useCallback(() => {
-    const formData = getValues();
-    setCliente(formData);
-  }, [getValues, setCliente]);
-
-  // Efecto para llenar el nombre del cliente encontrado
-  React.useEffect(() => {
-    console.log('=== EFECTO NOMBRE CLIENTE ===');
-    console.log('clientData:', clientData);
-    console.log('clientData?.NOMBRE_COMPLETO:', clientData?.NOMBRE_COMPLETO);
-    
-    if (clientData?.NOMBRE_COMPLETO) {
-      console.log('✅ Llenando campo nombre con:', clientData.NOMBRE_COMPLETO);
-      setValue('name', clientData.NOMBRE_COMPLETO);
-      
-      // También disparar auto-save para persistir el nombre en el store
-      setTimeout(() => {
-        const currentValue = getValues('name');
-        console.log('✅ Valor actual del campo nombre después del setValue:', currentValue);
-        saveToStore(); // Auto-guardar para persistir el nombre
-      }, 100);
-    } else {
-      console.log('❌ No hay NOMBRE_COMPLETO disponible');
-    }
-  }, [clientData, setValue, getValues, saveToStore]);
-
   // Efecto para guardar automáticamente cuando cambien los campos importantes
   React.useEffect(() => {
     const subscription = watch((value, { name }) => {
-      // Auto-guardar cuando cambien campos importantes
       if (name === 'tipoPlan' || name === 'clientChoosen' || name === 'identification') {
         saveToStore();
       }
@@ -184,21 +161,12 @@ const ClientInformation = forwardRef<
   // Función para validar y guardar
   const validateAndSave = React.useCallback(async () => {
     const isValid = await trigger();
-    
-    if (!isValid) {
-      // Mostrar errores específicos para debug
-      const currentErrors = errors;
-      console.log("Errores de validación:", currentErrors);
-      // alert(`Formulario inválido. Errores: ${Object.keys(currentErrors).join(", ")}`);
-    } else {
-    }
-    
     if (isValid) {
       saveToStore();
       return true;
     }
     return false;
-  }, [trigger, saveToStore, errors]);
+  }, [trigger, saveToStore]);
 
   // Exponer las funciones al padre
   useImperativeHandle(ref, () => ({
@@ -208,7 +176,6 @@ const ClientInformation = forwardRef<
 
   const onSubmit = (data: ClienteFormValues) => {
     setCliente(data);
-    alert("Datos guardados correctamente");
   };
 
   return (
@@ -217,84 +184,13 @@ const ClientInformation = forwardRef<
       
       {/* Información del Cliente */}
       <Card className="shadow-sm border border-border/50">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold text-[#005BBB]">
-            Información del Cliente
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Complete la información requerida para el cliente
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Campos de tipo de póliza y sub tipo - fundamentales para la cotización */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="tipoPlan" className="text-sm font-medium text-foreground">
-                {errors.tipoPlan ? (
-                  <span className="text-destructive">{errors.tipoPlan.message}</span>
-                ) : (
-                  "Tipo de póliza *"
-                )}
-              </Label>
-              <Controller
-                name="tipoPlan"
-                control={control}
-                render={({ field }) => (
-                  <SelectSimple
-                    {...field}
-                    id="tipoPlan"
-                    placeholder="Selecciona tipo de póliza"
-                    value={String(field.value || "")}
-                    onChange={(value) => field.onChange(Number(value))}
-                    options={
-                      plans?.map((plan) => ({
-                        label: plan.tipoPlanName,
-                        value: String(plan.id),
-                      })) || []
-                    }
-                    error={!!errors.tipoPlan}
-                    className="h-11"
-                  />
-                )}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="clientChoosen" className="text-sm font-medium text-foreground">
-                {errors.clientChoosen ? (
-                  <span className="text-destructive">{errors.clientChoosen.message}</span>
-                ) : (
-                  "Sub tipo de póliza *"
-                )}
-              </Label>
-              <Controller
-                name="clientChoosen"
-                control={control}
-                render={({ field }) => (
-                  <SelectSimple
-                    {...field}
-                    id="clientChoosen"
-                    placeholder="Selecciona sub tipo"
-                    value={String(field.value || "")}
-                    onChange={(value) => field.onChange(Number(value))}
-                    options={
-                      subPlans?.map((plan) => ({
-                        label: plan.nameCotizante,
-                        value: String(plan.id),
-                      })) || []
-                    }
-                    error={!!errors.clientChoosen}
-                    className="h-11"
-                  />
-                )}
-              />
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-6 items-center py-2">
-              <div className="space-y-2 mb-2 flex flex-col justify-center">
-                <Label htmlFor="name">Nombre *</Label>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Información básica del cliente */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre completo *</Label>
                 <Controller
                   name="name"
                   control={control}
@@ -302,8 +198,8 @@ const ClientInformation = forwardRef<
                     <Input
                       {...field}
                       id="name"
-                      placeholder="Nombre"
-                      className={`py-5 ${errors.name ? "border-red-500" : ""}`}
+                      placeholder="Ingrese el nombre completo"
+                      className={`h-11 ${errors.name ? "border-red-500" : ""}`}
                     />
                   )}
                 />
@@ -312,8 +208,8 @@ const ClientInformation = forwardRef<
                 )}
               </div>
 
-              <div className="space-y-2 mb-2 flex flex-col justify-center">
-                <Label htmlFor="contact">Contacto *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="contact">Teléfono de contacto *</Label>
                 <Controller
                   name="contact"
                   control={control}
@@ -321,8 +217,8 @@ const ClientInformation = forwardRef<
                     <Input
                       {...field}
                       id="contact"
-                      placeholder="Contacto"
-                      className={`py-5 ${errors.contact ? "border-red-500" : ""}`}
+                      placeholder="Ingrese el número de teléfono"
+                      className={`h-11 ${errors.contact ? "border-red-500" : ""}`}
                     />
                   )}
                 />
@@ -332,9 +228,9 @@ const ClientInformation = forwardRef<
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 items-center py-2">
-              <div className="space-y-2 mb-2 flex flex-col justify-center">
-                <Label htmlFor="email">Correo *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo electrónico *</Label>
                 <Controller
                   name="email"
                   control={control}
@@ -343,8 +239,8 @@ const ClientInformation = forwardRef<
                       type="email"
                       {...field}
                       id="email"
-                      placeholder="Correo"
-                      className={`py-5 ${errors.email ? "border-red-500" : ""}`}
+                      placeholder="ejemplo@correo.com"
+                      className={`h-11 ${errors.email ? "border-red-500" : ""}`}
                     />
                   )}
                 />
@@ -353,7 +249,7 @@ const ClientInformation = forwardRef<
                 )}
               </div>
 
-              <div className="space-y-2 mb-2 flex flex-col justify-center">
+              <div className="space-y-2">
                 <Label htmlFor="address">Dirección *</Label>
                 <Controller
                   name="address"
@@ -362,8 +258,8 @@ const ClientInformation = forwardRef<
                     <Input 
                       {...field} 
                       id="address" 
-                      placeholder="Dirección"
-                      className={`py-5 ${errors.address ? "border-red-500" : ""}`}
+                      placeholder="Dirección completa"
+                      className={`h-11 ${errors.address ? "border-red-500" : ""}`}
                     />
                   )}
                 />
@@ -373,8 +269,68 @@ const ClientInformation = forwardRef<
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 items-center">
-              <div className="space-y-2 flex flex-col justify-center">
+            {/* Tipo de póliza y sub tipo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tipoPlan">Tipo de póliza *</Label>
+                <Controller
+                  name="tipoPlan"
+                  control={control}
+                  render={({ field }) => (
+                    <SelectSimple
+                      {...field}
+                      id="tipoPlan"
+                      placeholder="Selecciona tipo de póliza"
+                      value={String(field.value || "")}
+                      onChange={(value) => field.onChange(Number(value))}
+                      options={
+                        plans?.map((plan) => ({
+                          label: plan.tipoPlanName,
+                          value: String(plan.id),
+                        })) || []
+                      }
+                      error={!!errors.tipoPlan}
+                      className="h-11"
+                    />
+                  )}
+                />
+                {errors.tipoPlan && (
+                  <p className="text-sm text-red-500">{errors.tipoPlan.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="clientChoosen">Sub tipo de póliza *</Label>
+                <Controller
+                  name="clientChoosen"
+                  control={control}
+                  render={({ field }) => (
+                    <SelectSimple
+                      {...field}
+                      id="clientChoosen"
+                      placeholder="Selecciona sub tipo"
+                      value={String(field.value || "")}
+                      onChange={(value) => field.onChange(Number(value))}
+                      options={
+                        subPlans?.map((plan) => ({
+                          label: plan.nameCotizante,
+                          value: String(plan.id),
+                        })) || []
+                      }
+                      error={!!errors.clientChoosen}
+                      className="h-11"
+                    />
+                  )}
+                />
+                {errors.clientChoosen && (
+                  <p className="text-sm text-red-500">{errors.clientChoosen.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Canal y Agente */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="office">Canal *</Label>
                 <Controller
                   name="office"
@@ -390,7 +346,7 @@ const ClientInformation = forwardRef<
                         { label: "Negocios", value: "Negocios" },
                       ]}
                       error={!!errors.office}
-                      className="mt-1 h-10"
+                      className="h-11"
                     />
                   )}
                 />
@@ -409,27 +365,27 @@ const ClientInformation = forwardRef<
 
                   return (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Seleccione el agente *</FormLabel>
+                      <FormLabel>Agente *</FormLabel>
                       <Popover open={openAgent} onOpenChange={setOpenAgent}>
                         <PopoverTrigger asChild>
-                          <FormControl className="py-5">
+                          <FormControl>
                             <Button
                               variant="outline"
                               role="combobox"
                               aria-expanded={openAgent}
                               className={cn(
-                                "w-full justify-between",
+                                "w-full justify-between h-11",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
-                              {selected ? `${selected.label}` : "Seleccionar..."}
+                              {selected ? `${selected.label}` : "Seleccionar agente..."}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0">
                           <Command>
-                            <CommandInput placeholder="Buscar..." />
+                            <CommandInput placeholder="Buscar agente..." />
                             <CommandList>
                               <CommandEmpty>
                                 No se encontraron resultados.
@@ -453,11 +409,7 @@ const ClientInformation = forwardRef<
                                           : "opacity-0"
                                       )}
                                     />
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">
-                                        {item.label}
-                                      </span>
-                                    </div>
+                                    {item.label}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -466,9 +418,6 @@ const ClientInformation = forwardRef<
                         </PopoverContent>
                       </Popover>
                       <FormMessage />
-                      {errors.agentId && (
-                        <p className="text-sm text-red-500">{errors.agentId.message}</p>
-                      )}
                     </FormItem>
                   );
                 }}

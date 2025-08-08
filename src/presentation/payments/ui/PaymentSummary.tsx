@@ -65,15 +65,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          <Button
-            variant="outline"
-            onClick={onBack}
-            disabled={isSubmitting}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Anterior
-          </Button>
+          
           
           <Button
             onClick={onSubmit}
@@ -94,12 +86,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
           </Button>
         </div>
 
-        {/* Info Message */}
-        <div className="text-sm text-gray-500 mt-4">
-          <p>
-            Al finalizar la cotización, se generará un PDF que podrás descargar y se abrirá automáticamente en una nueva ventana.
-          </p>
-        </div>
+        
       </CardContent>
     </Card>
   );

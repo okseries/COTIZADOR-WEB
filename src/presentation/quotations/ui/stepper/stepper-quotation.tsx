@@ -16,9 +16,9 @@ export function Stepper() {
   const currentStepIdx = steps.findIndex((s) => s.key === currentStep);
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6">
       {/* Stepper Header limpio y sincronizado */}
-      <div className="flex justify-between items-center mb-10 px-2">
+      <div className="flex justify-between items-center mb-6 sm:mb-8 lg:mb-10 px-2">
         {steps.map((s, idx) => {
           const isActive = currentStep === s.key;
           const isCompleted = idx < currentStepIdx;
@@ -27,7 +27,7 @@ export function Stepper() {
           return (
             <div key={s.key} className="flex items-center flex-1">
               {/* Paso */}
-              <div className="flex flex-col items-center relative min-w-[70px] z-10">
+              <div className="flex flex-col items-center relative min-w-[60px] sm:min-w-[70px] z-10">
                 <motion.div
                   className="relative"
                   initial={false}
@@ -40,7 +40,7 @@ export function Stepper() {
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   <motion.div
-                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 text-base font-bold bg-white`}
+                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 text-sm sm:text-base font-bold bg-white`}
                     style={{
                       borderColor:
                         isActive || isCompleted ? "#005BBB" : "#D1D5DB",
@@ -82,7 +82,7 @@ export function Stepper() {
                   </motion.div>
                 </motion.div>
                 <span
-                  className={`mt-3 text-sm font-medium text-center leading-tight tracking-wide ${
+                  className={`mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-center leading-tight tracking-wide max-w-[80px] sm:max-w-none ${
                     isActive
                       ? "text-primary"
                       : isCompleted
@@ -97,7 +97,7 @@ export function Stepper() {
               {/* Línea entre pasos */}
               {!isLast && (
                 <div
-                  className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${
+                  className={`flex-1 h-0.5 sm:h-1 mx-1 sm:mx-2 rounded-full transition-all duration-300 ${
                     idx < currentStepIdx ? "bg-primary" : "bg-gray-200"
                   }`}
                 />

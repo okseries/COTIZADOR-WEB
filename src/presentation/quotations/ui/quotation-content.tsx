@@ -7,9 +7,11 @@ import { useForm, FormProvider } from "react-hook-form";
 const QuotationContent = () => {
   const methods = useForm();
   return (
-    <FormProvider {...methods}>
-      <Stepper/>
-    </FormProvider>
+    <div className="h-full w-full">
+      <FormProvider {...methods}>
+        <Stepper/>
+      </FormProvider>
+    </div>
   )
 }
 

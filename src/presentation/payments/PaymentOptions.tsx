@@ -48,17 +48,7 @@ export const PaymentOptions: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <CreditCard className="w-6 h-6 text-[#005BBB]" />
-            Opciones de Pago
-          </CardTitle>
-          <p className="text-gray-600">
-            Selecciona el período de pago para cada plan y revisa el resumen final de tu cotización.
-          </p>
-        </CardHeader>
-      </Card>
+     
 
       {/* Error Global */}
       {error && (
@@ -90,22 +80,7 @@ export const PaymentOptions: React.FC = () => {
         onBack={handleBack}
       />
 
-      {/* Instructions */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-2 text-sm text-gray-600">
-            <h4 className="font-medium text-gray-900">Información importante:</h4>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Los montos se calculan automáticamente según el período seleccionado</li>
-              <li>Mensual: Sin multiplicador adicional</li>
-              <li>Trimestral: Se multiplica por 3 meses</li>
-              <li>Semestral: Se multiplica por 6 meses</li>
-              <li>Anual: Se multiplica por 12 meses</li>
-              <li>El PDF se generará automáticamente al finalizar</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      
     </div>
   );
 };

@@ -31,9 +31,11 @@ export function AdminLayout({
         <Navbar/>
 
         {/* Page Content */}
-        <main className={cn("flex-1 overflow-hidden", className)}>
-          <div className="h-full p-4 overflow-hidden">
-            {children}
+        <main className={cn("flex-1 min-h-0", className)}>
+          <div className="h-full p-2 sm:p-4 lg:p-6 overflow-y-auto">
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
           </div>
         </main>
       </div>

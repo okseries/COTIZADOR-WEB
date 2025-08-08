@@ -92,15 +92,7 @@ const FilterClient = () => {
 
   return (
     <Card className="mb-6 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold text-[#005BBB] flex items-center gap-2">
-          <Search className="w-5 h-5" />
-          Buscar Cliente
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Ingrese el tipo de documento e identificación para buscar un cliente existente
-        </p>
-      </CardHeader>
+      
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
