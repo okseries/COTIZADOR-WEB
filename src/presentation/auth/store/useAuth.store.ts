@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { AuthResponse } from '../interface/auth.interface'
 import { jwtDecode } from 'jwt-decode'
 
 export interface User {
@@ -33,7 +32,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // Estado inicial
       user: null,
       isAuthenticated: false,
@@ -87,7 +86,7 @@ export const useAuthStore = create<AuthState>()(
                   isChecking: false
                 })
               }
-            } catch (error) {
+            } catch {
               // Token inválido, limpiar
               localStorage.removeItem("access_token")
               set({

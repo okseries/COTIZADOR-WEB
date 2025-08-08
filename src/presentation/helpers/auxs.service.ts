@@ -22,7 +22,7 @@ export const GetIntermediarios = async () => {
     try {
         const {data} = await apiClient.get<Intermediario[]>("/intermediarios");
         return data;
-    } catch (error) {
+    } catch {
         return [];
     }
 } 
@@ -31,7 +31,7 @@ export const GetSucursales = async () => {
     try {
         const {data} = await apiClient.get<Sucursal[]>("/sucursales");
         return data;
-    } catch (error) {
+    } catch {
         return [];
     }
 }
@@ -40,7 +40,7 @@ export const GetPromotores = async () => {
     try {
         const {data} = await apiClient.get<Promotor[]>("/promotores");
         return data;
-    } catch (error) {
+    } catch {
         return [];
     }
 }

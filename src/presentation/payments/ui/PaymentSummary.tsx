@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
-import { AlertCircle, Download, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Download } from 'lucide-react';
 
 interface PaymentSummaryProps {
   totalGeneral: number;
@@ -10,7 +10,7 @@ interface PaymentSummaryProps {
   isSubmitting: boolean;
   error: string | null;
   onSubmit: () => void;
-  onBack: () => void;
+  _onBack: () => void;
 }
 
 export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
@@ -19,7 +19,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
   isSubmitting,
   error,
   onSubmit,
-  onBack
+  ..._rest
 }) => {
   const formatCurrency = (amount: number) => {
     return `DOP${amount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

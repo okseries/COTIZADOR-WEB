@@ -105,10 +105,10 @@ export const usePaymentOptions = () => {
   }, [updatePlanByName]);
 
   // Validar si todos los planes tienen período seleccionado
-  const isFormValid = () => {
+  const isFormValid = useCallback(() => {
     return paymentPlans.length > 0 && 
            paymentPlans.every(plan => plan.selectedPeriod);
-  };
+  }, [paymentPlans]);
 
   // Calcular total general
   const getTotalGeneral = () => {
@@ -200,7 +200,7 @@ export const usePaymentOptions = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [authUser, cliente, paymentPlans, downloadPDF, clearQuotation, queryClient]);
+  }, [authUser, cliente, paymentPlans, downloadPDF, clearQuotation, queryClient, isFormValid]);
 
   return {
     paymentPlans,

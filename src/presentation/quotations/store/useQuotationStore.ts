@@ -12,11 +12,11 @@ interface QuotationState {
   cliente: Cliente | null;
   planes: Plan[];
   filterData: FilterData | null;
-  agentOptions: any[];
+  agentOptions: unknown[];
   setUser: (user: string) => void;
   setCliente: (cliente: Cliente) => void;
   setFilterData: (filterData: FilterData) => void;
-  setAgentOptions: (agents: any[]) => void;
+  setAgentOptions: (agents: unknown[]) => void;
   addPlan: (plan: Plan) => void;
   updateLastPlan: (plan: Partial<Plan>) => void;
   updatePlanByName: (planName: string, update: Partial<Plan>) => void;

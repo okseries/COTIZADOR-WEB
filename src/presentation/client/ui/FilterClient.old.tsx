@@ -11,17 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
-import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
 import { useClientSearch } from "../hooks/useClientSearch";
-import { useGetClient } from "../hooks/useGetClient";
 import { ClientByIdentification } from "../services/client.services";
 import { LoadingSpinner } from "@/components/shared/loading";
 import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
 
-const FilterClient = () => {
+const FilterClientOld = () => {
 
-  const { data: plans } = usePlans();
-  const { data: subPlans } = useSubPlansType();
   const { setSearchData, setClientData } = useClientSearch();
   const { filterData } = useQuotationStore();
   const [isLoading, setIsLoading] = useState( false);
@@ -32,7 +28,6 @@ const FilterClient = () => {
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
     getValues,
   } = useForm<FiltrarClientFormValues>({
     resolver: zodResolver(filtrarClientSchema),
@@ -165,3 +160,5 @@ const FilterClient = () => {
     </form>
   );
 };
+
+export default FilterClientOld;

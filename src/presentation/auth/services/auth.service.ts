@@ -16,17 +16,17 @@ export const authService = {
       const { data } = await apiClient.post<AuthResponse>("/login", payload);
 
       return data; // Retorna todo el objeto { token: "..." }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Si el error ya tiene un mensaje personalizado (del servidor), usarlo
-      if (error.message && !error.response) {
+      if (typeof error === "object" && error !== null && "message" in error && !("response" in error)) {
         throw error;
       }
       // Manejo más específico de errores de red/HTTP
-      const message =
-        error.response?.data?.ERROR ||
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Error al conectar con el servidor";
+      let message = "Error al conectar con el servidor";
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const response = (error as { response?: { data?: { ERROR?: string, message?: string, error?: string } } }).response;
+        message = response?.data?.ERROR || response?.data?.message || response?.data?.error || message;
+      }
       throw new Error(message);
     }
   },

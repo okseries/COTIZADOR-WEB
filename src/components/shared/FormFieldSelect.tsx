@@ -31,8 +31,8 @@ function FormFieldSelect<TOption, TForm extends FieldValues = FieldValues>({
   name,
   label,
   options = [],
-  getOptionLabel = (opt: TOption) => (opt as any).name,
-  getOptionValue = (opt: TOption) => (opt as any).id,
+  getOptionLabel = (opt: TOption) => (opt as unknown as { name: string }).name,
+  getOptionValue = (opt: TOption) => (opt as unknown as { id: string | number }).id,
   renderOption,
   placeholder = 'Seleccionar...',
   onChange

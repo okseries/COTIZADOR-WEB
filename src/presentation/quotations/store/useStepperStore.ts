@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { shallow } from 'zustand/shallow';
 import {  PlanFormValues, QuotationFormValues } from '../schema/quotatio-schema';
 import { ClienteFormValues } from '@/presentation/client/schema/ClientInfo.schema';
 

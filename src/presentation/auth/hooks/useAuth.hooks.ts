@@ -46,9 +46,9 @@ export const useLogin = () => {
         // Redirigir al dashboard
         router.push('/dashboard')
         
-      } catch (decodeError) {
-        setChecking(false);
-        // Aquí podrías mostrar un error específico de token inválido
+      } catch {
+                setChecking(false);
+                // Aquí podrías mostrar un error específico de token inválido
       }
     },
     

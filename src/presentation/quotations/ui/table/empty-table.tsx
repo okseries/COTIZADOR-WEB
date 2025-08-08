@@ -1,6 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
-import { FileSearch, PlusCircle } from "lucide-react";
+import { FileSearch } from "lucide-react";
 import NewQuotation from "./new-quotation";
 
 interface Props {

@@ -35,7 +35,7 @@ export const GetAllPlans = async (polizaType: number, planType: number) => {
       `/planes/${polizaType}/${planType}`
     );
     return data;
-  } catch (error) {
+  } catch {
     return [];
   }
 };

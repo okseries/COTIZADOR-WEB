@@ -1,6 +1,6 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -71,7 +71,7 @@ export default function QuotationTable({data, isLoading = false}: QuotationTable
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   // Reset página cuando cambia la búsqueda
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 
@@ -81,7 +81,7 @@ export default function QuotationTable({data, isLoading = false}: QuotationTable
     const halfVisible = Math.floor(maxVisiblePages / 2);
     
     let startPage = Math.max(currentPage - halfVisible, 1);
-    let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
+    const endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
     
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(endPage - maxVisiblePages + 1, 1);
@@ -158,7 +158,7 @@ export default function QuotationTable({data, isLoading = false}: QuotationTable
                 No se encontraron resultados
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                No hay cotizaciones que coincidan con "{searchTerm}"
+                No hay cotizaciones que coincidan con &quot;{searchTerm}&quot;
               </p>
               <Button
                 variant="outline"

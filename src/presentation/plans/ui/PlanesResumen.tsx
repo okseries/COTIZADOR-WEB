@@ -10,7 +10,8 @@ interface Props {
 const PlanesResumen = ({ planes }: Props) => {
   if (planes.length === 0) return null
 
-  const totalAfiliados = planes.reduce((acc, plan) => acc + plan.afiliados.length, 0)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _totalAfiliados = planes.reduce((acc, plan) => acc + plan.afiliados.length, 0)
   const totalMonto = planes.reduce((acc, plan) => {
     const planTotal = plan.afiliados.reduce((planAcc, afiliado) => 
       planAcc + parseFloat(afiliado.subtotal || '0'), 0)

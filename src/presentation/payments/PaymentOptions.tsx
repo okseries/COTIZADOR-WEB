@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { PlanPaymentCard } from './ui/PlanPaymentCard';
 import { PaymentSummary } from './ui/PaymentSummary';
 import { usePaymentOptions, PeriodoPago } from './hooks/usePaymentOptions';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { AlertCircle, CreditCard } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 export const PaymentOptions: React.FC = () => {
   const router = useRouter();
@@ -77,7 +77,7 @@ export const PaymentOptions: React.FC = () => {
         isSubmitting={isSubmitting}
         error={error}
         onSubmit={handleSubmit}
-        onBack={handleBack}
+        _onBack={handleBack}
       />
 
       

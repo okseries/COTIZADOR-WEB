@@ -13,8 +13,7 @@ export function AdminLayout({
   children, 
   className
 }: AdminLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  // ...existing code...
 //   const { user } = useAuth()
 
 //   // Log user for debugging

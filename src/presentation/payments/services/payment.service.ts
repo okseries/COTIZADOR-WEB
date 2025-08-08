@@ -48,21 +48,20 @@ class PaymentService {
     try {
       const response = await apiClient.post<QuotationResponse>('/cotizaciones', payload);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error en calculateQuotation:', error);
-      
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const errorResponse = error as { response?: { data?: { message?: string }, status?: number } };
+        if (errorResponse.response?.data?.message) {
+          throw new Error(errorResponse.response.data.message);
+        }
+        if (errorResponse.response?.status === 401) {
+          throw new Error('No autorizado. Por favor, inicia sesión nuevamente.');
+        }
+        if (errorResponse.response?.status && errorResponse.response.status >= 500) {
+          throw new Error('Error del servidor. Inténtalo de nuevo más tarde.');
+        }
       }
-      
-      if (error.response?.status === 401) {
-        throw new Error('No autorizado. Por favor, inicia sesión nuevamente.');
-      }
-      
-      if (error.response?.status >= 500) {
-        throw new Error('Error del servidor. Inténtalo de nuevo más tarde.');
-      }
-      
       throw new Error('Error al procesar la cotización. Verifica los datos e inténtalo de nuevo.');
     }
   }

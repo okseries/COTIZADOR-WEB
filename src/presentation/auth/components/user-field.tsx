@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Mail, User } from "lucide-react"
+import { User } from "lucide-react"
 
 import { UseFormRegister, FieldErrors } from "react-hook-form"
 import { LoginFormData } from "../schemas/auth.schema"

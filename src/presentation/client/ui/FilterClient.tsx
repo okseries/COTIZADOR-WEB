@@ -7,7 +7,7 @@ import {
   filtrarClientSchema,
 } from "../schema/filtrar-client.schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
 import { IdentificationInput } from "@/components/shared/IdentificationInput";

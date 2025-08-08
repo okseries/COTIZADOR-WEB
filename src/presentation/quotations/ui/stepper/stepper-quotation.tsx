@@ -12,7 +12,7 @@ const steps = [
 ];
 
 export function Stepper() {
-  const { currentStep, setCurrentStep, isStepValid } = useStepperStore();
+  const { currentStep, setCurrentStep, ..._rest } = useStepperStore();
   const currentStepIdx = steps.findIndex((s) => s.key === currentStep);
 
   return (
@@ -29,32 +29,24 @@ export function Stepper() {
               {/* Paso */}
               <div className="flex flex-col items-center relative min-w-[60px] sm:min-w-[70px] z-10">
                 <motion.div
-                  className="relative"
-                  initial={false}
-                  animate={{
-                    scale: isActive ? 1.18 : 1,
-                    boxShadow: isActive
-                      ? "0 4px 16px 0 rgba(0,91,187,0.10)"
-                      : "none",
-                  }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                      : isCompleted
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground border-2 border-muted-foreground/20"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
-                  <motion.div
-                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 text-sm sm:text-base font-bold bg-white`}
-                    style={{
-                      borderColor:
-                        isActive || isCompleted ? "#005BBB" : "#D1D5DB",
-                      color: isActive || isCompleted ? "#005BBB" : "#D1D5DB",
-                    }}
-                  >
+                  <motion.div className="absolute inset-0 rounded-full">
                     <AnimatePresence mode="wait">
-                      {isCompleted ? (
+                      {isCompleted && !isActive ? (
                         <motion.svg
                           key="check"
-                          className="w-5 h-5"
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-white m-auto"
                           fill="none"
                           stroke="currentColor"
-                          strokeWidth="2.5"
                           viewBox="0 0 24 24"
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -64,12 +56,14 @@ export function Stepper() {
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
+                            strokeWidth={3}
                             d="M5 13l4 4L19 7"
                           />
                         </motion.svg>
                       ) : (
                         <motion.span
                           key="number"
+                          className="text-xs sm:text-sm font-bold"
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0, opacity: 0 }}

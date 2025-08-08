@@ -88,7 +88,6 @@ const PlanTable = ({
                   value={odontologiaSelection}
                   onChange={(value) => onOdontologiaChange(planName, value)}
                   options={odontologiaOptions}
-                  planName={planName}
                 />
               </div>
               <div className="text-sm font-medium">

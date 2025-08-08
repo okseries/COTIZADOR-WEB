@@ -10,11 +10,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/presentation/auth/store/useAuth.store";
 import { useLogout } from "@/presentation/auth/hooks/useAuth.hooks";
-import Image from "next/image";
 
 export function Navbar() {
   const { user, isAuthenticated } = useAuth();
@@ -29,7 +28,6 @@ export function Navbar() {
       .slice(0, 2);
   };
 
-  // Usuario por defecto si no hay datos
   const userData = {
     name:
       isAuthenticated && user?.data?.nombre && user?.data?.apellido
@@ -38,7 +36,7 @@ export function Navbar() {
     email:
       isAuthenticated && user?.data?.email
         ? user.data.email
-        : "usuario@ejemplo.com",
+        : "usuario@ejemplo.com"
   };
 
   const handleLogout = () => {

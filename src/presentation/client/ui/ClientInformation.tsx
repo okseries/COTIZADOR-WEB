@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   FormControl,
   FormField,
@@ -50,7 +50,7 @@ export interface ClientInformationRef {
 const ClientInformation = forwardRef<
   ClientInformationRef,
   ClientInformationProps
->(({ onFormChange }, ref) => {
+>((_props, ref) => {
   // Obtener datos del store principal de cotización
   const { cliente, setCliente, filterData, setFilterData, agentOptions, setAgentOptions } = useQuotationStore();
   // Obtener datos de búsqueda del filtro (solo para tipo documento e identificación)
@@ -443,5 +443,7 @@ const ClientInformation = forwardRef<
     </div>
   );
 });
+
+ClientInformation.displayName = "ClientInformation";
 
 export default ClientInformation;

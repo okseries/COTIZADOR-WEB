@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowBigLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import React from "react";
 
 interface Props {

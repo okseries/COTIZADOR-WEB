@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
 import { usePlanesOpcionales } from '../../hooks/usePlanesOpcionales';
 import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
@@ -29,21 +29,38 @@ export const useCoberturasOpcionales = () => {
   const [planesData, setPlanesData] = useState<{[planName: string]: CoberturasOpcional[]}>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Hacer petición para cada plan
-  const planQueries = planes.map(plan => ({
-    planName: plan.plan,
-    query: usePlanesOpcionales(plan.plan, cliente?.tipoPlan || 1, cliente?.clientChoosen || 1)
-  }));
+  // Crear hooks individuales para cada plan (máximo 5 planes) - siempre llamar los hooks
+  const plan1Query = usePlanesOpcionales(planes[0]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
+  const plan2Query = usePlanesOpcionales(planes[1]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
+  const plan3Query = usePlanesOpcionales(planes[2]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
+  const plan4Query = usePlanesOpcionales(planes[3]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
+  const plan5Query = usePlanesOpcionales(planes[4]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
+
+  // Combinar resultados en un array
+  const planQueriesData: Array<{
+    planName: string;
+    data: CoberturasOpcional[] | null;
+    isLoading: boolean;
+    error: unknown;
+  }> = useMemo(() => {
+    const queries = [plan1Query, plan2Query, plan3Query, plan4Query, plan5Query];
+    return planes.map((plan, index) => ({
+      planName: plan.plan,
+      data: planes[index] ? queries[index]?.data || null : null,
+      isLoading: planes[index] ? queries[index]?.isLoading || false : false,
+      error: planes[index] ? queries[index]?.error || null : null
+    }));
+  }, [planes, plan1Query, plan2Query, plan3Query, plan4Query, plan5Query]);
 
   // Cargar datos de las peticiones
   useEffect(() => {
     const newPlanesData: {[planName: string]: CoberturasOpcional[]} = {};
     let hasChanges = false;
     
-    planQueries.forEach(({ planName, query }) => {
-      if (query.data) {
-        newPlanesData[planName] = query.data;
-        if (!planesData[planName] || JSON.stringify(planesData[planName]) !== JSON.stringify(query.data)) {
+    planQueriesData.forEach(({ planName, data }) => {
+      if (data) {
+        newPlanesData[planName] = data;
+        if (!planesData[planName] || JSON.stringify(planesData[planName]) !== JSON.stringify(data)) {
           hasChanges = true;
         }
       }
@@ -52,7 +69,7 @@ export const useCoberturasOpcionales = () => {
     if (hasChanges) {
       setPlanesData(newPlanesData);
     }
-  }, [planQueries.map(q => q.query.data).join(',')]);
+  }, [planQueriesData, planesData]);
 
   // Inicializar selecciones de odontología para cada plan
   useEffect(() => {
@@ -81,7 +98,7 @@ export const useCoberturasOpcionales = () => {
     if (needsUpdate) {
       setPlanSelections(prev => ({ ...prev, ...initialSelections }));
     }
-  }, [planes.length]);
+  }, [planSelections, planes]);
 
   // Inicializar filtros globales desde el store
   useEffect(() => {
@@ -98,9 +115,9 @@ export const useCoberturasOpcionales = () => {
         odontologia: hasOdontologia
       });
     }
-  }, [cliente?.clientChoosen, planes.length]);
+  }, [cliente?.clientChoosen, planes]);
 
-  const updatePlanOpcionales = (planName: string, odontologiaValue: string) => {
+  const updatePlanOpcionales = useCallback((planName: string, odontologiaValue: string) => {
     if (isUpdating) return;
     
     const planData = planesData[planName];
@@ -179,7 +196,7 @@ export const useCoberturasOpcionales = () => {
     }
     
     setTimeout(() => setIsUpdating(false), 100);
-  };
+  }, [isUpdating, planesData, planes, cliente?.clientChoosen, globalFilters, updatePlanByName]);
 
   // Actualizar todos los planes cuando cambian los filtros globales
   useEffect(() => {
@@ -194,7 +211,7 @@ export const useCoberturasOpcionales = () => {
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [globalFilters.altoCosto, globalFilters.medicamentos, globalFilters.habitacion, globalFilters.odontologia]);
+  }, [globalFilters.altoCosto, globalFilters.medicamentos, globalFilters.habitacion, globalFilters.odontologia, cliente?.clientChoosen, isUpdating, planes, planesData, planSelections, updatePlanOpcionales]);
 
   // Actualizar planes cuando se cargan los datos por primera vez o cambia la selección de odontología
   useEffect(() => {
@@ -220,7 +237,7 @@ export const useCoberturasOpcionales = () => {
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [Object.keys(planesData).join(','), JSON.stringify(planSelections)]);
+  }, [planesData, planSelections, isUpdating, planes, updatePlanOpcionales]);
 
   const handleGlobalFilterChange = (filter: string, checked: boolean) => {
     setGlobalFilters(prev => ({
@@ -241,8 +258,8 @@ export const useCoberturasOpcionales = () => {
   };
 
   // Estados derivados
-  const isLoading = planQueries.some(q => q.query.isLoading);
-  const hasError = planQueries.some(q => q.query.error);
+  const isLoading = planQueriesData.some(q => q.isLoading);
+  const hasError = planQueriesData.some(q => q.error);
   const isEmpty = !cliente || planes.length === 0;
 
   return {

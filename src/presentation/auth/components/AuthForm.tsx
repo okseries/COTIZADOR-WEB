@@ -34,9 +34,14 @@ const AuthForm = () => {
     
     try {
       await login(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Extraer el mensaje del error para mostrarlo en el Alert
-      const errorMessage = error.message || error.toString() || "Error desconocido al iniciar sesión";
+      let errorMessage = "Error desconocido al iniciar sesión";
+      if (typeof error === "object" && error !== null && "message" in error) {
+        errorMessage = (error as { message?: string }).message || errorMessage;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
       setError("root", { 
         type: "manual",
         message: errorMessage 

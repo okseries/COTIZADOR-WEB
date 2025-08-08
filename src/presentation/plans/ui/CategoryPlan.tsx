@@ -32,7 +32,7 @@ const CategoryPlan = () => {
     });
     
     setSelectedPlans(newSelectedPlans);
-  }, [plans]); // Remover getFinalObject de las dependencias para evitar re-renders innecesarios
+  }, [plans, getFinalObject]); // Agregar getFinalObject a las dependencias
 
   const handlePlanChange = (plan: PlanInterface, checked: boolean) => {
     const newSelectedPlans = new Map(selectedPlans);

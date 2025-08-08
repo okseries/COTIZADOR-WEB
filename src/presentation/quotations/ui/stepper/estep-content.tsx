@@ -13,7 +13,7 @@ interface Props {
 }
 
 const StepContent = ({ step, setStep }: Props) => {
-  const { getFinalObject, isComplete } = useQuotationStore();
+  const { ..._rest } = useQuotationStore();
   const clientInfoRef = useRef<ClientInformationRef>(null);
 
   const handleNext = async (nextStep: string) => {

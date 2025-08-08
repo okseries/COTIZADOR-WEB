@@ -12,10 +12,9 @@ interface OdontologiaSelectProps {
   value: string;
   onChange: (value: string) => void;
   options: OdontologiaOption[];
-  planName: string;
 }
 
-const OdontologiaSelect = ({ value, onChange, options, planName }: OdontologiaSelectProps) => {
+const OdontologiaSelect = ({ value, onChange, options }: OdontologiaSelectProps) => {
   return (
     <Select
       value={value}

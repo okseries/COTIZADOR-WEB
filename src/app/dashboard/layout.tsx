@@ -1,7 +1,7 @@
 "use client"
 
 import { AdminLayout } from "@/components/layout/ClientLayout"
-import { AuthGuard } from "@/presentation/auth/components/auth-guard";
+// ...existing code...
 
 // import { AuthGuard } from "@/components/auth/ui/auth-guard"
 
