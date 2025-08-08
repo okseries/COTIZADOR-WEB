@@ -77,7 +77,6 @@ export const PaymentOptions: React.FC = () => {
         isSubmitting={isSubmitting}
         error={error}
         onSubmit={handleSubmit}
-        _onBack={handleBack}
       />
 
       

@@ -12,7 +12,7 @@ const steps = [
 ];
 
 export function Stepper() {
-  const { currentStep, setCurrentStep, ..._rest } = useStepperStore();
+  const { currentStep, setCurrentStep } = useStepperStore();
   const currentStepIdx = steps.findIndex((s) => s.key === currentStep);
 
   return (

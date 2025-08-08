@@ -10,7 +10,6 @@ interface PaymentSummaryProps {
   isSubmitting: boolean;
   error: string | null;
   onSubmit: () => void;
-  _onBack: () => void;
 }
 
 export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
@@ -18,8 +17,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
   isFormValid,
   isSubmitting,
   error,
-  onSubmit,
-  ..._rest
+  onSubmit
 }) => {
   const formatCurrency = (amount: number) => {
     return `DOP${amount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

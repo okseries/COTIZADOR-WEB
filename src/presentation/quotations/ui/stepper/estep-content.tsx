@@ -13,7 +13,7 @@ interface Props {
 }
 
 const StepContent = ({ step, setStep }: Props) => {
-  const { ..._rest } = useQuotationStore();
+  // No necesitamos destructurar nada del store ya que no se usa
   const clientInfoRef = useRef<ClientInformationRef>(null);
 
   const handleNext = async (nextStep: string) => {
