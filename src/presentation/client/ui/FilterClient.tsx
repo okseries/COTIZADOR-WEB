@@ -8,7 +8,7 @@ import {
 } from "../schema/filtrar-client.schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search } from "lucide-react";
+import { AlertCircle, Search } from "lucide-react";
 import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
 import { useClientSearch } from "../hooks/useClientSearch";
 import { ClientByIdentification } from "../services/client.services";
@@ -179,6 +179,10 @@ const FilterClient = () => {
           open={openAlertDialog}
           title={alertDialogTitle}
           message={alertDialogMessage}
+          icon={<AlertCircle className="h-6 w-6 text-[#FFA500]" />}
+          type="error"
+          actionLabel="Continuar"
+          onAction={() => setOpenAlertDialog(false)}
         />
       )}
     </Card>
