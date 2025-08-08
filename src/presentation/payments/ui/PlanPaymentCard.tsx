@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Plan } from '../../quotations/interface/createQuotation.interface';
 import { PeriodoPago, MULTIPLICADORES } from '../hooks/usePaymentOptions';
+import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
 
 interface PlanPaymentCardProps {
   plan: Plan;
@@ -17,9 +18,7 @@ export const PlanPaymentCard: React.FC<PlanPaymentCardProps> = ({
   selectedPeriod = 'Mensual',
   onPeriodChange
 }) => {
-  const formatCurrency = (amount: number) => {
-    return `DOP${amount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+  
 
   const subTotalAfiliado = plan.afiliados.reduce((sum, afiliado) => 
     sum + parseFloat(afiliado.subtotal.toString()), 0
@@ -92,13 +91,13 @@ export const PlanPaymentCard: React.FC<PlanPaymentCardProps> = ({
         </div>
 
         {/* Detalles adicionales */}
-        {selectedPeriod !== 'Mensual' && (
+        {/* {selectedPeriod !== 'Mensual' && (
           <div className="mt-4 p-3 bg-[#005BBB]/10 rounded-lg">
             <div className="text-sm text-[#005BBB]">
               <strong>Cálculo:</strong> {formatCurrency(total)} × {multiplicador} meses = {formatCurrency(totalPagar)}
             </div>
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   );

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Button } from '../../../components/ui/button';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { AlertCircle, Download } from 'lucide-react';
+import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
 
 interface PaymentSummaryProps {
   totalGeneral: number;
@@ -19,9 +20,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
   error,
   onSubmit
 }) => {
-  const formatCurrency = (amount: number) => {
-    return `DOP${amount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+  
 
   return (
     <Card className="w-full">
@@ -68,7 +67,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
           <Button
             onClick={onSubmit}
             disabled={!isFormValid || isSubmitting}
-            className="flex items-center gap-2 flex-1"
+            className="flex bg-[#005BBB] hover:bg-[#003E7E] items-center gap-2 flex-1 "
           >
             {isSubmitting ? (
               <>

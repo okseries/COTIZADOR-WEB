@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
 import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
 import OdontologiaSelect, { OdontologiaOption } from './OdontologiaSelect';
+import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
 
 interface PlanTableProps {
   planName: string;
@@ -55,7 +56,7 @@ const PlanTable = ({
               <div className="text-sm">
                 <div className="font-medium">ALTO COSTO {data.altoCosto}</div>
               </div>
-              <div className="text-sm font-medium">{(parseFloat(data.primaCosto) * cantidadAfiliados).toFixed(2)}</div>
+              <div className="text-sm font-medium">{formatCurrency(Number(data.primaCosto) * cantidadAfiliados)}</div>
             </div>
           )}
 
@@ -65,7 +66,7 @@ const PlanTable = ({
               <div className="text-sm">
                 <div className="font-medium">MEDICAMENTOS {data.medicamento}</div>
               </div>
-              <div className="text-sm font-medium">{(parseFloat(data.medicamentoCosto) * cantidadAfiliados).toFixed(2)}</div>
+              <div className="text-sm font-medium">{formatCurrency(Number(data.medicamentoCosto) * cantidadAfiliados)}</div>
             </div>
           )}
 
@@ -75,13 +76,13 @@ const PlanTable = ({
               <div className="text-sm">
                 <div className="font-medium">HABITACIÓN {data.habitacion}</div>
               </div>
-              <div className="text-sm font-medium">{(parseFloat(data.habitacionCosto) * cantidadAfiliados).toFixed(2)}</div>
+              <div className="text-sm font-medium">{formatCurrency(Number(data.habitacionCosto) * cantidadAfiliados)}</div>
             </div>
           )}
 
           {/* Odontología */}
           {(clientChoosen === 1 || globalFilters.odontologia) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b">
+            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
               <div className="text-sm">
                 <div className="font-medium">ODONTOLOGÍA</div>
                 <OdontologiaSelect
@@ -93,7 +94,7 @@ const PlanTable = ({
               <div className="text-sm font-medium">
                 {(() => {
                   const selected = odontologiaOptions.find(opt => opt.value === odontologiaSelection);
-                  return selected ? (selected.prima * cantidadAfiliados).toFixed(2) : "0";
+                  return selected ? (formatCurrency(selected.prima * cantidadAfiliados)) : "0";
                 })()}
               </div>
             </div>
@@ -103,7 +104,7 @@ const PlanTable = ({
           <div className="grid grid-cols-2 gap-4 pt-2 border-t font-bold">
             <div className="text-sm">SubTotal Opcionales</div>
             <div className="text-sm">
-              {plan?.resumenPago.subTotalOpcional.toFixed(2) || '0.00'}
+              {formatCurrency(plan?.resumenPago.subTotalOpcional || 0)}
             </div>
           </div>
         </div>

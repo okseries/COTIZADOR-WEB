@@ -34,6 +34,7 @@ import EmptyState from "./empty-table";
 import { useRouter } from "next/navigation";
 import { useQuotationStore } from "../../store/useQuotationStore";
 import QuotationTableSkeleton from "./quotation-skeleton";
+import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
 
 interface QuotationTableProps {
   data: Quotations[];
@@ -268,10 +269,7 @@ export default function QuotationTable({
 
                         <TableCell className="text-center py-4">
                           <span className="font-bold text-lg text-[#003E7E]">
-                            {total.toLocaleString("es-DO", {
-                              style: "currency",
-                              currency: "DOP",
-                            })}
+                            {formatCurrency(total)}
                           </span>
                         </TableCell>
                         <TableCell className="text-center py-4">
