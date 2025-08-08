@@ -32,7 +32,7 @@ const FilterClientOld = () => {
   } = useForm<FiltrarClientFormValues>({
     resolver: zodResolver(filtrarClientSchema),
     defaultValues: {
-      tipoDocumento: "",
+      tipoDocumento: "1",
       identificacion: "",
     },
   });

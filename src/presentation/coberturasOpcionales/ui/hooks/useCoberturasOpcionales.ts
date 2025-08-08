@@ -16,6 +16,9 @@ const odontologiaOptions: OdontologiaOption[] = [
 export const useCoberturasOpcionales = () => {
   const { getFinalObject, updatePlanByName } = useQuotationStore();
   const { cliente, planes } = getFinalObject();
+
+  
+  
   
   // Estados locales
   const [globalFilters, setGlobalFilters] = useState({

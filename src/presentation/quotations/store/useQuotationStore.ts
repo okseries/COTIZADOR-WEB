@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { Cliente, Plan, QuotationRequest } from '../interface/createQuotation.interface';
 
 interface FilterData {
-  tipoDocumento: string;
+  tipoDocumento: "1" | "2" | "3"; // 1: Cédula, 2: RNC, 3: Pasaporte
   identificacion: string;
 }
 
@@ -75,7 +75,7 @@ export const useQuotationStore = create<QuotationState>()(
         if (cliente) {
           // Crear filterData solo con los campos del filtro real
           const filterData: FilterData = {
-            tipoDocumento: "CEDULA", // Valor por defecto, se podría mejorar
+            tipoDocumento: "1", // Valor por defecto, se podría mejorar
             identificacion: cliente.identification
           };
           

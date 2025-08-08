@@ -44,7 +44,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="border-b bg-[#003E7E]">
+    <nav className="border-b bg-gradient-to-r from-[#009590] to-[#003E7E] shadow-sm">
       <div className="flex h-16 items-center px-6">
         {/* Logo */}
         <div className="flex items-center gap-x-3">

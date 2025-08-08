@@ -37,6 +37,7 @@ import { useQuotationStore } from "@/presentation/quotations/store/useQuotationS
 import { ClienteFormValues, clienteSchema } from "../schema/ClientInfo.schema";
 import { useClientSearch } from "../hooks/useClientSearch";
 import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
+import { formatPhone } from "../helpers/formatPhone";
 
 interface ClientInformationProps {
   onFormChange?: () => void;
@@ -52,7 +53,14 @@ const ClientInformation = forwardRef<
   ClientInformationProps
 >((_props, ref) => {
   // Obtener datos del store principal de cotización
-  const { cliente, setCliente, filterData, setFilterData, agentOptions, setAgentOptions } = useQuotationStore();
+  const {
+    cliente,
+    setCliente,
+    filterData,
+    setFilterData,
+    agentOptions,
+    setAgentOptions,
+  } = useQuotationStore();
   // Obtener datos de búsqueda del filtro (solo para tipo documento e identificación)
   const { searchData, clientData } = useClientSearch();
 
@@ -94,7 +102,7 @@ const ClientInformation = forwardRef<
   React.useEffect(() => {
     if (cliente) {
       const nameToUse = clientData?.NOMBRE_COMPLETO || cliente.name;
-      
+
       reset({
         clientChoosen: cliente.clientChoosen,
         identification: cliente.identification,
@@ -113,14 +121,16 @@ const ClientInformation = forwardRef<
   // Efecto para llenar el formulario con datos de búsqueda (solo identificación)
   React.useEffect(() => {
     if (searchData) {
-      setValue('identification', searchData.identificacion);
-      
-      if (!filterData || 
-          filterData.tipoDocumento !== searchData.tipoDocumento ||
-          filterData.identificacion !== searchData.identificacion) {
+      setValue("identification", searchData.identificacion);
+
+      if (
+        !filterData ||
+        filterData.tipoDocumento !== searchData.tipoDocumento ||
+        filterData.identificacion !== searchData.identificacion
+      ) {
         setFilterData({
           tipoDocumento: searchData.tipoDocumento,
-          identificacion: searchData.identificacion
+          identificacion: searchData.identificacion,
         });
       }
     }
@@ -129,7 +139,7 @@ const ClientInformation = forwardRef<
   // Efecto para llenar el nombre del cliente encontrado
   React.useEffect(() => {
     if (clientData?.NOMBRE_COMPLETO) {
-      setValue('name', clientData.NOMBRE_COMPLETO);
+      setValue("name", clientData.NOMBRE_COMPLETO);
       setTimeout(() => {
         saveToStore();
       }, 100);
@@ -143,7 +153,11 @@ const ClientInformation = forwardRef<
 
   // Efecto para guardar las opciones de agente en el store
   React.useEffect(() => {
-    if (dynamicOptions && dynamicOptions.length > 0 && JSON.stringify(agentOptions) !== JSON.stringify(dynamicOptions)) {
+    if (
+      dynamicOptions &&
+      dynamicOptions.length > 0 &&
+      JSON.stringify(agentOptions) !== JSON.stringify(dynamicOptions)
+    ) {
       setAgentOptions(dynamicOptions);
     }
   }, [dynamicOptions, setAgentOptions, agentOptions]);
@@ -151,7 +165,11 @@ const ClientInformation = forwardRef<
   // Efecto para guardar automáticamente cuando cambien los campos importantes
   React.useEffect(() => {
     const subscription = watch((value, { name }) => {
-      if (name === 'tipoPlan' || name === 'clientChoosen' || name === 'identification') {
+      if (
+        name === "tipoPlan" ||
+        name === "clientChoosen" ||
+        name === "identification"
+      ) {
         saveToStore();
       }
     });
@@ -181,10 +199,9 @@ const ClientInformation = forwardRef<
   return (
     <div className="space-y-6">
       <FilterClient />
-      
+
       {/* Información del Cliente */}
       <Card className="shadow-sm border border-border/50">
-        
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Información básica del cliente */}
@@ -217,13 +234,22 @@ const ClientInformation = forwardRef<
                     <Input
                       {...field}
                       id="contact"
+                      value={field.value || ""}
+                      onChange={(e) => {
+                        const formatted = formatPhone(e.target.value);
+                        field.onChange(formatted);
+                      }}
                       placeholder="Ingrese el número de teléfono"
-                      className={`h-11 ${errors.contact ? "border-red-500" : ""}`}
+                      className={`h-11 ${
+                        errors.contact ? "border-red-500" : ""
+                      }`}
                     />
                   )}
                 />
                 {errors.contact && (
-                  <p className="text-sm text-red-500">{errors.contact.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.contact.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -255,16 +281,20 @@ const ClientInformation = forwardRef<
                   name="address"
                   control={control}
                   render={({ field }) => (
-                    <Input 
-                      {...field} 
-                      id="address" 
+                    <Input
+                      {...field}
+                      id="address"
                       placeholder="Dirección completa"
-                      className={`h-11 ${errors.address ? "border-red-500" : ""}`}
+                      className={`h-11 ${
+                        errors.address ? "border-red-500" : ""
+                      }`}
                     />
                   )}
                 />
                 {errors.address && (
-                  <p className="text-sm text-red-500">{errors.address.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.address.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -295,7 +325,9 @@ const ClientInformation = forwardRef<
                   )}
                 />
                 {errors.tipoPlan && (
-                  <p className="text-sm text-red-500">{errors.tipoPlan.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.tipoPlan.message}
+                  </p>
                 )}
               </div>
 
@@ -323,7 +355,9 @@ const ClientInformation = forwardRef<
                   )}
                 />
                 {errors.clientChoosen && (
-                  <p className="text-sm text-red-500">{errors.clientChoosen.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.clientChoosen.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -351,7 +385,9 @@ const ClientInformation = forwardRef<
                   )}
                 />
                 {errors.office && (
-                  <p className="text-sm text-red-500">{errors.office.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.office.message}
+                  </p>
                 )}
               </div>
 
@@ -378,7 +414,9 @@ const ClientInformation = forwardRef<
                                 !field.value && "text-muted-foreground"
                               )}
                             >
-                              {selected ? `${selected.label}` : "Seleccionar agente..."}
+                              {selected
+                                ? `${selected.label}`
+                                : "Seleccionar agente..."}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>

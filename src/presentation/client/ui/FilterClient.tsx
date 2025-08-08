@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
-import { IdentificationInput } from "@/components/shared/IdentificationInput";
 import { useClientSearch } from "../hooks/useClientSearch";
 import { ClientByIdentification } from "../services/client.services";
 import { LoadingSpinner } from "@/components/shared/loading";
 import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { IdentificationInput } from "./IdentificationInput";
+import { getCleanIdentification } from "../helpers/indentification-format";
 
 const FilterClient = () => {
   const { setSearchData, setClientData } = useClientSearch();
@@ -27,13 +28,17 @@ const FilterClient = () => {
     formState: { errors },
     reset,
     getValues,
+    watch,
   } = useForm<FiltrarClientFormValues>({
     resolver: zodResolver(filtrarClientSchema),
     defaultValues: {
-      tipoDocumento: "",
+      tipoDocumento: "1",
       identificacion: "",
     },
   });
+
+  // Observar el tipo de documento para pasarlo al input de identificación
+  const tipoDocumento = watch("tipoDocumento");
 
   // Efecto para cargar datos del store en el formulario (solo campos del filtro real)
   React.useEffect(() => {
@@ -59,15 +64,22 @@ const FilterClient = () => {
       // Convertir el tipo de documento a número para la API
       const tipoDocumentoNumber = parseInt(data.tipoDocumento);
       
+      // Obtener identificación limpia (sin formato) para la API
+      const cleanIdentification = getCleanIdentification(
+        data.tipoDocumento as "1" | "2" | "3", 
+        data.identificacion
+      );
+      
       console.log('=== BÚSQUEDA DE CLIENTE ===');
       console.log('Datos del formulario:', data);
       console.log('Tipo documento (string):', data.tipoDocumento);
       console.log('Tipo documento (número):', tipoDocumentoNumber);
-      console.log('Identificación:', data.identificacion);
-      console.log('URL que se llamará:', `/users/${data.identificacion}/${tipoDocumentoNumber}`);
+      console.log('Identificación original:', data.identificacion);
+      console.log('Identificación limpia para API:', cleanIdentification);
+      console.log('URL que se llamará:', `/users/${cleanIdentification}/${tipoDocumentoNumber}`);
 
       // Guardar los datos de búsqueda para que los use ClientInformation
-      const response = await ClientByIdentification(data.identificacion, tipoDocumentoNumber);
+      const response = await ClientByIdentification(cleanIdentification, tipoDocumentoNumber);
 
       console.log('Respuesta de la API:', response);
       setSearchData(data);
@@ -120,9 +132,9 @@ const FilterClient = () => {
                   {...field}
                   id="identificacion"
                   label="Identificación"
-                  placeholder="Ingrese la identificación"
                   error={!!errors.identificacion}
                   required
+                  tipoDocumento={tipoDocumento as "1" | "2" | "3"}
                 />
               )}
             />
