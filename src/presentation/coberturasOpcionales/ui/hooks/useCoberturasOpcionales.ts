@@ -32,12 +32,37 @@ export const useCoberturasOpcionales = () => {
   const [planesData, setPlanesData] = useState<{[planName: string]: CoberturasOpcional[]}>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Crear hooks individuales para cada plan (máximo 5 planes) - siempre llamar los hooks
-  const plan1Query = usePlanesOpcionales(planes[0]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
-  const plan2Query = usePlanesOpcionales(planes[1]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
-  const plan3Query = usePlanesOpcionales(planes[2]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
-  const plan4Query = usePlanesOpcionales(planes[3]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
-  const plan5Query = usePlanesOpcionales(planes[4]?.plan || '', cliente?.tipoPlan || 1, cliente?.clientChoosen || 1);
+  // Crear hooks individuales para cada plan - siempre llamar los hooks con condición de enabled
+  const plan1Query = usePlanesOpcionales(
+    planes[0]?.plan || '', 
+    cliente?.tipoPlan || 1, 
+    cliente?.clientChoosen || 1, 
+    !!planes[0]?.plan // enabled solo si hay nombre de plan
+  );
+  const plan2Query = usePlanesOpcionales(
+    planes[1]?.plan || '', 
+    cliente?.tipoPlan || 1, 
+    cliente?.clientChoosen || 1, 
+    !!planes[1]?.plan
+  );
+  const plan3Query = usePlanesOpcionales(
+    planes[2]?.plan || '', 
+    cliente?.tipoPlan || 1, 
+    cliente?.clientChoosen || 1, 
+    !!planes[2]?.plan
+  );
+  const plan4Query = usePlanesOpcionales(
+    planes[3]?.plan || '', 
+    cliente?.tipoPlan || 1, 
+    cliente?.clientChoosen || 1, 
+    !!planes[3]?.plan
+  );
+  const plan5Query = usePlanesOpcionales(
+    planes[4]?.plan || '', 
+    cliente?.tipoPlan || 1, 
+    cliente?.clientChoosen || 1, 
+    !!planes[4]?.plan
+  );
 
   // Combinar resultados en un array
   const planQueriesData: Array<{
@@ -61,7 +86,7 @@ export const useCoberturasOpcionales = () => {
     let hasChanges = false;
     
     planQueriesData.forEach(({ planName, data }) => {
-      if (data) {
+      if (data && planName) {
         newPlanesData[planName] = data;
         if (!planesData[planName] || JSON.stringify(planesData[planName]) !== JSON.stringify(data)) {
           hasChanges = true;
@@ -72,7 +97,7 @@ export const useCoberturasOpcionales = () => {
     if (hasChanges) {
       setPlanesData(newPlanesData);
     }
-  }, [planQueriesData, planesData]);
+  }, [planQueriesData]); // Remover planesData de las dependencias para evitar bucle
 
   // Inicializar selecciones de odontología para cada plan
   useEffect(() => {
@@ -101,7 +126,7 @@ export const useCoberturasOpcionales = () => {
     if (needsUpdate) {
       setPlanSelections(prev => ({ ...prev, ...initialSelections }));
     }
-  }, [planSelections, planes]);
+  }, [planes]); // Remover planSelections de las dependencias para evitar bucle
 
   // Inicializar filtros globales desde el store
   useEffect(() => {

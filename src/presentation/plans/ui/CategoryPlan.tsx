@@ -18,6 +18,9 @@ const CategoryPlan = () => {
   
   const { data: plans, isLoading, error } = useGetAllPlans(tipoPoliza ?? 0, subTipoPoliza ?? 0);
 
+  console.log('CategoryPlan: Cargando planes:', getFinalObject());
+  
+
   // Sincronizar con el store
   useEffect(() => {
     const currentPlanes = getFinalObject().planes || [];

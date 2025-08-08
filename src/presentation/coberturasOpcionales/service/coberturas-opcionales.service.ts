@@ -7,12 +7,15 @@ export const GetCoberturasOpcionales = async (
   idCotizante: number
 ) => {
   try {
-    const { data } = await apiClient.get<CoberturasOpcional[]>(
-      `/opcionales-planes/${encodeURIComponent(planName)}/${idTipoPlan}/${idCotizante}`
-    );
+    const url = `/opcionales-planes/${encodeURIComponent(planName)}/${idTipoPlan}/${idCotizante}`;
+    console.log('🔍 Calling API URL:', url);
+    console.log('📋 Parameters:', { planName, idTipoPlan, idCotizante });
+    
+    const { data } = await apiClient.get<CoberturasOpcional[]>(url);
     return data;
   } catch (error) {
-    console.error("Error al obtener coberturas opcionales:", error);
+    console.error("❌ Error al obtener coberturas opcionales:", error);
+    console.error("📋 Failed parameters:", { planName, idTipoPlan, idCotizante });
     throw error;
   }
 };
