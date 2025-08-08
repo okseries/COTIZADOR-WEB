@@ -32,7 +32,7 @@ export function AuthCard({ title, description, children }: AuthCardProps) {
               priority
             />
           </div>
-          <CardTitle className="text-2xl font-bold">{title}</CardTitle>
+          <CardTitle className="text-2xl text-[#003E7E] font-bold">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">{children}</CardContent>

@@ -36,7 +36,7 @@ export const DocumentTypeSelect = React.forwardRef<
     ];
 
     return (
-      <div className={cn( className)} ref={ref}>
+      <div className={cn("", className)} ref={ref}>
         
         <SelectSimple
           value={value || ""}
@@ -44,7 +44,7 @@ export const DocumentTypeSelect = React.forwardRef<
           options={documentOptions}
           placeholder={placeholder}
           error={error}
-          className="h-11 w-full"
+          className="h-full w-full"
           {...props}
         />
       </div>

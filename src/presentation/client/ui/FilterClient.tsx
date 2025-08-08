@@ -109,10 +109,10 @@ const FilterClient = () => {
   };
 
   return (
-    <Card className="mb-6 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
+    <Card className="mb-2 py-4 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center justify-evenly">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
+          <div className="flex flex-col md:flex-row items-end justify-end  gap-4">
             {/* Tipo de Documento */}
             <Controller
               name="tipoDocumento"
@@ -147,9 +147,10 @@ const FilterClient = () => {
             {/* Botón de búsqueda */}
             <div className="flex justify-start">
               <Button
+              
                 type="submit"
                 disabled={isLoading}
-                className="h-11 px-6 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2"
+                className="h-10.5 px-6 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2"
               >
                 {isLoading ? (
                   <>

@@ -260,7 +260,7 @@ export default function QuotationTable({
                               <div className="font-semibold text-foreground truncate">
                                 {q.cotizacion.cliente.name}
                               </div>
-                              <div className="text-sm text-[#FFA500] truncate">
+                              <div className="text-sm text-[#009590] truncate">
                                 {q.cotizacion.cliente.email}
                               </div>
                             </div>
@@ -279,7 +279,7 @@ export default function QuotationTable({
                                 <div className="text-sm font-medium text-foreground">
                                   {format(fecha, "dd MMM yyyy")}
                                 </div>
-                                <div className="text-xs text-[#FFA500]">
+                                <div className="text-xs text-[#009590]">
                                   {formatDistanceToNow(fecha, {
                                     addSuffix: true,
                                     locale: es,
@@ -300,7 +300,7 @@ export default function QuotationTable({
                             <div className="font-medium text-foreground">
                               {q.cotizacion.cliente.agent}
                             </div>
-                            <div className="text-sm text-[#FFA500]">
+                            <div className="text-sm text-[#009590]">
                               {q.cotizacion.cliente.office}
                             </div>
                           </div>
@@ -314,7 +314,7 @@ export default function QuotationTable({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleEditQuotation(q)}
-                                  className="h-8 w-8 p-0 hover:bg-[#005BBB]/10 hover:text-[#005BBB]"
+                                  className="h-8 w-8 p-0 hover:bg-[#009590]/10 hover:text-[#009590]"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
@@ -331,7 +331,7 @@ export default function QuotationTable({
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 w-8 p-0 hover:bg-[#FFA500]/10 hover:text-[#FFA500]"
+                                    className="h-8 w-8 p-0 hover:bg-[#009590]/10 hover:text-[#009590]"
                                   >
                                     <Download className="w-4 h-4" />
                                   </Button>

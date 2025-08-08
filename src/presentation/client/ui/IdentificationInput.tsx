@@ -99,15 +99,15 @@ export const IdentificationInput = forwardRef<
     };
 
     return (
-      <div className=" ">
+      <div className="relative">
         <Input
           ref={ref}
           id={id}
           placeholder={getDynamicPlaceholder()}
           value={formattedValue}
           onChange={handleInputChange}
-          className={`h-11 transition-colors ${
-            error
+          className={`h-10.5 transition-colors ${
+            error || errorText()
               ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
               : "border-[#005BBB]/20 focus:border-[#005BBB] focus:ring-[#005BBB]/20"
           }`}
@@ -118,7 +118,11 @@ export const IdentificationInput = forwardRef<
         )}
 
         {errorText() && (
-          <p className="text-xs text-red-500 mt-1">{errorText()}</p>
+          <div className="absolute top-full left-0 right-0 z-10 mt-1">
+            <p className="text-xs text-red-500 bg-white px-2 py-1 rounded shadow-sm border border-red-200">
+              {errorText()}
+            </p>
+          </div>
         )}
       </div>
     );

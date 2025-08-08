@@ -299,6 +299,8 @@ const ClientInformation = forwardRef<
               </div>
             </div>
 
+            <div className=" w-full border-[0.5px] border-border/30"></div>
+
             {/* Tipo de póliza y sub tipo */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">

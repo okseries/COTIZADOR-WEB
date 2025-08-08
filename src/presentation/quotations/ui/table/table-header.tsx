@@ -11,10 +11,10 @@ interface Props {
 
 const QuotationTableHeader = ({ quantity, onCreateNew }: Props) => {
   return (
-    <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 ">
       <div className="flex flex-row items-center gap-4">
         <div className="flex-shrink-0">
-          <div className="p-3 bg-primary/10 rounded-xl">
+          <div className="p-3 bg-[#009590]/10 rounded-xl">
             <TextQuote size={28} className="text-[#008080]" />
           </div>
         </div>
@@ -23,12 +23,12 @@ const QuotationTableHeader = ({ quantity, onCreateNew }: Props) => {
             Cotizaciones Recientes
             <Badge
               variant="secondary"
-              className="bg-primary/10 text-primary border-primary/20 font-semibold"
+              className="bg-[#009590]/10 text-[#009590] border-[#009590]/20 font-semibold"
             >
               {quantity ?? 0}
             </Badge>
           </CardTitle>
-          <CardDescription className="text-[#FFA500] mt-1">
+          <CardDescription className="text-[#009590] mt-1">
             Aquí puedes ver y gestionar todas tus cotizaciones guardadas.
           </CardDescription>
         </div>
