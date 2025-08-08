@@ -25,9 +25,10 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
   const { getFinalObject } = useQuotationStore()
   const { data: parentescos, isLoading: loadingParentescos, error: errorParentescos } = useParentesco()
   
-  // Obtener tipoPlan y clientChoosen del store
-  const tipoPlan = getFinalObject().cliente?.tipoPlan ?? 0
-  const clientChoosen = getFinalObject().cliente?.clientChoosen ?? 0
+  // Obtener el objeto una sola vez al inicio del render
+  const finalObject = getFinalObject()
+  const tipoPlan = finalObject.cliente?.tipoPlan ?? 0
+  const clientChoosen = finalObject.cliente?.clientChoosen ?? 0
   
   // Obtener prima cuando tenemos todos los datos necesarios (no para "Todos")
   const shouldFetchPrima = selectedPlanName !== '' && selectedPlanName !== 'Todos' && edad !== '' && !isNaN(Number(edad)) && Number(edad) > 0

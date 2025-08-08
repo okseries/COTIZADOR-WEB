@@ -46,7 +46,7 @@ export const PaymentOptions: React.FC = () => {
     console.log("finalPayload:", finalPayload);
     console.log("usuario en finalPayload:", finalPayload.user);
     
-    await submitQuotation();
+    //await submitQuotation();
   };
 
   // Loading state

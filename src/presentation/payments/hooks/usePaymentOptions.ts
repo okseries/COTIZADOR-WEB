@@ -155,15 +155,15 @@ export const usePaymentOptions = () => {
   const submitQuotation = useCallback(async () => {
     const userName = authUser?.data?.user;
     
-    console.log("=== DEBUG SUBMIT QUOTATION ===");
-    console.log("authUser completo:", authUser);
-    console.log("authUser?.data:", authUser?.data);
-    console.log("userName extraído:", userName);
-    console.log("isFormValid():", isFormValid());
-    console.log("cliente:", cliente);
-    console.log("Validación userName:", !!userName);
-    console.log("Validación cliente:", !!cliente);
-    console.log("=== END DEBUG SUBMIT ===");
+    // console.log("=== DEBUG SUBMIT QUOTATION ===");
+    // console.log("authUser completo:", authUser);
+    // console.log("authUser?.data:", authUser?.data);
+    // console.log("userName extraído:", userName);
+    // console.log("isFormValid():", isFormValid());
+    // console.log("cliente:", cliente);
+    // console.log("Validación userName:", !!userName);
+    // console.log("Validación cliente:", !!cliente);
+    // console.log("=== END DEBUG SUBMIT ===");
     
     if (!isFormValid() || !userName || !cliente) {
       setError('Faltan datos requeridos para completar la cotización');

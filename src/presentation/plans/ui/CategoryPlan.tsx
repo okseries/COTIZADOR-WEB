@@ -12,19 +12,19 @@ import { Plan as QuotationPlan, Afiliado } from '@/presentation/quotations/inter
 
 const CategoryPlan = () => {
   const { getFinalObject, addPlan, updatePlanByName, removePlan } = useQuotationStore();
-  const tipoPoliza = getFinalObject().cliente?.tipoPlan;
-  const subTipoPoliza = getFinalObject().cliente?.clientChoosen;
+  
+  // Obtener el objeto una sola vez al inicio del render
+  const finalObject = getFinalObject();
+  const tipoPoliza = finalObject.cliente?.tipoPlan;
+  const subTipoPoliza = finalObject.cliente?.clientChoosen;
 
   const [selectedPlans, setSelectedPlans] = useState<Map<number, PlanInterface>>(new Map());
   
   const { data: plans, isLoading, error } = useGetAllPlans(tipoPoliza ?? 0, subTipoPoliza ?? 0);
 
-  console.log('CategoryPlan: Cargando planes:', getFinalObject());
-  
-
   // Sincronizar con el store
   useEffect(() => {
-    const currentPlanes = getFinalObject().planes || [];
+    const currentPlanes = finalObject.planes || [];
     const newSelectedPlans = new Map<number, PlanInterface>();
     
     // Solo agregar a selectedPlans los planes que están en el store Y existen en la lista de planes
@@ -36,7 +36,7 @@ const CategoryPlan = () => {
     });
     
     setSelectedPlans(newSelectedPlans);
-  }, [plans, getFinalObject]); // Agregar getFinalObject a las dependencias
+  }, [plans?.length, finalObject.planes?.length]); // Solo depender de las longitudes para evitar referencias cambiantes
 
   const handlePlanChange = (plan: PlanInterface, checked: boolean) => {
     const newSelectedPlans = new Map(selectedPlans);
@@ -75,7 +75,7 @@ const CategoryPlan = () => {
       plans?.forEach(plan => {
         newSelectedPlans.set(plan.id, plan);
         // Agregar al store si no existe
-        const existingPlan = getFinalObject().planes?.find(p => p.plan === plan.plan_name);
+        const existingPlan = finalObject.planes?.find(p => p.plan === plan.plan_name);
         if (!existingPlan) {
           const newQuotationPlan: QuotationPlan = {
             plan: plan.plan_name,
@@ -105,13 +105,13 @@ const CategoryPlan = () => {
   };
 
   const handleAddAfiliado = async (planName: string, afiliado: Afiliado) => {
-    const tipoPlan = getFinalObject().cliente?.tipoPlan ?? 0;
-    const clientChoosen = getFinalObject().cliente?.clientChoosen ?? 0;
+    const tipoPlan = finalObject.cliente?.tipoPlan ?? 0;
+    const clientChoosen = finalObject.cliente?.clientChoosen ?? 0;
 
     if (planName === "Todos") {
       // Agregar el afiliado a todos los planes seleccionados con prima específica para cada uno
       for (const plan of Array.from(selectedPlans.values())) {
-        const currentPlanes = getFinalObject().planes || [];
+        const currentPlanes = finalObject.planes || [];
         const existingPlan = currentPlanes.find(p => p.plan === plan.plan_name);
         
         if (existingPlan) {
@@ -168,7 +168,7 @@ const CategoryPlan = () => {
       }
     } else {
       // Agregar solo al plan específico
-      const currentPlanes = getFinalObject().planes || [];
+      const currentPlanes = finalObject.planes || [];
       const existingPlan = currentPlanes.find(p => p.plan === planName);
       
       if (existingPlan) {
@@ -189,7 +189,7 @@ const CategoryPlan = () => {
   };
 
   const handleRemoveAfiliado = (plan: PlanInterface, afiliadoIndex: number) => {
-    const currentPlanes = getFinalObject().planes || [];
+    const currentPlanes = finalObject.planes || [];
     const existingPlan = currentPlanes.find(p => p.plan === plan.plan_name);
     
     if (existingPlan) {
@@ -215,7 +215,7 @@ const CategoryPlan = () => {
     return <div>No se encontraron planes.</div>;
   }
 
-  const currentQuotationPlans = getFinalObject().planes || [];
+  const currentQuotationPlans = finalObject.planes || [];
   const isAllPlansSelected = plans?.length > 0 && selectedPlans.size === plans.length;
 
   return (

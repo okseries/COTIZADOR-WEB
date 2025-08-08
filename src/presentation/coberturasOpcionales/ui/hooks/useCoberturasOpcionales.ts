@@ -15,7 +15,10 @@ const odontologiaOptions: OdontologiaOption[] = [
 
 export const useCoberturasOpcionales = () => {
   const { getFinalObject, updatePlanByName } = useQuotationStore();
-  const { cliente, planes } = getFinalObject();
+  
+  // Obtener el objeto una sola vez al inicio del render para evitar bucles
+  const finalObject = getFinalObject();
+  const { cliente, planes } = finalObject;
 
   
   
@@ -78,7 +81,20 @@ export const useCoberturasOpcionales = () => {
       isLoading: planes[index] ? queries[index]?.isLoading || false : false,
       error: planes[index] ? queries[index]?.error || null : null
     }));
-  }, [planes, plan1Query, plan2Query, plan3Query, plan4Query, plan5Query]);
+  }, [
+    planes.length,
+    planes.map(p => p.plan).join(','),
+    plan1Query?.data,
+    plan2Query?.data,
+    plan3Query?.data,
+    plan4Query?.data,
+    plan5Query?.data,
+    plan1Query?.isLoading,
+    plan2Query?.isLoading,
+    plan3Query?.isLoading,
+    plan4Query?.isLoading,
+    plan5Query?.isLoading
+  ]);
 
   // Cargar datos de las peticiones
   useEffect(() => {
@@ -88,16 +104,16 @@ export const useCoberturasOpcionales = () => {
     planQueriesData.forEach(({ planName, data }) => {
       if (data && planName) {
         newPlanesData[planName] = data;
-        if (!planesData[planName] || JSON.stringify(planesData[planName]) !== JSON.stringify(data)) {
-          hasChanges = true;
-        }
+        hasChanges = true;
       }
     });
     
-    if (hasChanges) {
+    if (hasChanges && Object.keys(newPlanesData).length > 0) {
       setPlanesData(newPlanesData);
     }
-  }, [planQueriesData]); // Remover planesData de las dependencias para evitar bucle
+  }, [
+    planQueriesData.map(q => `${q.planName}:${q.data?.length || 0}`).join(',')
+  ]); // Depender solo de una representación string estable de los datos
 
   // Inicializar selecciones de odontología para cada plan
   useEffect(() => {
@@ -105,7 +121,9 @@ export const useCoberturasOpcionales = () => {
     let needsUpdate = false;
     
     planes.forEach(plan => {
-      if (!planSelections[plan.plan]) {
+      // Solo agregar si el plan no existe en las selecciones actuales
+      const currentPlanSelections = planSelections[plan.plan];
+      if (!currentPlanSelections) {
         const odontologiaOpcional = plan.opcionales.find(opt => opt.nombre === "ODONTOLOGÍA" || opt.nombre === "ODONTOLOGIA");
         let odontologiaValue = "0";
         
@@ -126,7 +144,7 @@ export const useCoberturasOpcionales = () => {
     if (needsUpdate) {
       setPlanSelections(prev => ({ ...prev, ...initialSelections }));
     }
-  }, [planes]); // Remover planSelections de las dependencias para evitar bucle
+  }, [planes.length]); // Solo depender del número de planes para evitar bucles
 
   // Inicializar filtros globales desde el store
   useEffect(() => {
@@ -148,111 +166,108 @@ export const useCoberturasOpcionales = () => {
   const updatePlanOpcionales = useCallback((planName: string, odontologiaValue: string) => {
     if (isUpdating) return;
     
-    const planData = planesData[planName];
-    if (!planData || !planData[0]) return;
-
     setIsUpdating(true);
     
-    const opcionales: Opcional[] = [];
-    const data = planData[0];
-    const plan = planes.find(p => p.plan === planName);
-    if (!plan) {
-      setIsUpdating(false);
-      return;
-    }
-
-    let subTotalOpcional = 0;
-    const cantidadAfiliados = plan.afiliados.length;
-
-    // Solo agregar las coberturas que están filtradas (para clientChoosen === 2) o todas (para clientChoosen === 1)
-    if (cliente?.clientChoosen === 1 || globalFilters.altoCosto) {
-      const prima = parseFloat(data.primaCosto) || 0;
-      opcionales.push({
-        nombre: "ALTO COSTO",
-        descripcion: data.altoCosto,
-        prima: prima * cantidadAfiliados
-      });
-      subTotalOpcional += prima * cantidadAfiliados;
-    }
-
-    if (cliente?.clientChoosen === 1 || globalFilters.medicamentos) {
-      const prima = parseFloat(data.medicamentoCosto) || 0;
-      opcionales.push({
-        nombre: "MEDICAMENTOS",
-        descripcion: data.medicamento,
-        prima: prima * cantidadAfiliados
-      });
-      subTotalOpcional += prima * cantidadAfiliados;
-    }
-
-    if (cliente?.clientChoosen === 1 || globalFilters.habitacion) {
-      const prima = parseFloat(data.habitacionCosto) || 0;
-      opcionales.push({
-        nombre: "HABITACIÓN",
-        descripcion: data.habitacion,
-        prima: prima * cantidadAfiliados
-      });
-      subTotalOpcional += prima * cantidadAfiliados;
-    }
-
-    // Odontología - siempre verificar si hay una selección válida
-    const odontologiaSelected = odontologiaOptions.find(opt => opt.value === odontologiaValue);
-    if (odontologiaSelected && odontologiaSelected.value !== "0") {
-      // Incluir odontología si:
-      // 1. clientChoosen === 1 (siempre incluir todas las opcionales)
-      // 2. clientChoosen === 2 Y globalFilters.odontologia === true (filtro activado)
-      // 3. O si hay una selección específica de odontología (independientemente del filtro)
-      if (cliente?.clientChoosen === 1 || globalFilters.odontologia || odontologiaValue !== "0") {
-        opcionales.push({
-          nombre: "ODONTOLOGIA",
-          descripcion: odontologiaSelected.label,
-          prima: odontologiaSelected.prima * cantidadAfiliados
-        });
-        subTotalOpcional += odontologiaSelected.prima * cantidadAfiliados;
+    setTimeout(() => {
+      const planDataCurrent = planesData[planName];
+      if (!planDataCurrent || !planDataCurrent[0]) {
+        setIsUpdating(false);
+        return;
       }
-    }
 
-    // Actualizar el plan en el store
-    const currentPlan = planes.find(p => p.plan === planName);
-    if (currentPlan) {
-      const subTotalAfiliado = currentPlan.resumenPago.subTotalAfiliado;
-      
-      console.log(`🦷 Plan ${planName} - Opcionales actualizados:`, {
-        opcionales,
-        odontologiaValue,
-        globalFilters,
-        clientChoosen: cliente?.clientChoosen,
-        subTotalOpcional,
-        totalOpcionales: opcionales.length
-      });
-      
-      updatePlanByName(planName, {
-        opcionales,
-        resumenPago: {
-          ...currentPlan.resumenPago,
-          subTotalOpcional,
-          totalPagar: subTotalAfiliado + subTotalOpcional
+      const opcionales: Opcional[] = [];
+      const data = planDataCurrent[0];
+      const plan = planes.find(p => p.plan === planName);
+      if (!plan) {
+        setIsUpdating(false);
+        return;
+      }
+
+      let subTotalOpcional = 0;
+      const cantidadAfiliados = plan.afiliados.length;
+
+      // Solo agregar las coberturas que están filtradas (para clientChoosen === 2) o todas (para clientChoosen === 1)
+      if (cliente?.clientChoosen === 1 || globalFilters.altoCosto) {
+        const prima = parseFloat(data.primaCosto) || 0;
+        opcionales.push({
+          nombre: "ALTO COSTO",
+          descripcion: data.altoCosto,
+          prima: prima * cantidadAfiliados
+        });
+        subTotalOpcional += prima * cantidadAfiliados;
+      }
+
+      if (cliente?.clientChoosen === 1 || globalFilters.medicamentos) {
+        const prima = parseFloat(data.medicamentoCosto) || 0;
+        opcionales.push({
+          nombre: "MEDICAMENTOS",
+          descripcion: data.medicamento,
+          prima: prima * cantidadAfiliados
+        });
+        subTotalOpcional += prima * cantidadAfiliados;
+      }
+
+      if (cliente?.clientChoosen === 1 || globalFilters.habitacion) {
+        const prima = parseFloat(data.habitacionCosto) || 0;
+        opcionales.push({
+          nombre: "HABITACIÓN",
+          descripcion: data.habitacion,
+          prima: prima * cantidadAfiliados
+        });
+        subTotalOpcional += prima * cantidadAfiliados;
+      }
+
+      // Odontología - siempre verificar si hay una selección válida
+      const odontologiaSelected = odontologiaOptions.find(opt => opt.value === odontologiaValue);
+      if (odontologiaSelected && odontologiaSelected.value !== "0") {
+        // Incluir odontología si:
+        // 1. clientChoosen === 1 (siempre incluir todas las opcionales)
+        // 2. clientChoosen === 2 Y globalFilters.odontologia === true (filtro activado)
+        // 3. O si hay una selección específica de odontología (independientemente del filtro)
+        if (cliente?.clientChoosen === 1 || globalFilters.odontologia || odontologiaValue !== "0") {
+          opcionales.push({
+            nombre: "ODONTOLOGIA",
+            descripcion: odontologiaSelected.label,
+            prima: odontologiaSelected.prima * cantidadAfiliados
+          });
+          subTotalOpcional += odontologiaSelected.prima * cantidadAfiliados;
         }
-      });
-    }
-    
-    setTimeout(() => setIsUpdating(false), 100);
-  }, [isUpdating, planesData, planes, cliente?.clientChoosen, globalFilters, updatePlanByName]);
+      }
+
+      // Actualizar el plan en el store
+      const currentPlan = planes.find(p => p.plan === planName);
+      if (currentPlan) {
+        const subTotalAfiliado = currentPlan.resumenPago.subTotalAfiliado;
+        
+        
+        updatePlanByName(planName, {
+          opcionales,
+          resumenPago: {
+            ...currentPlan.resumenPago,
+            subTotalOpcional,
+            totalPagar: subTotalAfiliado + subTotalOpcional
+          }
+        });
+      }
+      
+      setIsUpdating(false);
+    }, 100);
+  }, []); // Dependencias vacías, usar valores capturados por closures
 
   // Actualizar todos los planes cuando cambian los filtros globales
   useEffect(() => {
-    if (cliente?.clientChoosen === 2 && !isUpdating) {
+    if (cliente?.clientChoosen === 2 && !isUpdating && Object.keys(planesData).length > 0) {
       const timer = setTimeout(() => {
         planes.forEach(plan => {
-          if (planesData[plan.plan]) {
+          if (planesData[plan.plan] && planSelections[plan.plan]) {
             const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
             updatePlanOpcionales(plan.plan, odontologiaValue);
           }
         });
-      }, 50);
+      }, 200);
       return () => clearTimeout(timer);
     }
-  }, [globalFilters.altoCosto, globalFilters.medicamentos, globalFilters.habitacion, globalFilters.odontologia, cliente?.clientChoosen, isUpdating, planes, planesData, planSelections, updatePlanOpcionales]);
+  }, [globalFilters.altoCosto, globalFilters.medicamentos, globalFilters.habitacion, globalFilters.odontologia]); // Solo dependencias de filtros
 
   // Actualizar planes cuando se cargan los datos por primera vez o cambia la selección de odontología
   useEffect(() => {
@@ -272,13 +287,6 @@ export const useCoberturasOpcionales = () => {
               (odontologiaValue !== "0" && !currentOdontologia); // Asegurar que se incluya odontología si se seleccionó
             
             if (shouldUpdate) {
-              console.log(`🔄 Actualizando plan ${plan.plan} - Razón:`, {
-                hasOpcionales,
-                currentOdontologia: currentOdontologia?.descripcion,
-                expectedOdontologia: expectedOdontologia?.label,
-                odontologiaValue,
-                shouldUpdate
-              });
               updatePlanOpcionales(plan.plan, odontologiaValue);
             }
           }
@@ -286,7 +294,7 @@ export const useCoberturasOpcionales = () => {
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [planesData, planSelections, isUpdating, planes, updatePlanOpcionales]);
+  }, [Object.keys(planesData).length, Object.keys(planSelections).length]); // Solo depender de la existencia de datos
 
   const handleGlobalFilterChange = (filter: string, checked: boolean) => {
     setGlobalFilters(prev => ({
@@ -296,8 +304,6 @@ export const useCoberturasOpcionales = () => {
   };
 
   const handleOdontologiaChange = (planName: string, value: string) => {
-    console.log(`🦷 Cambiando odontología para ${planName}:`, { value, previousValue: planSelections[planName]?.odontologia });
-    
     setPlanSelections(prev => ({
       ...prev,
       [planName]: {
