@@ -14,6 +14,7 @@ interface GlobalFiltersProps {
 }
 
 const GlobalFilters = ({ filters, onFilterChange, clientChoosen }: GlobalFiltersProps) => {
+  // Solo mostrar para clientes COLECTIVOS (clientChoosen === 2)
   if (clientChoosen !== 2) return null;
 
   return (

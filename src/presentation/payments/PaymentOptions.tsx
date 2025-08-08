@@ -40,13 +40,26 @@ export const PaymentOptions: React.FC = () => {
     
     console.log("=== DEBUG PAYLOAD ===");
     console.log("payload original:", payload);
+    
+    // Debug específico para odontología
+    console.log("=== DEBUG ODONTOLOGÍA ===");
+    payload.planes.forEach((plan, index) => {
+      console.log(`Plan ${index + 1} (${plan.plan}):`, {
+        planName: plan.plan,
+        totalOpcionales: plan.opcionales.length,
+        opcionales: plan.opcionales,
+        odontologiaPresente: plan.opcionales.find(opt => opt.nombre === "ODONTOLOGIA" || opt.nombre === "ODONTOLOGÍA"),
+        subTotalOpcional: plan.resumenPago.subTotalOpcional
+      });
+    });
+    
     console.log("authUser completo:", authUser);
     console.log("authUser.data:", authUser?.data);
     console.log("authUser.data.user:", authUser?.data?.user);
     console.log("finalPayload:", finalPayload);
     console.log("usuario en finalPayload:", finalPayload.user);
     
-    //await submitQuotation();
+    await submitQuotation();
   };
 
   // Loading state
