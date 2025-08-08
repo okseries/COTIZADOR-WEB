@@ -74,17 +74,6 @@ const FilterClient = () => {
         data.identificacion
       );
 
-      console.log("=== BÚSQUEDA DE CLIENTE ===");
-      console.log("Datos del formulario:", data);
-      console.log("Tipo documento (string):", data.tipoDocumento);
-      console.log("Tipo documento (número):", tipoDocumentoNumber);
-      console.log("Identificación original:", data.identificacion);
-      console.log("Identificación limpia para API:", cleanIdentification);
-      console.log(
-        "URL que se llamará:",
-        `/users/${cleanIdentification}/${tipoDocumentoNumber}`
-      );
-
       // Guardar los datos de búsqueda para que los use ClientInformation
       const response = await ClientByIdentification(
         cleanIdentification,
@@ -103,11 +92,9 @@ const FilterClient = () => {
         setAlertDialogMessage(`No se encontró ningún cliente con la identificación: ${cleanIdentification}`);
         setOpenAlertDialog(true);
         setClientData(null);
-        console.log("❌ Cliente no encontrado");
       }
     } catch (error) {
       console.error("❌ Error al buscar cliente:", error);
-      alert("Error al buscar cliente");
       setClientData(null);
     } finally {
       setIsLoading(false);
