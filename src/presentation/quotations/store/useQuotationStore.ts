@@ -3,8 +3,6 @@ import { persist } from 'zustand/middleware';
 import { Cliente, Plan, QuotationRequest } from '../interface/createQuotation.interface';
 
 interface FilterData {
-  tipoPoliza: string;
-  subTipoPoliza: string;
   tipoDocumento: string;
   identificacion: string;
 }
@@ -73,11 +71,10 @@ export const useQuotationStore = create<QuotationState>()(
       }),
       loadExistingQuotation: (quotationRequest) => {
         const cliente = quotationRequest.cliente;
+        
         if (cliente) {
-          // Crear filterData a partir de los datos del cliente existente
+          // Crear filterData solo con los campos del filtro real
           const filterData: FilterData = {
-            tipoPoliza: String(cliente.tipoPlan),
-            subTipoPoliza: String(cliente.clientChoosen),
             tipoDocumento: "CEDULA", // Valor por defecto, se podría mejorar
             identificacion: cliente.identification
           };

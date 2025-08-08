@@ -6,58 +6,46 @@ import {
   FiltrarClientFormValues,
   filtrarClientSchema,
 } from "../schema/filtrar-client.schema";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search } from "lucide-react";
-import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
-import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
+import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
+import { IdentificationInput } from "@/components/shared/IdentificationInput";
 import { useClientSearch } from "../hooks/useClientSearch";
-import { useGetClient } from "../hooks/useGetClient";
 import { ClientByIdentification } from "../services/client.services";
 import { LoadingSpinner } from "@/components/shared/loading";
 import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
 
 const FilterClient = () => {
-
-  const { data: plans } = usePlans();
-  const { data: subPlans } = useSubPlansType();
   const { setSearchData, setClientData } = useClientSearch();
   const { filterData } = useQuotationStore();
-  const [isLoading, setIsLoading] = useState( false);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
     getValues,
   } = useForm<FiltrarClientFormValues>({
     resolver: zodResolver(filtrarClientSchema),
     defaultValues: {
-      tipoPoliza: "",
-      subTipoPoliza: "",
       tipoDocumento: "",
       identificacion: "",
     },
   });
 
-  // Efecto para cargar datos del store en el formulario (solo una vez)
+  // Efecto para cargar datos del store en el formulario (solo campos del filtro real)
   React.useEffect(() => {
     if (filterData) {
       const currentValues = getValues();
+      
       // Solo actualizar si los valores son diferentes para evitar bucle infinito
       if (
-        currentValues.tipoPoliza !== filterData.tipoPoliza ||
-        currentValues.subTipoPoliza !== filterData.subTipoPoliza ||
         currentValues.tipoDocumento !== filterData.tipoDocumento ||
         currentValues.identificacion !== filterData.identificacion
       ) {
         reset({
-          tipoPoliza: filterData.tipoPoliza,
-          subTipoPoliza: filterData.subTipoPoliza,
           tipoDocumento: filterData.tipoDocumento,
           identificacion: filterData.identificacion,
         });
@@ -65,153 +53,112 @@ const FilterClient = () => {
     }
   }, [filterData, reset, getValues]);
 
-  const onSubmit = async  (data: FiltrarClientFormValues) => {
+  const onSubmit = async (data: FiltrarClientFormValues) => {
     setIsLoading(true);
-    // Guardar los datos de búsqueda para que los use ClientInformation
-    const response = await ClientByIdentification(data.identificacion, +data.tipoDocumento);
+    try {
+      // Convertir el tipo de documento a número para la API
+      const tipoDocumentoNumber = parseInt(data.tipoDocumento);
+      
+      console.log('=== BÚSQUEDA DE CLIENTE ===');
+      console.log('Datos del formulario:', data);
+      console.log('Tipo documento (string):', data.tipoDocumento);
+      console.log('Tipo documento (número):', tipoDocumentoNumber);
+      console.log('Identificación:', data.identificacion);
+      console.log('URL que se llamará:', `/users/${data.identificacion}/${tipoDocumentoNumber}`);
 
-    setSearchData(data);
-    
-    // Guardar la información del cliente encontrado
-    if (response) {
-      setClientData(response);
-      console.log('Cliente encontrado:', response);
-      setIsLoading(false);
+      // Guardar los datos de búsqueda para que los use ClientInformation
+      const response = await ClientByIdentification(data.identificacion, tipoDocumentoNumber);
 
-    } else {
-      alert('Cliente no encontrado');
+      console.log('Respuesta de la API:', response);
+      setSearchData(data);
+      
+      // Guardar la información del cliente encontrado
+      if (response) {
+        setClientData(response);
+        console.log('✅ Cliente encontrado:', response);
+      } else {
+        alert('Cliente no encontrado');
+        setClientData(null);
+        console.log('❌ Cliente no encontrado');
+      }
+    } catch (error) {
+      console.error('❌ Error al buscar cliente:', error);
+      alert('Error al buscar cliente');
       setClientData(null);
-      console.log('Cliente no encontrado');
+    } finally {
       setIsLoading(false);
     }
-    
-    // Aquí podrías hacer una llamada a la API para buscar el cliente
-    // Si no se encuentra, ClientInformation usará estos datos para prellenar el formulario
-    console.log('Datos de búsqueda:', data);
   };
 
-
-  if (isLoading) {
-    return <LoadingSpinner className="h-10 w-10 mx-auto mb-4 mt-10 text-[#005BBB]" />;
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      {/* filtrar cliente */}
-      <div className="grid grid-cols-5 gap-6  items-center  py-2">
-        <div className="space-y-2 flex flex-col justify-center">
-          <Label htmlFor="tipoPoliza">
-            {errors.tipoPoliza ? errors.tipoPoliza.message : "Tipo de poliza *"}
-          </Label>
-          <Controller
-            name="tipoPoliza"
-            control={control}
-            render={({ field }) => (
-              <SelectSimple
-                {...field}
-                id="tipoPoliza"
-                placeholder="Selecciona tipo"
-                options={
-                  plans?.map((plan) => ({
-                    label: plan.tipoPlanName,
-                    value: String(plan.id),
-                  })) || []
-                }
-                error={!!errors.tipoPoliza}
-                className="mt-1 h-10"
-              />
-            )}
-          />
-        </div>
+    <Card className="mb-6 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-semibold text-[#005BBB] flex items-center gap-2">
+          <Search className="w-5 h-5" />
+          Buscar Cliente
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Ingrese el tipo de documento e identificación para buscar un cliente existente
+        </p>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            {/* Tipo de Documento */}
+            <Controller
+              name="tipoDocumento"
+              control={control}
+              render={({ field }) => (
+                <DocumentTypeSelect
+                  {...field}
+                  label="Tipo de documento"
+                  placeholder="Selecciona tipo"
+                  error={!!errors.tipoDocumento}
+                  required
+                />
+              )}
+            />
 
-        <div className="space-y-2 flex flex-col justify-center">
-          <Label htmlFor="subTipoPoliza">
-            {errors.subTipoPoliza
-              ? errors.subTipoPoliza.message
-              : "Sub tipo de póliza *"}
-          </Label>
-          <Controller
-            name="subTipoPoliza"
-            control={control}
-            render={({ field }) => (
-              <SelectSimple
-                {...field}
-                id="subTipoPoliza"
-                placeholder="Selecciona sub tipo"
-                options={
-                  subPlans?.map((plan) => ({
-                    label: plan.nameCotizante,
-                    value: String(plan.id),
-                  })) || []
-                }
-                error={!!errors.subTipoPoliza}
-                className="mt-1 h-10"
-              />
-            )}
-          />
-        </div>
+            {/* Identificación */}
+            <Controller
+              name="identificacion"
+              control={control}
+              render={({ field }) => (
+                <IdentificationInput
+                  {...field}
+                  id="identificacion"
+                  label="Identificación"
+                  placeholder="Ingrese la identificación"
+                  error={!!errors.identificacion}
+                  required
+                />
+              )}
+            />
 
-        <div className="space-y-2 flex flex-col justify-center">
-          <Label htmlFor="tipoDocumento">
-            {errors.tipoDocumento
-              ? errors.tipoDocumento.message
-              : "Tipo documento *"}
-          </Label>
-          <Controller
-            name="tipoDocumento"
-            control={control}
-            render={({ field }) => (
-              <SelectSimple
-                {...field}
-                id="tipoDocumento"
-                placeholder="Selecciona tipo doc."
-                options={[
-                  { label: "Cédula", value: "1" },
-                  { label: "Pasaporte", value: "2" },
-                  { label: "RNC", value: "3" },
-                ]}
-                error={!!errors.tipoDocumento}
-                className="mt-1 h-10"
-              />
-            )}
-          />
-        </div>
-
-        <div className="space-y-2 mb-2 flex flex-col justify-center">
-          <Label htmlFor="identificacion">
-            {errors.identificacion
-              ? errors.identificacion.message
-              : "Identificación *"}
-          </Label>
-          <Controller
-            name="identificacion"
-            control={control}
-            render={({ field }) => (
-              <Input
-                {...field}
-                id="identificacion"
-                placeholder="Identificación"
-                className={`py-5 ${
-                  errors.identificacion ? "border-red-500" : ""
-                }`}
-              />
-            )}
-          />
-        </div>
-
-        <div className="space-y-2 flex flex-col justify-center">
-          {/* Label invisible para mantener la altura */}
-          <Label className="invisible">Buscar</Label>
-          <Button
-            type="submit"
-            className="bg-[#005BBB] hover:bg-[#003E7E] text-white rounded-full h-10 w-10 flex items-center justify-center shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2"
-            aria-label="Buscar cliente"
-          >
-            <Search className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        </div>
-      </div>
-    </form>
+            {/* Botón de búsqueda */}
+            <div className="flex justify-start">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="h-11 px-6 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2"
+              >
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner className="w-4 h-4 mr-2" />
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Buscar Cliente
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
