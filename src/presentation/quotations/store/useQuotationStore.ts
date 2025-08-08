@@ -94,8 +94,42 @@ export const useQuotationStore = create<QuotationState>()(
         }
       },
       getFinalObject: () => {
-        const { user, cliente, planes } = get();
-        return { user, cliente, planes };
+        const { cliente, planes } = get();
+        
+        // Obtener el usuario autenticado desde localStorage de manera segura
+        let authenticatedUser = null;
+        if (typeof window !== "undefined") {
+          try {
+            console.log("=== DEBUG AUTH STORAGE ===");
+            
+            // Verificar qué hay en localStorage
+            const authStorageData = localStorage.getItem("auth-storage");
+            console.log("authStorageData raw:", authStorageData);
+            
+            if (authStorageData) {
+              const authData = JSON.parse(authStorageData);
+              console.log("authData parsed:", authData);
+              console.log("authData.state:", authData?.state);
+              console.log("authData.state.user:", authData?.state?.user);
+              console.log("authData.state.user.data:", authData?.state?.user?.data);
+              console.log("authData.state.user.data.user:", authData?.state?.user?.data?.user);
+              
+              authenticatedUser = authData?.state?.user?.data?.user || null;
+            }
+            
+            // También revisar el token directamente
+            const token = localStorage.getItem("access_token");
+            console.log("access_token:", token);
+            
+            console.log("authenticatedUser final:", authenticatedUser);
+            console.log("=== END DEBUG ===");
+            
+          } catch (error) {
+            console.error("Error getting authenticated user:", error);
+          }
+        }
+        
+        return { user: authenticatedUser, cliente, planes };
       },
       isComplete: () => {
         const { cliente, planes } = get();

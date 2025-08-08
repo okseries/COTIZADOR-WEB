@@ -1,16 +1,20 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '../../components/ui/card';
 import { PlanPaymentCard } from './ui/PlanPaymentCard';
 import { PaymentSummary } from './ui/PaymentSummary';
 import { usePaymentOptions, PeriodoPago } from './hooks/usePaymentOptions';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { useQuotationStore } from '../quotations/store/useQuotationStore';
+import { useAuth } from '../auth/store/useAuth.store';
 
 export const PaymentOptions: React.FC = () => {
-  const router = useRouter();
+  const {getFinalObject} = useQuotationStore();
+  const { user: authUser } = useAuth();
+  // const router = useRouter();
   const {
     paymentPlans,
     isSubmitting,
@@ -21,11 +25,27 @@ export const PaymentOptions: React.FC = () => {
     submitQuotation
   } = usePaymentOptions();
 
-  const handleBack = () => {
-    router.push('/dashboard/cotizacion?step=3');
-  };
+  // const handleBack = () => {
+  //   router.push('/dashboard/cotizacion?step=3');
+  // };
 
   const handleSubmit = async () => {
+    const payload = getFinalObject();
+    
+    // Asegurarse de que el usuario esté incluido desde el store de auth
+    const finalPayload = {
+      ...payload,
+      user: authUser?.data?.user || null
+    };
+    
+    console.log("=== DEBUG PAYLOAD ===");
+    console.log("payload original:", payload);
+    console.log("authUser completo:", authUser);
+    console.log("authUser.data:", authUser?.data);
+    console.log("authUser.data.user:", authUser?.data?.user);
+    console.log("finalPayload:", finalPayload);
+    console.log("usuario en finalPayload:", finalPayload.user);
+    
     await submitQuotation();
   };
 
