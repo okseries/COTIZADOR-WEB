@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useGetAllPlans } from '../hooks/usePlans';
+import { GetPrimaPlan } from '../service/prima.service';
 import CheckBoxPlans from './CheckBoxPlans';
 import AddAfiliadoForm from './AddAfiliadoForm';
 import AfiliadosList from './AfiliadosList';
@@ -67,23 +68,123 @@ const CategoryPlan = () => {
     console.log('Planes seleccionados:', Array.from(newSelectedPlans.keys()));
   };
 
-  const handleAddAfiliado = (planName: string, afiliado: Afiliado) => {
-    const currentPlanes = getFinalObject().planes || [];
-    const existingPlan = currentPlanes.find(p => p.plan === planName);
-    
-    if (existingPlan) {
-      const updatedAfiliados = [...existingPlan.afiliados, afiliado];
-      const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
-      
-      updatePlanByName(planName, {
-        afiliados: updatedAfiliados,
-        cantidadAfiliados: updatedAfiliados.length,
-        resumenPago: {
-          ...existingPlan.resumenPago,
-          subTotalAfiliado,
-          totalPagar: subTotalAfiliado + existingPlan.resumenPago.subTotalOpcional
+  const handleSelectAllPlans = (checked: boolean) => {
+    if (checked) {
+      // Seleccionar todos los planes
+      const newSelectedPlans = new Map<number, PlanInterface>();
+      plans?.forEach(plan => {
+        newSelectedPlans.set(plan.id, plan);
+        // Agregar al store si no existe
+        const existingPlan = getFinalObject().planes?.find(p => p.plan === plan.plan_name);
+        if (!existingPlan) {
+          const newQuotationPlan: QuotationPlan = {
+            plan: plan.plan_name,
+            afiliados: [],
+            opcionales: [],
+            resumenPago: {
+              subTotalAfiliado: 0,
+              subTotalOpcional: 0,
+              periodoPago: "Mensual",
+              totalPagar: 0
+            },
+            cantidadAfiliados: 0,
+            tipo: "VOLUNTARIO"
+          };
+          addPlan(newQuotationPlan);
         }
       });
+      setSelectedPlans(newSelectedPlans);
+    } else {
+      // Deseleccionar todos los planes
+      setSelectedPlans(new Map());
+      // Remover todos del store
+      plans?.forEach(plan => {
+        removePlan(plan.plan_name);
+      });
+    }
+  };
+
+  const handleAddAfiliado = async (planName: string, afiliado: Afiliado) => {
+    const tipoPlan = getFinalObject().cliente?.tipoPlan ?? 0;
+    const clientChoosen = getFinalObject().cliente?.clientChoosen ?? 0;
+
+    if (planName === "Todos") {
+      // Agregar el afiliado a todos los planes seleccionados con prima específica para cada uno
+      for (const plan of Array.from(selectedPlans.values())) {
+        const currentPlanes = getFinalObject().planes || [];
+        const existingPlan = currentPlanes.find(p => p.plan === plan.plan_name);
+        
+        if (existingPlan) {
+          try {
+            // Calcular prima específica para este plan
+            const primaValue = await GetPrimaPlan(
+              plan.plan_name, 
+              afiliado.edad, 
+              tipoPlan, 
+              clientChoosen
+            );
+            
+            const afiliadoForPlan: Afiliado = {
+              ...afiliado,
+              plan: plan.plan_name,
+              subtotal: primaValue.toFixed(2)
+            };
+            
+            const updatedAfiliados = [...existingPlan.afiliados, afiliadoForPlan];
+            const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
+            
+            updatePlanByName(plan.plan_name, {
+              afiliados: updatedAfiliados,
+              cantidadAfiliados: updatedAfiliados.length,
+              resumenPago: {
+                ...existingPlan.resumenPago,
+                subTotalAfiliado,
+                totalPagar: subTotalAfiliado + existingPlan.resumenPago.subTotalOpcional
+              }
+            });
+          } catch (error) {
+            console.error(`Error al calcular prima para plan ${plan.plan_name}:`, error);
+            // Usar valor por defecto si hay error
+            const afiliadoForPlan: Afiliado = {
+              ...afiliado,
+              plan: plan.plan_name,
+              subtotal: "1186.57"
+            };
+            
+            const updatedAfiliados = [...existingPlan.afiliados, afiliadoForPlan];
+            const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
+            
+            updatePlanByName(plan.plan_name, {
+              afiliados: updatedAfiliados,
+              cantidadAfiliados: updatedAfiliados.length,
+              resumenPago: {
+                ...existingPlan.resumenPago,
+                subTotalAfiliado,
+                totalPagar: subTotalAfiliado + existingPlan.resumenPago.subTotalOpcional
+              }
+            });
+          }
+        }
+      }
+    } else {
+      // Agregar solo al plan específico
+      const currentPlanes = getFinalObject().planes || [];
+      const existingPlan = currentPlanes.find(p => p.plan === planName);
+      
+      if (existingPlan) {
+        const updatedAfiliados = [...existingPlan.afiliados, afiliado];
+        const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
+        
+        updatePlanByName(planName, {
+          afiliados: updatedAfiliados,
+          cantidadAfiliados: updatedAfiliados.length,
+          resumenPago: {
+            ...existingPlan.resumenPago,
+            subTotalAfiliado,
+            totalPagar: subTotalAfiliado + existingPlan.resumenPago.subTotalOpcional
+          }
+        });
+      }
     }
   };
 
@@ -115,11 +216,21 @@ const CategoryPlan = () => {
   }
 
   const currentQuotationPlans = getFinalObject().planes || [];
+  const isAllPlansSelected = plans?.length > 0 && selectedPlans.size === plans.length;
 
   return (
     <div className="space-y-6">
       {/* Selección de planes */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <CheckBoxPlans
+          plan={{
+            id: 0,
+            plan_name: "Todos",
+            poliza: "Seleccionar todos",
+          }}
+          isChecked={isAllPlansSelected}
+          onChange={handleSelectAllPlans}
+        />
         {plans?.map((plan) => (
           <CheckBoxPlans 
             key={plan.id} 
@@ -140,6 +251,8 @@ const CategoryPlan = () => {
         </div>
       )}
 
+      
+
       {/* Lista de afiliados por plan - Solo mostrar si hay afiliados */}
       {currentQuotationPlans.length > 0 && (
         <div className="space-y-4">
@@ -151,6 +264,7 @@ const CategoryPlan = () => {
               <AfiliadosList
                 key={`list-${quotationPlan.plan}`}
                 planName={quotationPlan.plan}
+                planType={originalPlan.poliza}
                 afiliados={quotationPlan.afiliados}
                 onRemoveAfiliado={(index) => handleRemoveAfiliado(originalPlan, index)}
               />

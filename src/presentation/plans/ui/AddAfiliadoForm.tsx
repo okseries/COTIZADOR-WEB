@@ -17,7 +17,7 @@ interface Props {
 }
 
 const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
-  const [selectedPlanName, setSelectedPlanName] = useState<string>('')
+  const [selectedPlanName, setSelectedPlanName] = useState<string>('Todos')
   const [parentescoId, setParentescoId] = useState<string>('')
   const [edad, setEdad] = useState<string>('')
   const [errors, setErrors] = useState<{ plan?: string; parentesco?: string; edad?: string }>({})
@@ -29,8 +29,8 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
   const tipoPlan = getFinalObject().cliente?.tipoPlan ?? 0
   const clientChoosen = getFinalObject().cliente?.clientChoosen ?? 0
   
-  // Obtener prima cuando tenemos todos los datos necesarios
-  const shouldFetchPrima = selectedPlanName !== '' && edad !== '' && !isNaN(Number(edad)) && Number(edad) > 0
+  // Obtener prima cuando tenemos todos los datos necesarios (no para "Todos")
+  const shouldFetchPrima = selectedPlanName !== '' && selectedPlanName !== 'Todos' && edad !== '' && !isNaN(Number(edad)) && Number(edad) > 0
   const { data: prima, isLoading: loadingPrima } = usePrimaPlan(
     selectedPlanName, 
     Number(edad), 
@@ -39,10 +39,10 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
     shouldFetchPrima
   )
 
-  // Resetear plan seleccionado si ya no está en la lista
+  // Resetear plan seleccionado si ya no está en la lista (excepto "Todos")
   useEffect(() => {
-    if (selectedPlanName && !selectedPlans.find(p => p.plan_name === selectedPlanName)) {
-      setSelectedPlanName('')
+    if (selectedPlanName && selectedPlanName !== 'Todos' && !selectedPlans.find(p => p.plan_name === selectedPlanName)) {
+      setSelectedPlanName('Todos')
     }
   }, [selectedPlans, selectedPlanName])
 
@@ -73,17 +73,28 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
     const selectedParentesco = parentescos?.find(p => p.id.toString() === parentescoId)
     if (!selectedParentesco) return
 
-    const primaValue = prima || 1186.57 // Valor por defecto
-
-    const newAfiliado: Afiliado = {
-      plan: selectedPlanName,
-      parentesco: selectedParentesco.nomebreParentesco,
-      edad: Number(edad),
-      subtotal: primaValue.toFixed(2),
-      cantidadAfiliados: 1
+    if (selectedPlanName === 'Todos') {
+      // Para "Todos", crear un afiliado base sin prima específica
+      const newAfiliado: Afiliado = {
+        plan: 'Todos', // Se actualizará en CategoryPlan
+        parentesco: selectedParentesco.nomebreParentesco,
+        edad: Number(edad),
+        subtotal: '0', // Se calculará por cada plan en CategoryPlan
+        cantidadAfiliados: 1
+      }
+      onAddAfiliado(selectedPlanName, newAfiliado)
+    } else {
+      // Para plan específico
+      const primaValue = prima || 1186.57 // Valor por defecto
+      const newAfiliado: Afiliado = {
+        plan: selectedPlanName,
+        parentesco: selectedParentesco.nomebreParentesco,
+        edad: Number(edad),
+        subtotal: primaValue.toFixed(2),
+        cantidadAfiliados: 1
+      }
+      onAddAfiliado(selectedPlanName, newAfiliado)
     }
-
-    onAddAfiliado(selectedPlanName, newAfiliado)
     
     // Reset form (mantener plan seleccionado)
     setParentescoId('')
@@ -109,6 +120,7 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
               <SelectValue placeholder="Seleccionar plan" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="Todos">Todos los planes</SelectItem>
               {selectedPlans.map((plan) => (
                 <SelectItem key={plan.id} value={plan.plan_name}>
                   {plan.plan_name}
@@ -167,7 +179,9 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
         <div className="space-y-2">
           <Label>Prima Plan</Label>
           <div className="h-10 px-3 py-2 border rounded-md bg-gray-100 flex items-center text-sm">
-            {loadingPrima ? (
+            {selectedPlanName === 'Todos' ? (
+              'Variable por plan'
+            ) : loadingPrima ? (
               <LoadingSpinner className="h-4 w-4 mr-2" />
             ) : (
               `RD$ ${prima ? prima.toFixed(2) : shouldFetchPrima ? '0.00' : '--'}`
@@ -180,7 +194,7 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
           <Label>&nbsp;</Label>
           <Button 
             onClick={handleAddAfiliado}
-            className="w-full h-10 bg-blue-600 hover:bg-blue-700"
+            className="w-full h-10 bg-[#005BBB] hover:bg-[#003E7E]"
             disabled={loadingPrima}
           >
             {loadingPrima ? <LoadingSpinner className="h-4 w-4 mr-2" /> : null}

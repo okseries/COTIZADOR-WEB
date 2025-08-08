@@ -1,24 +1,36 @@
-"use client"
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Trash2 } from 'lucide-react'
-import React from 'react'
-import { Afiliado } from '@/presentation/quotations/interface/createQuotation.interface'
-import { formatCurrency } from '@/presentation/helpers/FormattCurrency'
+"use client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trash2 } from "lucide-react";
+import React from "react";
+import { Afiliado } from "@/presentation/quotations/interface/createQuotation.interface";
+import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
-  planName: string
-  afiliados: Afiliado[]
-  onRemoveAfiliado: (index: number) => void
+  planName: string;
+  planType: string;
+  afiliados: Afiliado[];
+  onRemoveAfiliado: (index: number) => void;
 }
 
-const AfiliadosList = ({ planName, afiliados, onRemoveAfiliado }: Props) => {
-  if (afiliados.length === 0) return null
+const AfiliadosList = ({
+  planName,
+  planType,
+  afiliados,
+  onRemoveAfiliado,
+}: Props) => {
+  if (afiliados.length === 0) return null;
 
   return (
     <Card className="mt-4">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">{planName}</CardTitle>
+        <CardTitle className="text-lg">
+          <Badge className=" bg-gradient-to-b from-[#009590] to-[#0269aa] text-white mr-2">
+            {planName}
+          </Badge>
+        </CardTitle>
+        <span className="text-sm text-gray-500 px-1">{planType}</span>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
@@ -29,13 +41,18 @@ const AfiliadosList = ({ planName, afiliados, onRemoveAfiliado }: Props) => {
             <div>Prima Plan</div>
             <div>Acciones</div>
           </div>
-          
+
           {/* Afiliados */}
           {afiliados.map((afiliado, index) => (
-            <div key={index} className="grid grid-cols-4 gap-4 py-2 border-b last:border-b-0">
+            <div
+              key={index}
+              className="grid grid-cols-4 gap-4 py-2 border-b last:border-b-0"
+            >
               <div className="text-sm">{afiliado.parentesco}</div>
               <div className="text-sm">{afiliado.edad}</div>
-              <div className="text-sm font-medium">{formatCurrency(afiliado.subtotal)}</div>
+              <div className="text-sm font-medium">
+                {formatCurrency(afiliado.subtotal)}
+              </div>
               <div>
                 <Button
                   variant="destructive"
@@ -51,7 +68,7 @@ const AfiliadosList = ({ planName, afiliados, onRemoveAfiliado }: Props) => {
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default AfiliadosList
+export default AfiliadosList;
