@@ -1,6 +1,5 @@
 import React from "react";
 import { SelectSimple } from "./FormFieldSelectSimple";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 interface DocumentTypeSelectProps {
@@ -13,17 +12,23 @@ interface DocumentTypeSelectProps {
   required?: boolean;
 }
 
-export const DocumentTypeSelect = React.forwardRef<HTMLDivElement, DocumentTypeSelectProps>(
-  ({ 
-    value, 
-    onChange, 
-    error, 
-    placeholder = "Selecciona tipo", 
-    className,
-    label = "Tipo de documento",
-    required = false,
-    ...props 
-  }, ref) => {
+export const DocumentTypeSelect = React.forwardRef<
+  HTMLDivElement,
+  DocumentTypeSelectProps
+>(
+  (
+    {
+      value,
+      onChange,
+      error,
+      placeholder = "Selecciona tipo",
+      className,
+      label = "Tipo de documento",
+      required = false,
+      ...props
+    },
+    ref
+  ) => {
     const documentOptions = [
       { label: "Cédula", value: "1" },
       { label: "Pasaporte", value: "2" },
@@ -31,13 +36,8 @@ export const DocumentTypeSelect = React.forwardRef<HTMLDivElement, DocumentTypeS
     ];
 
     return (
-      <div className={cn("space-y-2", className)} ref={ref}>
-        {label && (
-          <Label className="text-sm font-medium text-foreground">
-            {label}
-            {required && <span className="text-destructive ml-1">*</span>}
-          </Label>
-        )}
+      <div className={cn( className)} ref={ref}>
+        
         <SelectSimple
           value={value || ""}
           onChange={onChange}
@@ -52,4 +52,3 @@ export const DocumentTypeSelect = React.forwardRef<HTMLDivElement, DocumentTypeS
   }
 );
 
-DocumentTypeSelect.displayName = "DocumentTypeSelect";

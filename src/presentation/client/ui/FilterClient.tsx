@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -44,7 +44,7 @@ const FilterClient = () => {
   React.useEffect(() => {
     if (filterData) {
       const currentValues = getValues();
-      
+
       // Solo actualizar si los valores son diferentes para evitar bucle infinito
       if (
         currentValues.tipoDocumento !== filterData.tipoDocumento ||
@@ -63,39 +63,45 @@ const FilterClient = () => {
     try {
       // Convertir el tipo de documento a número para la API
       const tipoDocumentoNumber = parseInt(data.tipoDocumento);
-      
+
       // Obtener identificación limpia (sin formato) para la API
       const cleanIdentification = getCleanIdentification(
-        data.tipoDocumento as "1" | "2" | "3", 
+        data.tipoDocumento as "1" | "2" | "3",
         data.identificacion
       );
-      
-      console.log('=== BÚSQUEDA DE CLIENTE ===');
-      console.log('Datos del formulario:', data);
-      console.log('Tipo documento (string):', data.tipoDocumento);
-      console.log('Tipo documento (número):', tipoDocumentoNumber);
-      console.log('Identificación original:', data.identificacion);
-      console.log('Identificación limpia para API:', cleanIdentification);
-      console.log('URL que se llamará:', `/users/${cleanIdentification}/${tipoDocumentoNumber}`);
+
+      console.log("=== BÚSQUEDA DE CLIENTE ===");
+      console.log("Datos del formulario:", data);
+      console.log("Tipo documento (string):", data.tipoDocumento);
+      console.log("Tipo documento (número):", tipoDocumentoNumber);
+      console.log("Identificación original:", data.identificacion);
+      console.log("Identificación limpia para API:", cleanIdentification);
+      console.log(
+        "URL que se llamará:",
+        `/users/${cleanIdentification}/${tipoDocumentoNumber}`
+      );
 
       // Guardar los datos de búsqueda para que los use ClientInformation
-      const response = await ClientByIdentification(cleanIdentification, tipoDocumentoNumber);
+      const response = await ClientByIdentification(
+        cleanIdentification,
+        tipoDocumentoNumber
+      );
 
-      console.log('Respuesta de la API:', response);
+      console.log("Respuesta de la API:", response);
       setSearchData(data);
-      
+
       // Guardar la información del cliente encontrado
       if (response) {
         setClientData(response);
-        console.log('✅ Cliente encontrado:', response);
+        console.log("✅ Cliente encontrado:", response);
       } else {
-        alert('Cliente no encontrado');
+        alert("Cliente no encontrado");
         setClientData(null);
-        console.log('❌ Cliente no encontrado');
+        console.log("❌ Cliente no encontrado");
       }
     } catch (error) {
-      console.error('❌ Error al buscar cliente:', error);
-      alert('Error al buscar cliente');
+      console.error("❌ Error al buscar cliente:", error);
+      alert("Error al buscar cliente");
       setClientData(null);
     } finally {
       setIsLoading(false);
@@ -104,10 +110,9 @@ const FilterClient = () => {
 
   return (
     <Card className="mb-6 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
-      
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center justify-evenly">
             {/* Tipo de Documento */}
             <Controller
               name="tipoDocumento"
