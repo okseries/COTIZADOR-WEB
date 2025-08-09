@@ -234,7 +234,8 @@ const ClientInformation = forwardRef<
                       {...field}
                       id="name"
                       placeholder="Ingrese el nombre completo"
-                      className={`h-11 ${errors.name ? "border-red-500" : ""}`}
+                      className={`h-11  ${clientData?.NOMBRE_COMPLETO ? " text-green-500" : ""} ${errors.name ? "border-red-500" : ""}`}
+                      readOnly={!!clientData?.NOMBRE_COMPLETO}
                     />
                   )}
                 />

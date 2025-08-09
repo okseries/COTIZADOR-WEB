@@ -120,9 +120,9 @@ const FilterClient = () => {
         setClientData(response);
         console.log("✅ Cliente encontrado:", response);
       } else {
-        setAlertDialogTitle("Cliente no encontrado");
+        setAlertDialogTitle("Sin Resultados");
         setAlertDialogMessage(
-          `No se encontró ningún cliente con la identificación: ${cleanIdentification}`
+          `No se encontraron datos con la información proporcionada, vuelva a intentarlo.`
         );
         setOpenAlertDialog(true);
         setClientData(null);
