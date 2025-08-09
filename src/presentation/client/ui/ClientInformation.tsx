@@ -118,6 +118,24 @@ const ClientInformation = forwardRef<
     }
   }, [cliente, reset, clientData]);
 
+  // Efecto separado para resetear cuando se limpia el store
+  React.useEffect(() => {
+    if (!cliente) {
+      reset({
+        clientChoosen: 0,
+        identification: "",
+        name: "",
+        contact: "",
+        email: "",
+        address: "",
+        office: "",
+        agent: "",
+        agentId: 0,
+        tipoPlan: 0,
+      });
+    }
+  }, [cliente, reset]);
+
   // Efecto para llenar el formulario con datos de búsqueda (solo identificación)
   React.useEffect(() => {
     if (searchData) {

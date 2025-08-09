@@ -1,7 +1,6 @@
 import React, { useRef } from 'react'
 import ClientInformation, { ClientInformationRef } from '../../../client/ui/ClientInformation';
 import StepButton from './stepButtom';
-import { useQuotationStore } from '../../store/useQuotationStore';
 import CategoryPlan from '@/presentation/plans/ui/CategoryPlan';
 import { ClientSearchProvider } from '@/presentation/client/hooks/useClientSearch';
 import CoberturasOpcionales from '@/presentation/coberturasOpcionales/ui/CoberturasOptinals';

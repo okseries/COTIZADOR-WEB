@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../store/useAuth.store'
-import { LoadingSpinner } from '@/components/shared/loading'
+import { Spinner } from '@/components/shared/Spinner'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -26,7 +26,14 @@ export function AuthGuard({
 
   // Mostrar spinner mientras verifica autenticación
   if (isChecking) {
-    return <LoadingSpinner />
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#005BBB]/5 to-[#FFA500]/5">
+        <div className="text-center">
+          <Spinner size="xl" color="primary" className="mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
   }
 
   // Si no está autenticado, no renderizar nada (ya se redirigió)

@@ -15,7 +15,6 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Activity,
 } from "lucide-react";
 import React from "react";
 

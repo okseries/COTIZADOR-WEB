@@ -11,7 +11,6 @@ interface Props {
 const PlanesResumen = ({ planes }: Props) => {
   if (planes.length === 0) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const totalMonto = planes.reduce((acc, plan) => {
     const planTotal = plan.afiliados.reduce((planAcc, afiliado) => 
       planAcc + parseFloat(afiliado.subtotal || '0'), 0)

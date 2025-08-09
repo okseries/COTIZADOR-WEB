@@ -61,11 +61,11 @@ export const useLogin = () => {
       }
     },
     
-    onError: (error: any) => {
+    onError: (error: Error | unknown) => {
       console.log("=== LOGIN ERROR ===");
       console.log("Error recibido:", error);
       console.log("Tipo de error:", typeof error);
-      console.log("Error message:", error?.message);
+      console.log("Error message:", error instanceof Error ? error.message : String(error));
       
       setChecking(false)
       // No re-lanzar el error aquí, React Query ya lo maneja

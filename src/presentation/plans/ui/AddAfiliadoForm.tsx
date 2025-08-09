@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useParentesco } from '@/presentation/parentesco/hooks/useParentesco'
 import { usePrimaPlan } from '../hooks/usePrimaPlan'
 import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore'
-import { LoadingSpinner } from '@/components/shared/loading'
+import { Spinner } from '@/components/shared/Spinner'
 import React, { useState, useEffect } from 'react'
 import { Afiliado } from '@/presentation/quotations/interface/createQuotation.interface'
 import { Plan } from '../interface/plan.interface'
@@ -103,7 +103,7 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
     setErrors({})
   }
 
-  if (loadingParentescos) return <LoadingSpinner className="h-6 w-6" />
+  if (loadingParentescos) return <Spinner size="md" color="primary" className="mx-auto" />
   if (errorParentescos) return <div className="text-red-500 text-sm">Error al cargar parentescos</div>
 
   return (
@@ -183,7 +183,7 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
             {selectedPlanName === 'Todos' ? (
               'Variable por plan'
             ) : loadingPrima ? (
-              <LoadingSpinner className="h-4 w-4 mr-2" />
+              <Spinner size="sm" color="primary" className="mr-2" />
             ) : (
               `RD$ ${prima ? prima.toFixed(2) : shouldFetchPrima ? '0.00' : '--'}`
             )}
@@ -198,7 +198,7 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
             className="w-full h-10 bg-[#005BBB] hover:bg-[#003E7E]"
             disabled={loadingPrima}
           >
-            {loadingPrima ? <LoadingSpinner className="h-4 w-4 mr-2" /> : null}
+            {loadingPrima ? <Spinner size="sm" color="white" className="mr-2" /> : null}
             Agregar
           </Button>
         </div>

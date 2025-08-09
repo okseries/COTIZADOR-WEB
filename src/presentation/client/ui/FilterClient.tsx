@@ -8,16 +8,15 @@ import {
 } from "../schema/filtrar-client.schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Search } from "lucide-react";
+import { AlertCircle, Search, Trash2 } from "lucide-react";
 import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
 import { useClientSearch } from "../hooks/useClientSearch";
 import { ClientByIdentification } from "../services/client.services";
-import { LoadingSpinner } from "@/components/shared/loading";
+import { Spinner } from "@/components/shared/Spinner";
 import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
 import { IdentificationInput } from "./IdentificationInput";
 import { getCleanIdentification } from "../helpers/indentification-format";
 import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
-import Link from "next/link";
 
 const FilterClient = () => {
   const { setSearchData, setClientData } = useClientSearch();
@@ -44,6 +43,38 @@ const FilterClient = () => {
 
   // Observar el tipo de documento para pasarlo al input de identificación
   const tipoDocumento = watch("tipoDocumento");
+
+  // Función mejorada para limpiar todo
+  const handleClearAll = () => {
+    clearQuotation();
+    reset({
+      tipoDocumento: "1",
+      identificacion: "",
+    });
+    setClientData(null);
+    // Corregir el tipo - usar valores por defecto en lugar de null
+    setSearchData({
+      tipoDocumento: "1",
+      identificacion: "",
+    });
+  };
+
+  // Manejar tecla ESC para cerrar el alert dialog
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && openAlertDialog) {
+        setOpenAlertDialog(false);
+      }
+    };
+
+    if (openAlertDialog) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openAlertDialog]);
 
   // Efecto para cargar datos del store en el formulario (solo campos del filtro real)
   React.useEffect(() => {
@@ -108,7 +139,15 @@ const FilterClient = () => {
     <Card className="mb-2 py-4 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
       <CardContent className="flex flex-row items-center justify-between">
         <div>
-          <Button onClick={clearQuotation} className="bg-red-300 hover:bg-red-500" variant="ghost">Limpiar</Button>
+          <Button 
+            onClick={handleClearAll} 
+            className="bg-red-500 hover:bg-red-600 text-white" 
+            variant="outline"
+            size="sm"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Limpiar Todo
+          </Button>
         </div>
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -155,8 +194,8 @@ const FilterClient = () => {
               >
                 {isLoading ? (
                   <>
-                    <LoadingSpinner className="w-4 h-4 mr-2" />
-                    Buscando...
+                    <Spinner  className="text-white w-4 h-4 mr-2" />
+                    Buscar Cliente
                   </>
                 ) : (
                   <>

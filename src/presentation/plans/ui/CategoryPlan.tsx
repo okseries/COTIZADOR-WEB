@@ -6,7 +6,7 @@ import AddAfiliadoForm from './AddAfiliadoForm';
 import AfiliadosList from './AfiliadosList';
 import PlanesResumen from './PlanesResumen';
 import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
-import { LoadingSpinner } from '@/components/shared/loading';
+import { Spinner } from '@/components/shared/Spinner';
 import { Plan as PlanInterface } from '../interface/plan.interface';
 import { Plan as QuotationPlan, Afiliado } from '@/presentation/quotations/interface/createQuotation.interface';
 
@@ -22,6 +22,49 @@ const CategoryPlan = () => {
   
   const { data: plans, isLoading, error } = useGetAllPlans(tipoPoliza ?? 0, subTipoPoliza ?? 0);
 
+  // Función para ordenar los planes según el orden deseado
+  const getOrderedPlans = (plansList: PlanInterface[]) => {
+    if (!plansList) return [];
+    
+    const desiredOrder = ['FLEX', 'SMART', 'UP', 'CARE', 'LIFE'];
+    
+    return plansList.sort((a, b) => {
+      // Extraer el nombre del plan sin "FLEX " al inicio
+      const getBaseName = (planName: string) => {
+        // Si el plan se llama exactamente "FLEX", devolver "FLEX"
+        if (planName === 'FLEX') return 'FLEX';
+        
+        // Si empieza con "FLEX ", quitar el prefijo
+        if (planName.startsWith('FLEX ')) {
+          return planName.replace('FLEX ', '');
+        }
+        
+        // Si no empieza con FLEX, devolver el nombre completo
+        return planName;
+      };
+      
+      const baseNameA = getBaseName(a.plan_name);
+      const baseNameB = getBaseName(b.plan_name);
+      
+      const indexA = desiredOrder.indexOf(baseNameA);
+      const indexB = desiredOrder.indexOf(baseNameB);
+      
+      // Si ambos están en el orden deseado, usar ese orden
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      
+      // Si solo uno está en el orden deseado, ese va primero
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      
+      // Si ninguno está en el orden deseado, mantener orden alfabético
+      return a.plan_name.localeCompare(b.plan_name);
+    });
+  };
+
+  const orderedPlans = getOrderedPlans(plans || []);
+
   // Sincronizar con el store
   useEffect(() => {
     const currentPlanes = finalObject.planes || [];
@@ -29,14 +72,14 @@ const CategoryPlan = () => {
     
     // Solo agregar a selectedPlans los planes que están en el store Y existen en la lista de planes
     currentPlanes.forEach(quotationPlan => {
-      const planFromAPI = plans?.find(plan => plan.plan_name === quotationPlan.plan);
+      const planFromAPI = orderedPlans?.find(plan => plan.plan_name === quotationPlan.plan);
       if (planFromAPI) {
         newSelectedPlans.set(planFromAPI.id, planFromAPI);
       }
     });
     
     setSelectedPlans(newSelectedPlans);
-  }, [plans?.length, finalObject.planes?.length]); // Solo depender de las longitudes para evitar referencias cambiantes
+  }, [orderedPlans?.length, finalObject.planes?.length]); // Solo depender de las longitudes para evitar referencias cambiantes
 
   const handlePlanChange = (plan: PlanInterface, checked: boolean) => {
     const newSelectedPlans = new Map(selectedPlans);
@@ -72,7 +115,7 @@ const CategoryPlan = () => {
     if (checked) {
       // Seleccionar todos los planes
       const newSelectedPlans = new Map<number, PlanInterface>();
-      plans?.forEach(plan => {
+      orderedPlans?.forEach(plan => {
         newSelectedPlans.set(plan.id, plan);
         // Agregar al store si no existe
         const existingPlan = finalObject.planes?.find(p => p.plan === plan.plan_name);
@@ -208,15 +251,24 @@ const CategoryPlan = () => {
     }
   };
 
-  if (isLoading) return <LoadingSpinner className="h-10 w-10 mx-auto mb-4 mt-10 text-[#005BBB]" />;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <Spinner size="xl" color="primary" className="mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Cargando planes disponibles...</p>
+        </div>
+      </div>
+    );
+  }
   if (error) return <div>Error al cargar los planes: {error.message}</div>;
 
-  if (!plans || plans.length === 0) {
+  if (!orderedPlans || orderedPlans.length === 0) {
     return <div>No se encontraron planes.</div>;
   }
 
   const currentQuotationPlans = finalObject.planes || [];
-  const isAllPlansSelected = plans?.length > 0 && selectedPlans.size === plans.length;
+  const isAllPlansSelected = orderedPlans?.length > 0 && selectedPlans.size === orderedPlans.length;
 
   return (
     <div className="space-y-6">
@@ -231,7 +283,7 @@ const CategoryPlan = () => {
           isChecked={isAllPlansSelected}
           onChange={handleSelectAllPlans}
         />
-        {plans?.map((plan) => (
+        {orderedPlans?.map((plan) => (
           <CheckBoxPlans 
             key={plan.id} 
             plan={plan}

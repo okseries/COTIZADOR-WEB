@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { HomeIcon, Link, LogOut } from "lucide-react";
+import { HomeIcon, LogOut } from "lucide-react";
 import { useAuth } from "@/presentation/auth/store/useAuth.store";
 import { useLogout } from "@/presentation/auth/hooks/useAuth.hooks";
 import { Label } from "../ui/label";

@@ -52,3 +52,5 @@ export const DocumentTypeSelect = React.forwardRef<
   }
 );
 
+DocumentTypeSelect.displayName = "DocumentTypeSelect";
+
