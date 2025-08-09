@@ -17,10 +17,11 @@ import { useQuotationStore } from "@/presentation/quotations/store/useQuotationS
 import { IdentificationInput } from "./IdentificationInput";
 import { getCleanIdentification } from "../helpers/indentification-format";
 import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
+import Link from "next/link";
 
 const FilterClient = () => {
   const { setSearchData, setClientData } = useClientSearch();
-  const { filterData } = useQuotationStore();
+  const { filterData, clearQuotation } = useQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [openAlertDialog, setOpenAlertDialog] = useState(false);
   const [alertDialogMessage, setAlertDialogMessage] = useState("");
@@ -89,7 +90,9 @@ const FilterClient = () => {
         console.log("✅ Cliente encontrado:", response);
       } else {
         setAlertDialogTitle("Cliente no encontrado");
-        setAlertDialogMessage(`No se encontró ningún cliente con la identificación: ${cleanIdentification}`);
+        setAlertDialogMessage(
+          `No se encontró ningún cliente con la identificación: ${cleanIdentification}`
+        );
         setOpenAlertDialog(true);
         setClientData(null);
       }
@@ -103,8 +106,14 @@ const FilterClient = () => {
 
   return (
     <Card className="mb-2 py-4 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
+      <CardContent className="flex flex-row items-center justify-between">
+        <div>
+          <Button onClick={clearQuotation} className="bg-red-300 hover:bg-red-500" variant="ghost">Limpiar</Button>
+        </div>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
           <div className="flex flex-col md:flex-row items-end justify-end  gap-4">
             {/* Tipo de Documento */}
             <Controller

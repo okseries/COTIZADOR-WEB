@@ -11,13 +11,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut } from "lucide-react";
+import { HomeIcon, Link, LogOut } from "lucide-react";
 import { useAuth } from "@/presentation/auth/store/useAuth.store";
 import { useLogout } from "@/presentation/auth/hooks/useAuth.hooks";
+import { Label } from "../ui/label";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
   const { user, isAuthenticated } = useAuth();
   const logoutMutation = useLogout();
+
+  const router = useRouter();
 
   const getInitials = (name: string) => {
     return name
@@ -36,7 +40,7 @@ export function Navbar() {
     email:
       isAuthenticated && user?.data?.email
         ? user.data.email
-        : "usuario@ejemplo.com"
+        : "usuario@ejemplo.com",
   };
 
   const handleLogout = () => {
@@ -48,15 +52,15 @@ export function Navbar() {
       <div className="flex h-16 items-center px-6">
         {/* Logo */}
         <div className="flex items-center gap-x-3">
-          {/* <Image
-            src="/futuro.png"
-            alt="Logo Futuro ARS"
-            width={120}
-            height={40}
-            className="object-contain"
-            priority
-          /> */}
-          <span className="font-bold text-lg text-white">FUTURO ARS</span>
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-x-2 text-white hover:bg-transparent"
+            aria-label="Ir al dashboard de FUTURO ARS"
+          >
+            <HomeIcon className="w-12 h-12" />
+            <Label className="font-bold text-lg">FUTURO ARS</Label>
+          </Button>
         </div>
 
         {/* Spacer */}
@@ -65,7 +69,10 @@ export function Navbar() {
         {/* User Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-auto px-3 bg-transparent hover:bg-transparent cursor-pointer ">
+            <Button
+              variant="ghost"
+              className="relative h-10 w-auto px-3 bg-transparent hover:bg-transparent cursor-pointer "
+            >
               <div className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>
