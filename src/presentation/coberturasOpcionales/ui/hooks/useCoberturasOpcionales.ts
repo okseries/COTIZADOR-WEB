@@ -153,9 +153,21 @@ export const useCoberturasOpcionales = () => {
         let odontologiaValue = "0";
         
         if (odontologiaOpcional) {
+          // Buscar por descripción en las opciones de odontología
           const found = odontologiaOptions.find(opt => opt.label === odontologiaOpcional.descripcion);
           if (found) {
             odontologiaValue = found.value;
+            console.log(`🦷 Odontología detectada en plan ${plan.plan}:`, {
+              descripcion: odontologiaOpcional.descripcion,
+              value: odontologiaValue,
+              prima: found.prima
+            });
+          } else {
+            console.log(`⚠️ Descripción de odontología no encontrada:`, {
+              plan: plan.plan,
+              descripcion: odontologiaOpcional.descripcion,
+              opcionesDisponibles: odontologiaOptions.map(opt => opt.label)
+            });
           }
         }
         
@@ -167,30 +179,63 @@ export const useCoberturasOpcionales = () => {
     });
     
     if (needsUpdate) {
+      console.log("🔄 Actualizando planSelections con datos del store:", initialSelections);
       setPlanSelections(prev => ({ ...prev, ...initialSelections }));
     }
-  }, [planes.length]); // Solo depender del número de planes para evitar bucles
+  }, [planes.length, planes.map(p => p.opcionales.length).join(',')]);
 
   // Inicializar filtros globales desde el store
   useEffect(() => {
-    if (cliente?.clientChoosen === 2 && planes.length > 0) {
-      // Para colectivos, inicializar filtros como false para que el usuario pueda seleccionar
-      setGlobalFilters({
-        altoCosto: false,
-        medicamentos: false,
-        habitacion: false,
-        odontologia: false
+    if (planes.length > 0) {
+      console.log("🔧 Inicializando filtros globales desde store:", {
+        clientChoosen: cliente?.clientChoosen,
+        planesCount: planes.length,
+        primerasCoberturas: planes[0]?.opcionales?.map(opt => opt.nombre) || []
       });
-    } else if (cliente?.clientChoosen === 1 && planes.length > 0) {
-      // Para individuales, no se necesitan filtros (todas las coberturas se incluyen automáticamente)
-      setGlobalFilters({
-        altoCosto: true,
-        medicamentos: true,
-        habitacion: true,
-        odontologia: true
-      });
+
+      if (cliente?.clientChoosen === 2) {
+        // Para colectivos, leer las opcionales existentes para determinar qué filtros deben estar activos
+        const firstPlan = planes[0]; // Usar el primer plan como referencia
+        if (firstPlan && firstPlan.opcionales.length > 0) {
+          const hasAltoCosto = firstPlan.opcionales.some(opt => opt.nombre === "ALTO COSTO");
+          const hasMedicamentos = firstPlan.opcionales.some(opt => opt.nombre === "MEDICAMENTOS");
+          const hasHabitacion = firstPlan.opcionales.some(opt => opt.nombre === "HABITACIÓN");
+          const hasOdontologia = firstPlan.opcionales.some(opt => opt.nombre === "ODONTOLOGIA" || opt.nombre === "ODONTOLOGÍA");
+
+          console.log("📋 Filtros detectados desde opcionales existentes:", {
+            hasAltoCosto,
+            hasMedicamentos,
+            hasHabitacion,
+            hasOdontologia,
+            opcionales: firstPlan.opcionales.map(opt => ({ nombre: opt.nombre, descripcion: opt.descripcion }))
+          });
+
+          setGlobalFilters({
+            altoCosto: hasAltoCosto,
+            medicamentos: hasMedicamentos,
+            habitacion: hasHabitacion,
+            odontologia: hasOdontologia
+          });
+        } else {
+          // Si no hay opcionales existentes, inicializar todos como false
+          setGlobalFilters({
+            altoCosto: false,
+            medicamentos: false,
+            habitacion: false,
+            odontologia: false
+          });
+        }
+      } else if (cliente?.clientChoosen === 1) {
+        // Para individuales, todas las coberturas se incluyen automáticamente
+        setGlobalFilters({
+          altoCosto: true,
+          medicamentos: true,
+          habitacion: true,
+          odontologia: true
+        });
+      }
     }
-  }, [cliente?.clientChoosen, planes.length]);
+  }, [cliente?.clientChoosen, planes.length, planes.map(p => p.opcionales.length).join(',')]);
 
   const updatePlanOpcionales = useCallback((planName: string, odontologiaValue: string) => {
     console.log(`🚀 updatePlanOpcionales ejecutándose:`, {
