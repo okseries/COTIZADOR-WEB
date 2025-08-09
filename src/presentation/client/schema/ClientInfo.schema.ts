@@ -7,6 +7,12 @@ const phoneSchema = z
   .refine((val) => val.length === 10, {
     message: "El número debe tener 10 dígitos",
   })
+  .refine((val) => {
+    const prefix = val.slice(0, 3);
+    return prefix === "849" || prefix === "829" || prefix === "808";
+  }, {
+    message: "El número debe comenzar con 849, 829 u 808",
+  })
   .transform((val) => `(${val.slice(0, 3)}) ${val.slice(3, 6)}-${val.slice(6)}`)
 
 // Schema para cliente

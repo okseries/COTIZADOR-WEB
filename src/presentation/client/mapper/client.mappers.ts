@@ -12,17 +12,17 @@ export const mapIntermediarios = (data: Intermediario[]): SelectOption[] =>
     id: i.id,
     label: i.nameIntermediario,
     subLabel: i.documentId,
-  }));
+  })).sort((a, b) => a.label.localeCompare(b.label));
 
 export const mapPromotores = (data: Promotor[]): SelectOption[] =>
   data.map((p) => ({
     id: p.id,
     label: p.promotorName,
     subLabel: p.indentification,
-  }));
+  })).sort((a, b) => a.label.localeCompare(b.label));
 
 export const mapSucursales = (data: Sucursal[]): SelectOption[] =>
   data.map((s) => ({
     id: s.id,
     label: s.officeName,
-  }));
+  })).sort((a, b) => a.label.localeCompare(b.label));

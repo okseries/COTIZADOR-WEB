@@ -66,6 +66,7 @@ const ClientInformation = forwardRef<
 
   // Estados para los popovers
   const [openAgent, setOpenAgent] = useState(false);
+  const [searchAgent, setSearchAgent] = useState("");
 
   const {
     control,
@@ -76,8 +77,11 @@ const ClientInformation = forwardRef<
     trigger,
     getValues,
     watch,
+    setError,
+    clearErrors,
   } = useForm<ClienteFormValues>({
     resolver: zodResolver(clienteSchema),
+    mode: "onChange", // Habilitar validación en tiempo real
     defaultValues: {
       clientChoosen: cliente?.clientChoosen || 0,
       identification: cliente?.identification || "",
@@ -169,6 +173,62 @@ const ClientInformation = forwardRef<
   const { data: plans } = usePlans();
   const { data: subPlans } = useSubPlansType();
 
+  // Función para filtrar agentes de manera más precisa
+  const filteredAgents = React.useMemo(() => {
+    if (!searchAgent.trim()) return dynamicOptions;
+    
+    const searchTerm = searchAgent.toLowerCase().trim();
+    
+    return dynamicOptions.filter((item) => {
+      const label = item.label.toLowerCase();
+      const subLabel = (item.subLabel || '').toLowerCase();
+      
+      // Búsqueda exacta al inicio
+      if (label.startsWith(searchTerm) || subLabel.startsWith(searchTerm)) {
+        return true;
+      }
+      
+      // Búsqueda por palabras individuales
+      const labelWords = label.split(' ');
+      const searchWords = searchTerm.split(' ');
+      
+      const wordsMatch = searchWords.every(searchWord => 
+        labelWords.some(labelWord => labelWord.startsWith(searchWord))
+      );
+      
+      if (wordsMatch) return true;
+      
+      // Búsqueda por iniciales
+      const initials = labelWords.map(word => word.charAt(0)).join('');
+      if (initials.includes(searchTerm)) return true;
+      
+      // Búsqueda parcial en cualquier parte
+      return label.includes(searchTerm) || subLabel.includes(searchTerm);
+    }).sort((a, b) => {
+      const aLabel = a.label.toLowerCase();
+      const bLabel = b.label.toLowerCase();
+      const searchLower = searchTerm.toLowerCase();
+      
+      // Priorizar coincidencias exactas al inicio
+      const aStartsWith = aLabel.startsWith(searchLower) ? 0 : 1;
+      const bStartsWith = bLabel.startsWith(searchLower) ? 0 : 1;
+      
+      if (aStartsWith !== bStartsWith) {
+        return aStartsWith - bStartsWith;
+      }
+      
+      // Luego ordenar alfabéticamente
+      return aLabel.localeCompare(bLabel);
+    });
+  }, [dynamicOptions, searchAgent]);
+
+  // Efecto para limpiar la búsqueda cuando se cierre el popover
+  React.useEffect(() => {
+    if (!openAgent) {
+      setSearchAgent("");
+    }
+  }, [openAgent]);
+
   // Efecto para guardar las opciones de agente en el store
   React.useEffect(() => {
     if (
@@ -257,6 +317,23 @@ const ClientInformation = forwardRef<
                       onChange={(e) => {
                         const formatted = formatPhone(e.target.value);
                         field.onChange(formatted);
+                        
+                        // Validación en tiempo real
+                        if (formatted && formatted.length >= 12) {
+                          const phoneWithoutFormat = formatted.replace(/\D/g, '');
+                          const prefix = phoneWithoutFormat.slice(0, 3);
+                          
+                          if (!['849', '829', '808'].includes(prefix)) {
+                            setError('contact', {
+                              type: 'manual',
+                              message: 'El teléfono debe comenzar con 849, 829 u 808'
+                            });
+                          } else {
+                            clearErrors('contact');
+                          }
+                        } else if (formatted && formatted.length > 0) {
+                          clearErrors('contact');
+                        }
                       }}
                       placeholder="Ingrese el número de teléfono"
                       className={`h-11 ${
@@ -443,14 +520,18 @@ const ClientInformation = forwardRef<
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar agente..." />
+                          <Command shouldFilter={false}>
+                            <CommandInput 
+                              placeholder="Buscar agente..." 
+                              value={searchAgent}
+                              onValueChange={setSearchAgent}
+                            />
                             <CommandList>
                               <CommandEmpty>
                                 No se encontraron resultados.
                               </CommandEmpty>
                               <CommandGroup>
-                                {dynamicOptions.map((item) => (
+                                {filteredAgents.map((item) => (
                                   <CommandItem
                                     key={item.id}
                                     value={`${item.label}`}
@@ -458,6 +539,7 @@ const ClientInformation = forwardRef<
                                       field.onChange(item.id);
                                       setValue("agent", item.label);
                                       setOpenAgent(false);
+                                      setSearchAgent(""); // Limpiar búsqueda al seleccionar
                                     }}
                                   >
                                     <Check
@@ -468,7 +550,14 @@ const ClientInformation = forwardRef<
                                           : "opacity-0"
                                       )}
                                     />
-                                    {item.label}
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{item.label}</span>
+                                      {item.subLabel && (
+                                        <span className="text-xs text-muted-foreground">
+                                          {item.subLabel}
+                                        </span>
+                                      )}
+                                    </div>
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
