@@ -14,9 +14,10 @@ import { Plan } from '../interface/plan.interface'
 interface Props {
   selectedPlans: Plan[]
   onAddAfiliado: (planName: string, afiliado: Afiliado) => void
+  clienteChousen: number // Agregado para pasar el tipo de cliente
 }
 
-const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
+const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado, clienteChousen }: Props) => {
   const [selectedPlanName, setSelectedPlanName] = useState<string>('Todos')
   const [parentescoId, setParentescoId] = useState<string>('')
   const [edad, setEdad] = useState<string>('')
@@ -159,12 +160,12 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado }: Props) => {
         {/* Edad */}
         <div className="space-y-2">
           <Label htmlFor="edad-input">
-            Edad *
+            {clienteChousen === 2 ? 'Cantidad *' : 'Edad *'}
           </Label>
           <Input
             id="edad-input"
             type="number"
-            placeholder="Ingrese edad"
+            placeholder={clienteChousen === 2 ? 'Ingrese cantidad' : 'Ingrese edad'}
             value={edad}
             onChange={(e) => setEdad(e.target.value)}
             className={`h-10 ${errors.edad ? 'border-red-500' : ''}`}

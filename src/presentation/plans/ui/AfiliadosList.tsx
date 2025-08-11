@@ -11,6 +11,7 @@ interface Props {
   planName: string;
   planType: string;
   afiliados: Afiliado[];
+  clienteChousen: number; // Agregado para pasar el tipo de cliente
   onRemoveAfiliado: (index: number) => void;
 }
 
@@ -19,6 +20,7 @@ const AfiliadosList = ({
   planType,
   afiliados,
   onRemoveAfiliado,
+  clienteChousen
 }: Props) => {
   if (afiliados.length === 0) return null;
 
@@ -37,7 +39,7 @@ const AfiliadosList = ({
           {/* Header */}
           <div className="grid grid-cols-4 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
             <div>Parentesco</div>
-            <div>Edad</div>
+            <div>{clienteChousen === 2 ? 'Cantidad' : 'Edad'}</div>
             <div>Prima Plan</div>
             <div>Acciones</div>
           </div>

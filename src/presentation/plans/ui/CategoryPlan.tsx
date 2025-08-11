@@ -299,6 +299,7 @@ const CategoryPlan = () => {
           <AddAfiliadoForm
             selectedPlans={Array.from(selectedPlans.values())}
             onAddAfiliado={handleAddAfiliado}
+            clienteChousen={subTipoPoliza || 0}
           />
         </div>
       )}
@@ -318,6 +319,7 @@ const CategoryPlan = () => {
                 planName={quotationPlan.plan}
                 planType={originalPlan.poliza}
                 afiliados={quotationPlan.afiliados}
+                clienteChousen={subTipoPoliza || 0}
                 onRemoveAfiliado={(index) => handleRemoveAfiliado(originalPlan, index)}
               />
             );
