@@ -323,10 +323,10 @@ const ClientInformation = forwardRef<
                           const phoneWithoutFormat = formatted.replace(/\D/g, '');
                           const prefix = phoneWithoutFormat.slice(0, 3);
                           
-                          if (!['849', '829', '808'].includes(prefix)) {
+                          if (!['849', '829', '809'].includes(prefix)) {
                             setError('contact', {
                               type: 'manual',
-                              message: 'El teléfono debe comenzar con 849, 829 u 808'
+                              message: 'El teléfono debe comenzar con 849, 829 u 809'
                             });
                           } else {
                             clearErrors('contact');

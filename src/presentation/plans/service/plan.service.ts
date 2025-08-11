@@ -32,7 +32,7 @@ export const GetSubPlansType = async () => {
 export const GetAllPlans = async (polizaType: number, planType: number) => {
   try {
     const { data } = await apiClient.get<Plan[]>(
-      `/planes/${polizaType}/${planType}`
+      `/planes/${planType}/${polizaType}`
     );
     return data;
   } catch {

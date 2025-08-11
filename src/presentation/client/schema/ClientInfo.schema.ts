@@ -9,9 +9,9 @@ const phoneSchema = z
   })
   .refine((val) => {
     const prefix = val.slice(0, 3);
-    return prefix === "849" || prefix === "829" || prefix === "808";
+    return prefix === "849" || prefix === "829" || prefix === "809";
   }, {
-    message: "El número debe comenzar con 849, 829 u 808",
+    message: "El número debe comenzar con 849, 829 u 809",
   })
   .transform((val) => `(${val.slice(0, 3)}) ${val.slice(3, 6)}-${val.slice(6)}`)
 

@@ -1,124 +1,157 @@
-"use client"
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useParentesco } from '@/presentation/parentesco/hooks/useParentesco'
-import { usePrimaPlan } from '../hooks/usePrimaPlan'
-import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore'
-import { Spinner } from '@/components/shared/Spinner'
-import React, { useState, useEffect } from 'react'
-import { Afiliado } from '@/presentation/quotations/interface/createQuotation.interface'
-import { Plan } from '../interface/plan.interface'
+"use client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useParentesco } from "@/presentation/parentesco/hooks/useParentesco";
+import { usePrimaPlan } from "../hooks/usePrimaPlan";
+import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { Spinner } from "@/components/shared/Spinner";
+import React, { useState, useEffect } from "react";
+import { Afiliado } from "@/presentation/quotations/interface/createQuotation.interface";
+import { Plan } from "../interface/plan.interface";
 
 interface Props {
-  selectedPlans: Plan[]
-  onAddAfiliado: (planName: string, afiliado: Afiliado) => void
-  clienteChousen: number // Agregado para pasar el tipo de cliente
+  selectedPlans: Plan[];
+  onAddAfiliado: (planName: string, afiliado: Afiliado) => void;
+  clienteChousen: number; // Agregado para pasar el tipo de cliente
 }
 
-const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado, clienteChousen }: Props) => {
-  const [selectedPlanName, setSelectedPlanName] = useState<string>('Todos')
-  const [parentescoId, setParentescoId] = useState<string>('')
-  const [edad, setEdad] = useState<string>('')
-  const [errors, setErrors] = useState<{ plan?: string; parentesco?: string; edad?: string }>({})
+const AddAfiliadoForm = ({
+  selectedPlans,
+  onAddAfiliado,
+  clienteChousen,
+}: Props) => {
+  const [selectedPlanName, setSelectedPlanName] = useState<string>("Todos");
+  const [parentescoId, setParentescoId] = useState<string>("");
+  const [edad, setEdad] = useState<string>("");
+  const [errors, setErrors] = useState<{
+    plan?: string;
+    parentesco?: string;
+    edad?: string;
+  }>({});
 
-  const { getFinalObject } = useQuotationStore()
-  const { data: parentescos, isLoading: loadingParentescos, error: errorParentescos } = useParentesco()
-  
+  const { getFinalObject } = useQuotationStore();
+  const {
+    data: parentescos,
+    isLoading: loadingParentescos,
+    error: errorParentescos,
+  } = useParentesco();
+
   // Obtener el objeto una sola vez al inicio del render
-  const finalObject = getFinalObject()
-  const tipoPlan = finalObject.cliente?.tipoPlan ?? 0
-  const clientChoosen = finalObject.cliente?.clientChoosen ?? 0
-  
+  const finalObject = getFinalObject();
+  const tipoPlan = finalObject.cliente?.tipoPlan ?? 0;
+  const clientChoosen = finalObject.cliente?.clientChoosen ?? 0;
+
   // Obtener prima cuando tenemos todos los datos necesarios (no para "Todos")
-  const shouldFetchPrima = selectedPlanName !== '' && selectedPlanName !== 'Todos' && edad !== '' && !isNaN(Number(edad)) && Number(edad) > 0
+  const shouldFetchPrima =
+    selectedPlanName !== "" &&
+    selectedPlanName !== "Todos" &&
+    edad !== "" &&
+    !isNaN(Number(edad)) &&
+    Number(edad) > 0;
   const { data: prima, isLoading: loadingPrima } = usePrimaPlan(
-    selectedPlanName, 
-    Number(edad), 
-    tipoPlan, 
-    clientChoosen, 
+    selectedPlanName,
+    Number(edad),
+    tipoPlan,
+    clientChoosen,
     shouldFetchPrima
-  )
+  );
 
   // Resetear plan seleccionado si ya no está en la lista (excepto "Todos")
   useEffect(() => {
-    if (selectedPlanName && selectedPlanName !== 'Todos' && !selectedPlans.find(p => p.plan_name === selectedPlanName)) {
-      setSelectedPlanName('Todos')
+    if (
+      selectedPlanName &&
+      selectedPlanName !== "Todos" &&
+      !selectedPlans.find((p) => p.plan_name === selectedPlanName)
+    ) {
+      setSelectedPlanName("Todos");
     }
-  }, [selectedPlans, selectedPlanName])
+  }, [selectedPlans, selectedPlanName]);
 
   const validateForm = () => {
-    const newErrors: { plan?: string; parentesco?: string; edad?: string } = {}
-    
+    const newErrors: { plan?: string; parentesco?: string; edad?: string } = {};
+
     if (!selectedPlanName) {
-      newErrors.plan = 'Debe seleccionar un plan'
+      newErrors.plan = "Debe seleccionar un plan";
     }
-    
+
     if (!parentescoId) {
-      newErrors.parentesco = 'El parentesco es obligatorio'
+      newErrors.parentesco = "El parentesco es obligatorio";
     }
-    
+
     if (!edad) {
-      newErrors.edad = 'La edad es obligatoria'
+      newErrors.edad = "La edad es obligatoria";
     } else if (isNaN(Number(edad)) || Number(edad) <= 0 || Number(edad) > 120) {
-      newErrors.edad = 'Ingrese una edad válida (1-120)'
+      newErrors.edad = "Ingrese una edad válida (1-120)";
     }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleAddAfiliado = () => {
-    if (!validateForm()) return
+    if (!validateForm()) return;
 
-    const selectedParentesco = parentescos?.find(p => p.id.toString() === parentescoId)
-    if (!selectedParentesco) return
+    const selectedParentesco = parentescos?.find(
+      (p) => p.id.toString() === parentescoId
+    );
+    if (!selectedParentesco) return;
 
-    if (selectedPlanName === 'Todos') {
+    if (selectedPlanName === "Todos") {
       // Para "Todos", crear un afiliado base sin prima específica
       const newAfiliado: Afiliado = {
-        plan: 'Todos', // Se actualizará en CategoryPlan
+        plan: "Todos", // Se actualizará en CategoryPlan
         parentesco: selectedParentesco.nomebreParentesco,
         edad: Number(edad),
-        subtotal: '0', // Se calculará por cada plan en CategoryPlan
-        cantidadAfiliados: 1
-      }
-      onAddAfiliado(selectedPlanName, newAfiliado)
+        subtotal: "0", // Se calculará por cada plan en CategoryPlan
+        cantidadAfiliados: 1,
+      };
+      onAddAfiliado(selectedPlanName, newAfiliado);
     } else {
       // Para plan específico
-      const primaValue = prima || 1186.57 // Valor por defecto
+      const primaValue = prima || 1186.57; // Valor por defecto
       const newAfiliado: Afiliado = {
         plan: selectedPlanName,
         parentesco: selectedParentesco.nomebreParentesco,
         edad: Number(edad),
         subtotal: primaValue.toFixed(2),
-        cantidadAfiliados: 1
-      }
-      onAddAfiliado(selectedPlanName, newAfiliado)
+        cantidadAfiliados: 1,
+      };
+      onAddAfiliado(selectedPlanName, newAfiliado);
     }
-    
-    // Reset form (mantener plan seleccionado)
-    setParentescoId('')
-    setEdad('')
-    setErrors({})
-  }
 
-  if (loadingParentescos) return <Spinner size="md" color="primary" className="mx-auto" />
-  if (errorParentescos) return <div className="text-red-500 text-sm">Error al cargar parentescos</div>
+    // Reset form (mantener plan seleccionado)
+    setParentescoId("");
+    setEdad("");
+    setErrors({});
+  };
+
+  if (loadingParentescos)
+    return <Spinner size="md" color="primary" className="mx-auto" />;
+  if (errorParentescos)
+    return (
+      <div className="text-red-500 text-sm">Error al cargar parentescos</div>
+    );
 
   return (
     <div className="border rounded-lg p-4 bg-gray-50 space-y-4">
       <h4 className="font-medium text-sm text-gray-700">Agregar afiliado</h4>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {/* Selección de Plan */}
         <div className="space-y-2">
-          <Label htmlFor="plan-select">
-            Plan *
-          </Label>
+          <Label htmlFor="plan-select">Plan *</Label>
           <Select value={selectedPlanName} onValueChange={setSelectedPlanName}>
-            <SelectTrigger className={`h-10 ${errors.plan ? 'border-red-500' : ''}`}>
+            <SelectTrigger
+              className={`h-10 ${errors.plan ? "border-red-500" : ""}`}
+            >
               <SelectValue placeholder="Seleccionar plan" />
             </SelectTrigger>
             <SelectContent>
@@ -130,26 +163,36 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado, clienteChousen }: Props
               ))}
             </SelectContent>
           </Select>
-          {errors.plan && (
-            <p className="text-red-500 text-xs">{errors.plan}</p>
-          )}
+          {errors.plan && <p className="text-red-500 text-xs">{errors.plan}</p>}
         </div>
 
         {/* Parentesco */}
         <div className="space-y-2">
-          <Label htmlFor="parentesco-select">
-            Parentesco *
-          </Label>
+          <Label htmlFor="parentesco-select">Parentesco *</Label>
           <Select value={parentescoId} onValueChange={setParentescoId}>
-            <SelectTrigger className={`h-10 ${errors.parentesco ? 'border-red-500' : ''}`}>
+            <SelectTrigger
+              className={`h-10 ${errors.parentesco ? "border-red-500" : ""}`}
+            >
               <SelectValue placeholder="Seleccionar" />
             </SelectTrigger>
             <SelectContent>
-              {parentescos?.map((parentesco) => (
-                <SelectItem key={parentesco.id} value={parentesco.id.toString()}>
-                  {parentesco.nomebreParentesco}
-                </SelectItem>
-              ))}
+              {clientChoosen !== 2
+                ? parentescos?.map((parentesco) => (
+                    <SelectItem
+                      key={parentesco.id}
+                      value={parentesco.id.toString()}
+                    >
+                      {parentesco.nomebreParentesco}
+                    </SelectItem>
+                  ))
+                : parentescos?.[0] && (
+                    <SelectItem
+                      key={parentescos[0].id}
+                      value={parentescos[0].id.toString()}
+                    >
+                      {parentescos[0].nomebreParentesco}
+                    </SelectItem>
+                  )}
             </SelectContent>
           </Select>
           {errors.parentesco && (
@@ -160,33 +203,35 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado, clienteChousen }: Props
         {/* Edad */}
         <div className="space-y-2">
           <Label htmlFor="edad-input">
-            {clienteChousen === 2 ? 'Cantidad *' : 'Edad *'}
+            {clienteChousen === 2 ? "Cantidad *" : "Edad *"}
           </Label>
           <Input
             id="edad-input"
             type="number"
-            placeholder={clienteChousen === 2 ? 'Ingrese cantidad' : 'Ingrese edad'}
+            placeholder={
+              clienteChousen === 2 ? "Ingrese cantidad" : "Ingrese edad"
+            }
             value={edad}
             onChange={(e) => setEdad(e.target.value)}
-            className={`h-10 ${errors.edad ? 'border-red-500' : ''}`}
+            className={`h-10 ${errors.edad ? "border-red-500" : ""}`}
             min="1"
             max="120"
           />
-          {errors.edad && (
-            <p className="text-red-500 text-xs">{errors.edad}</p>
-          )}
+          {errors.edad && <p className="text-red-500 text-xs">{errors.edad}</p>}
         </div>
 
         {/* Prima Plan */}
         <div className="space-y-2">
           <Label>Prima Plan</Label>
           <div className="h-10 px-3 py-2 border rounded-md bg-gray-100 flex items-center text-sm">
-            {selectedPlanName === 'Todos' ? (
-              'Variable por plan'
+            {selectedPlanName === "Todos" ? (
+              "Variable por plan"
             ) : loadingPrima ? (
               <Spinner size="sm" color="primary" className="mr-2" />
             ) : (
-              `RD$ ${prima ? prima.toFixed(2) : shouldFetchPrima ? '0.00' : '--'}`
+              `RD$ ${
+                prima ? prima.toFixed(2) : shouldFetchPrima ? "0.00" : "--"
+              }`
             )}
           </div>
         </div>
@@ -194,18 +239,20 @@ const AddAfiliadoForm = ({ selectedPlans, onAddAfiliado, clienteChousen }: Props
         {/* Botón agregar */}
         <div className="space-y-2">
           <Label>&nbsp;</Label>
-          <Button 
+          <Button
             onClick={handleAddAfiliado}
             className="w-full h-10 bg-[#005BBB] hover:bg-[#003E7E]"
             disabled={loadingPrima}
           >
-            {loadingPrima ? <Spinner size="sm" color="white" className="mr-2" /> : null}
+            {loadingPrima ? (
+              <Spinner size="sm" color="white" className="mr-2" />
+            ) : null}
             Agregar
           </Button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AddAfiliadoForm
+export default AddAfiliadoForm;

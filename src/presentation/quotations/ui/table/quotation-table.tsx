@@ -49,6 +49,9 @@ export default function QuotationTable({
   const router = useRouter();
   const { loadExistingQuotation } = useQuotationStore();
 
+  console.log("QuotationTable data:", data);
+  
+
   // Estados para búsqueda y paginación
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
