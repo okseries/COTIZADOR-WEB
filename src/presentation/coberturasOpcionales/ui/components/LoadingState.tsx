@@ -20,6 +20,7 @@ const LoadingState = ({ isLoading, hasError, isEmpty }: LoadingStateProps) => {
     return (
       <div className="text-center py-8">
         <p>Cargando coberturas opcionales...</p>
+        {/* <Spinner size='sm'/> */}
       </div>
     );
   }

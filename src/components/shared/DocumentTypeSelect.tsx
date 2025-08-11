@@ -37,7 +37,6 @@ export const DocumentTypeSelect = React.forwardRef<
 
     return (
       <div className={cn("", className)} ref={ref}>
-        
         <SelectSimple
           value={value || ""}
           onChange={onChange}
@@ -53,4 +52,3 @@ export const DocumentTypeSelect = React.forwardRef<
 );
 
 DocumentTypeSelect.displayName = "DocumentTypeSelect";
-

@@ -372,7 +372,7 @@ const ClientInformation = forwardRef<
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address">Dirección *</Label>
+                <Label htmlFor="address">Dirección</Label>
                 <Controller
                   name="address"
                   control={control}

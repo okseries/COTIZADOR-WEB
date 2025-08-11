@@ -17,12 +17,12 @@ const phoneSchema = z
 
 // Schema para cliente
 export const clienteSchema = z.object({
-  clientChoosen: z.number().min(0, "Debe seleccionar un cliente"), // Cambiado a 0 para permitir "sin seleccionar"
+  clientChoosen: z.number().min(1, "El sub tipo de póliza es requerido"), 
   identification: z.string().min(1, "La identificación es requerida").max(11, "La identificación debe tener 11 dígitos"),
   name: z.string().min(1, "El nombre es requerido"),
   contact: phoneSchema,
   email: z.email("Debe ser un email válido"),
-  address: z.string().min(1, "La dirección es requerida"),
+  address: z.string(),
   office: z.string().min(1, "La oficina es requerida"),
   agent: z.string().min(1, "El agente es requerido"),
   agentId: z.number().min(1, "Debe seleccionar un agente"), // ID del agente seleccionado
