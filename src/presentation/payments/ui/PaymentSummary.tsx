@@ -4,6 +4,7 @@ import { Button } from '../../../components/ui/button';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { AlertCircle, Download } from 'lucide-react';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
+import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
 
 interface PaymentSummaryProps {
   totalGeneral: number;
@@ -20,6 +21,9 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
   error,
   onSubmit
 }) => {
+
+
+  const mode = useQuotationStore((state) => state.mode);
   
 
   return (
@@ -77,7 +81,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                Finalizar Cotización
+                {mode !== "create" ? "Actualizar Cotización" : "Crear Cotización"}
               </>
             )}
           </Button>

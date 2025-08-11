@@ -8,11 +8,13 @@ interface FilterData {
 }
 
 interface QuotationState {
+  mode: "create" | number;
   user: string | null;
   cliente: Cliente | null;
   planes: Plan[];
   filterData: FilterData | null;
   agentOptions: unknown[];
+  setMode: (mode: "create" | number) => void;
   setUser: (user: string) => void;
   setCliente: (cliente: Cliente) => void;
   setFilterData: (filterData: FilterData) => void;
@@ -30,11 +32,13 @@ interface QuotationState {
 export const useQuotationStore = create<QuotationState>()(
   persist(
     (set, get) => ({
+      mode: "create",
       user: null,
       cliente: null,
       planes: [],
       filterData: null,
       agentOptions: [],
+      setMode: (mode) => set({ mode }),
       setUser: (user) => set({ user }),
       setCliente: (cliente) => set({ cliente }),
       setFilterData: (filterData) => set({ filterData }),
@@ -62,12 +66,13 @@ export const useQuotationStore = create<QuotationState>()(
         set((state) => ({
           planes: state.planes.filter((p) => p.plan !== planName),
         })),
-      clearQuotation: () => set({ 
-        user: null, 
-        cliente: null, 
-        planes: [], 
-        filterData: null, 
-        agentOptions: [] 
+      clearQuotation: () => set({
+        mode: "create",
+        user: null,
+        cliente: null,
+        planes: [],
+        filterData: null,
+        agentOptions: []
       }),
       loadExistingQuotation: (quotationRequest) => {
         const cliente = quotationRequest.cliente;
@@ -122,6 +127,14 @@ export const useQuotationStore = create<QuotationState>()(
     }),
     {
       name: 'quotation-storage',
+       partialize: (state) => ({
+        // Guardar solo lo necesario, excluyendo "mode"
+        user: state.user,
+        cliente: state.cliente,
+        planes: state.planes,
+        filterData: state.filterData,
+        agentOptions: state.agentOptions,
+      }),
     }
   )
 );

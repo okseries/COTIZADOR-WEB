@@ -76,6 +76,7 @@ export default function QuotationTable({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
+  const setMode = useQuotationStore((state) => state.setMode);
 
   // Reset página cuando cambia la búsqueda
   useEffect(() => {
@@ -101,6 +102,7 @@ export default function QuotationTable({
   };
 
   const handleEditQuotation = (quotation: Quotations) => {
+    setMode(Number(quotation.id));
     // Convert the quotation data to the expected format
     const quotationRequest = {
       user: quotation.cotizacion.user,

@@ -1,12 +1,11 @@
+import { useState, useEffect, useCallback } from "react";
+import { useQuotationStore } from "../../quotations/store/useQuotationStore";
+import { useAuth } from "../../auth/store/useAuth.store";
+import { paymentService } from "../services/payment.service";
+import { Plan } from "../../quotations/interface/createQuotation.interface";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useQuotationStore } from '../../quotations/store/useQuotationStore';
-import { useAuth } from '../../auth/store/useAuth.store';
-import { paymentService } from '../services/payment.service';
-import { Plan } from '../../quotations/interface/createQuotation.interface';
-import { useQueryClient } from '@tanstack/react-query';
-
-export type PeriodoPago = 'Mensual' | 'Trimestral' | 'Semestral' | 'Anual';
+export type PeriodoPago = "Mensual" | "Trimestral" | "Semestral" | "Anual";
 
 interface PaymentPlan extends Plan {
   selectedPeriod?: PeriodoPago;
@@ -27,7 +26,8 @@ export const MULTIPLICADORES: Record<PeriodoPago, number> = {
 
 export const usePaymentOptions = () => {
   const { user: authUser } = useAuth();
-  const { cliente, planes, updatePlanByName, clearQuotation } = useQuotationStore();
+  const { cliente, planes, updatePlanByName, clearQuotation, mode } =
+    useQuotationStore();
   const queryClient = useQueryClient();
   const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,15 +36,18 @@ export const usePaymentOptions = () => {
   // Inicializar planes con período por defecto
   useEffect(() => {
     if (planes.length > 0) {
-      const initializedPlans = planes.map(plan => ({
+      const initializedPlans = planes.map((plan) => ({
         ...plan,
-        selectedPeriod: plan.resumenPago?.periodoPago as PeriodoPago || 'Mensual'
+        selectedPeriod:
+          (plan.resumenPago?.periodoPago as PeriodoPago) || "Mensual",
       }));
-      
+
       // Solo actualizar si los planes han cambiado
-      setPaymentPlans(prev => {
-        if (prev.length !== initializedPlans.length || 
-            prev.some((p, i) => p.plan !== initializedPlans[i].plan)) {
+      setPaymentPlans((prev) => {
+        if (
+          prev.length !== initializedPlans.length ||
+          prev.some((p, i) => p.plan !== initializedPlans[i].plan)
+        ) {
           return initializedPlans;
         }
         return prev;
@@ -55,65 +58,76 @@ export const usePaymentOptions = () => {
   }, [planes]);
 
   // Calcular resumen de pago para un plan
-  const calculatePaymentSummary = (plan: Plan, periodo: PeriodoPago): PaymentSummary => {
-    const subTotalAfiliado = plan.afiliados.reduce((sum, afiliado) => 
-      sum + parseFloat(afiliado.subtotal.toString()), 0
+  const calculatePaymentSummary = (
+    plan: Plan,
+    periodo: PeriodoPago
+  ): PaymentSummary => {
+    const subTotalAfiliado = plan.afiliados.reduce(
+      (sum, afiliado) => sum + parseFloat(afiliado.subtotal.toString()),
+      0
     );
-    
-    const subTotalOpcional = plan.opcionales.reduce((sum, opcional) => 
-      sum + opcional.prima, 0
+
+    const subTotalOpcional = plan.opcionales.reduce(
+      (sum, opcional) => sum + opcional.prima,
+      0
     );
-    
+
     const baseTotal = subTotalAfiliado + subTotalOpcional;
     const totalPagar = baseTotal * MULTIPLICADORES[periodo];
 
     return {
       subTotalAfiliado,
       subTotalOpcional,
-      totalPagar
+      totalPagar,
     };
   };
 
   // Manejar cambio de período de pago
-  const handlePeriodChange = useCallback((planName: string, periodo: PeriodoPago) => {
-    setPaymentPlans(prev => 
-      prev.map(plan => {
-        if (plan.plan === planName) {
-          const summary = calculatePaymentSummary(plan, periodo);
-          const updatedPlan = {
-            ...plan,
-            selectedPeriod: periodo,
-            resumenPago: {
-              ...plan.resumenPago,
-              periodoPago: periodo,
-              ...summary
-            }
-          };
+  const handlePeriodChange = useCallback(
+    (planName: string, periodo: PeriodoPago) => {
+      setPaymentPlans((prev) =>
+        prev.map((plan) => {
+          if (plan.plan === planName) {
+            const summary = calculatePaymentSummary(plan, periodo);
+            const updatedPlan = {
+              ...plan,
+              selectedPeriod: periodo,
+              resumenPago: {
+                ...plan.resumenPago,
+                periodoPago: periodo,
+                ...summary,
+              },
+            };
 
-          // Actualizar en el store de forma asíncrona para evitar el error de renderizado
-          setTimeout(() => {
-            updatePlanByName(planName, {
-              resumenPago: updatedPlan.resumenPago
-            });
-          }, 0);
+            // Actualizar en el store de forma asíncrona para evitar el error de renderizado
+            setTimeout(() => {
+              updatePlanByName(planName, {
+                resumenPago: updatedPlan.resumenPago,
+              });
+            }, 0);
 
-          return updatedPlan;
-        }
-        return plan;
-      })
-    );
-  }, [updatePlanByName]);
+            return updatedPlan;
+          }
+          return plan;
+        })
+      );
+    },
+    [updatePlanByName]
+  );
 
   // Validar si todos los planes tienen período seleccionado
   const isFormValid = useCallback(() => {
-    return paymentPlans.length > 0 && 
-           paymentPlans.every(plan => plan.selectedPeriod);
+    return (
+      paymentPlans.length > 0 &&
+      paymentPlans.every((plan) => plan.selectedPeriod)
+    );
   }, [paymentPlans]);
 
   // Calcular total general
   const getTotalGeneral = () => {
-    return paymentPlans.reduce((total, plan) => 
-      total + (plan.resumenPago?.totalPagar || 0), 0
+    return paymentPlans.reduce(
+      (total, plan) => total + (plan.resumenPago?.totalPagar || 0),
+      0
     );
   };
 
@@ -127,18 +141,18 @@ export const usePaymentOptions = () => {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'application/pdf' });
+      const blob = new Blob([byteArray], { type: "application/pdf" });
 
       // Crear URL del blob
       const blobUrl = URL.createObjectURL(blob);
 
       // Abrir en nueva ventana
-      window.open(blobUrl, '_blank');
+      window.open(blobUrl, "_blank");
 
       // Descargar automáticamente
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = filename || 'cotizacion.pdf';
+      link.download = filename || "cotizacion.pdf";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -146,27 +160,18 @@ export const usePaymentOptions = () => {
       // Limpiar URL
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (err) {
-      console.error('Error al descargar PDF:', err);
-      setError('Error al descargar el PDF');
+      console.error("Error al descargar PDF:", err);
+      setError("Error al descargar el PDF");
     }
   }, []);
 
   // Enviar cotización final
+  //! Esto envia la cotizacion final al backend
   const submitQuotation = useCallback(async () => {
     const userName = authUser?.data?.user;
-    
-    // console.log("=== DEBUG SUBMIT QUOTATION ===");
-    // console.log("authUser completo:", authUser);
-    // console.log("authUser?.data:", authUser?.data);
-    // console.log("userName extraído:", userName);
-    // console.log("isFormValid():", isFormValid());
-    // console.log("cliente:", cliente);
-    // console.log("Validación userName:", !!userName);
-    // console.log("Validación cliente:", !!cliente);
-    // console.log("=== END DEBUG SUBMIT ===");
-    
+
     if (!isFormValid() || !userName || !cliente) {
-      setError('Faltan datos requeridos para completar la cotización');
+      setError("Faltan datos requeridos para completar la cotización");
       return;
     }
 
@@ -177,40 +182,53 @@ export const usePaymentOptions = () => {
       const finalPayload = {
         user: userName,
         cliente,
-        planes: paymentPlans.map(plan => ({
+        planes: paymentPlans.map((plan) => ({
           plan: plan.plan,
           afiliados: plan.afiliados,
           opcionales: plan.opcionales,
           resumenPago: plan.resumenPago,
           cantidadAfiliados: plan.cantidadAfiliados,
-          tipo: plan.tipo
-        }))
+          tipo: plan.tipo,
+        })),
       };
 
-      const response = await paymentService.calculateQuotation(finalPayload);
-      
+      //! mode puede ser el id de la cotización existente o "create" para una nueva
+      const response =
+        mode === "create"
+          ? await paymentService.generateQuotation(finalPayload)
+          : await paymentService.updateQuotation(mode, finalPayload);
+
       // Descargar PDF
       downloadPDF(response.pdfBase64, response.filename);
-      
+
       // Resetear el store después del éxito
       clearQuotation();
-      
+
       // Invalidar cache de cotizaciones para que se actualice la tabla
       queryClient.invalidateQueries({
-        queryKey: ['quotations', userName]
+        queryKey: ["quotations", userName],
       });
-      
+
       // Redirigir al dashboard después de un breve delay
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = "/dashboard";
       }, 1000);
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al procesar la cotización');
+      setError(
+        err instanceof Error ? err.message : "Error al procesar la cotización"
+      );
     } finally {
       setIsSubmitting(false);
     }
-  }, [authUser, cliente, paymentPlans, downloadPDF, clearQuotation, queryClient, isFormValid]);
+  }, [
+    authUser,
+    cliente,
+    paymentPlans,
+    downloadPDF,
+    clearQuotation,
+    queryClient,
+    isFormValid,
+  ]);
 
   return {
     paymentPlans,
@@ -220,6 +238,6 @@ export const usePaymentOptions = () => {
     totalGeneral: getTotalGeneral(),
     handlePeriodChange,
     submitQuotation,
-    MULTIPLICADORES
+    MULTIPLICADORES,
   };
 };
