@@ -62,17 +62,17 @@ const FilterClient = () => {
   // Manejar tecla ESC para cerrar el alert dialog
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && openAlertDialog) {
+      if (event.key === "Escape" && openAlertDialog) {
         setOpenAlertDialog(false);
       }
     };
 
     if (openAlertDialog) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [openAlertDialog]);
 
@@ -139,9 +139,9 @@ const FilterClient = () => {
     <Card className="mb-2 py-4 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
       <CardContent className="flex flex-row items-center justify-between">
         <div>
-          <Button 
-            onClick={handleClearAll} 
-            className="bg-red-500 hover:bg-red-600 text-white" 
+          <Button
+            onClick={handleClearAll}
+            className="bg-red-500 hover:bg-red-600 text-white"
             variant="outline"
             size="sm"
           >
@@ -149,10 +149,7 @@ const FilterClient = () => {
             Limpiar Todo
           </Button>
         </div>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="flex flex-col md:flex-row items-end justify-end  gap-4">
             {/* Tipo de Documento */}
             <Controller
@@ -193,16 +190,11 @@ const FilterClient = () => {
                 className="h-10.5 px-6 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2"
               >
                 {isLoading ? (
-                  <>
-                    <Spinner  className="text-white w-4 h-4 mr-2" />
-                    Buscar Cliente
-                  </>
+                  <Spinner className="text-white w-4 h-4 mr-2" />
                 ) : (
-                  <>
-                    <Search className="w-4 h-4 mr-2" />
-                    Buscar Cliente
-                  </>
+                  <Search className="w-4 h-4 mr-2" />
                 )}
+                Buscar Cliente
               </Button>
             </div>
           </div>

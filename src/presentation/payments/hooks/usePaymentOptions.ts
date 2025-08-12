@@ -158,14 +158,14 @@ export const usePaymentOptions = () => {
       document.body.removeChild(link);
 
       // Limpiar URL
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);  //1000
     } catch (err) {
       console.error("Error al descargar PDF:", err);
       setError("Error al descargar el PDF");
     }
   }, []);
 
-  // Enviar cotización final
+  // Enviar cotización finalñ
   //! Esto envia la cotizacion final al backend
   const submitQuotation = useCallback(async () => {
     const userName = authUser?.data?.user;
@@ -197,6 +197,9 @@ export const usePaymentOptions = () => {
         mode === "create"
           ? await paymentService.generateQuotation(finalPayload)
           : await paymentService.updateQuotation(mode, finalPayload);
+
+      // Log para depuración de la respuesta
+      console.log("Respuesta de cotización:", response);
 
       // Descargar PDF
       downloadPDF(response.pdfBase64, response.filename);
