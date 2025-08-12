@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
 import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
 import OdontologiaSelect, { OdontologiaOption } from './OdontologiaSelect';
+import CoberturaSelect, { CoberturaOption } from './CoberturaSelect';
+import { CoberturaSelections } from '../../data/coberturaOptions';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
 
 interface PlanTableProps {
@@ -19,7 +21,12 @@ interface PlanTableProps {
   };
   odontologiaSelection: string;
   odontologiaOptions: OdontologiaOption[];
+  coberturaSelections?: CoberturaSelections;
+  altoCostoOptions: CoberturaOption[];
+  medicamentosOptions: CoberturaOption[];
+  habitacionOptions: CoberturaOption[];
   onOdontologiaChange: (planName: string, value: string) => void;
+  onCoberturaChange: (planName: string, coberturaType: keyof CoberturaSelections, value: string) => void;
 }
 
 const PlanTable = ({
@@ -30,7 +37,12 @@ const PlanTable = ({
   globalFilters,
   odontologiaSelection,
   odontologiaOptions,
-  onOdontologiaChange
+  coberturaSelections,
+  altoCostoOptions,
+  medicamentosOptions,
+  habitacionOptions,
+  onOdontologiaChange,
+  onCoberturaChange
 }: PlanTableProps) => {
   if (!planData || !planData[0]) return null;
   
@@ -54,9 +66,30 @@ const PlanTable = ({
           {(clientChoosen === 1 || globalFilters.altoCosto) && (
             <div className="grid grid-cols-2 gap-4 py-2 border-b">
               <div className="text-sm">
-                <div className="font-medium">ALTO COSTO {data.altoCosto}</div>
+                {clientChoosen === 2 ? (
+                  <div>
+                    <div className="font-medium">ALTO COSTO</div>
+                    <CoberturaSelect
+                      value={coberturaSelections?.altoCosto || ''}
+                      onChange={(value) => onCoberturaChange(planName, 'altoCosto', value)}
+                      options={altoCostoOptions}
+                      placeholder="Seleccionar opción"
+                    />
+                  </div>
+                ) : (
+                  <div className="font-medium">ALTO COSTO {data.altoCosto}</div>
+                )}
               </div>
-              <div className="text-sm font-medium">{formatCurrency(Number(data.primaCosto) * cantidadAfiliados)}</div>
+              <div className="text-sm font-medium">
+                {clientChoosen === 2 ? (
+                  (() => {
+                    const selected = altoCostoOptions.find(opt => opt.value === coberturaSelections?.altoCosto);
+                    return selected ? formatCurrency(selected.prima * cantidadAfiliados) : formatCurrency(0);
+                  })()
+                ) : (
+                  formatCurrency(Number(data.primaCosto) * cantidadAfiliados)
+                )}
+              </div>
             </div>
           )}
 
@@ -64,9 +97,30 @@ const PlanTable = ({
           {(clientChoosen === 1 || globalFilters.medicamentos) && (
             <div className="grid grid-cols-2 gap-4 py-2 border-b">
               <div className="text-sm">
-                <div className="font-medium">MEDICAMENTOS {data.medicamento}</div>
+                {clientChoosen === 2 ? (
+                  <div>
+                    <div className="font-medium">MEDICAMENTOS</div>
+                    <CoberturaSelect
+                      value={coberturaSelections?.medicamentos || ''}
+                      onChange={(value) => onCoberturaChange(planName, 'medicamentos', value)}
+                      options={medicamentosOptions}
+                      placeholder="Seleccionar opción"
+                    />
+                  </div>
+                ) : (
+                  <div className="font-medium">MEDICAMENTOS {data.medicamento}</div>
+                )}
               </div>
-              <div className="text-sm font-medium">{formatCurrency(Number(data.medicamentoCosto) * cantidadAfiliados)}</div>
+              <div className="text-sm font-medium">
+                {clientChoosen === 2 ? (
+                  (() => {
+                    const selected = medicamentosOptions.find(opt => opt.value === coberturaSelections?.medicamentos);
+                    return selected ? formatCurrency(selected.prima * cantidadAfiliados) : formatCurrency(0);
+                  })()
+                ) : (
+                  formatCurrency(Number(data.medicamentoCosto) * cantidadAfiliados)
+                )}
+              </div>
             </div>
           )}
 
@@ -74,9 +128,30 @@ const PlanTable = ({
           {(clientChoosen === 1 || globalFilters.habitacion) && (
             <div className="grid grid-cols-2 gap-4 py-2 border-b">
               <div className="text-sm">
-                <div className="font-medium">HABITACIÓN {data.habitacion}</div>
+                {clientChoosen === 2 ? (
+                  <div>
+                    <div className="font-medium">HABITACIÓN</div>
+                    <CoberturaSelect
+                      value={coberturaSelections?.habitacion || ''}
+                      onChange={(value) => onCoberturaChange(planName, 'habitacion', value)}
+                      options={habitacionOptions}
+                      placeholder="Seleccionar opción"
+                    />
+                  </div>
+                ) : (
+                  <div className="font-medium">HABITACIÓN {data.habitacion}</div>
+                )}
               </div>
-              <div className="text-sm font-medium">{formatCurrency(Number(data.habitacionCosto) * cantidadAfiliados)}</div>
+              <div className="text-sm font-medium">
+                {clientChoosen === 2 ? (
+                  (() => {
+                    const selected = habitacionOptions.find(opt => opt.value === coberturaSelections?.habitacion);
+                    return selected ? formatCurrency(selected.prima * cantidadAfiliados) : formatCurrency(0);
+                  })()
+                ) : (
+                  formatCurrency(Number(data.habitacionCosto) * cantidadAfiliados)
+                )}
+              </div>
             </div>
           )}
 

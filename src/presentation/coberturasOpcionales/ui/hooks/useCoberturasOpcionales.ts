@@ -4,6 +4,13 @@ import { usePlanesOpcionales } from '../../hooks/usePlanesOpcionales';
 import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { OdontologiaOption } from '../components/OdontologiaSelect';
+import { 
+  CoberturaSelections, 
+  defaultCoberturaSelections,
+  altoCostoOptions,
+  medicamentosOptions,
+  habitacionOptions
+} from '../../data/coberturaOptions';
 
 // Datos estáticos para odontología
 const odontologiaOptions: OdontologiaOption[] = [
@@ -30,6 +37,7 @@ export const useCoberturasOpcionales = () => {
   });
   
   const [planSelections, setPlanSelections] = useState<{[planName: string]: {[key: string]: string}}>({});
+  const [coberturaSelections, setCoberturaSelections] = useState<{[planName: string]: CoberturaSelections}>({});
   const [planesData, setPlanesData] = useState<{[planName: string]: CoberturasOpcional[]}>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -176,6 +184,26 @@ export const useCoberturasOpcionales = () => {
     }
   }, [planes.length, planes.map(p => p.opcionales.length).join(',')]);
 
+  // Inicializar selecciones de cobertura con valores por defecto
+  useEffect(() => {
+    if (planes.length > 0 && cliente?.clientChoosen === 2) {
+      const initialCoberturaSelections: {[planName: string]: CoberturaSelections} = {};
+      let needsCoberturaUpdate = false;
+
+      planes.forEach(plan => {
+        if (!coberturaSelections[plan.plan]) {
+          initialCoberturaSelections[plan.plan] = { ...defaultCoberturaSelections };
+          needsCoberturaUpdate = true;
+        }
+      });
+
+      if (needsCoberturaUpdate) {
+        console.log("🔄 Inicializando coberturaSelections:", initialCoberturaSelections);
+        setCoberturaSelections(prev => ({ ...prev, ...initialCoberturaSelections }));
+      }
+    }
+  }, [planes.length, cliente?.clientChoosen, Object.keys(coberturaSelections).length]);
+
   // Inicializar filtros globales desde el store
   useEffect(() => {
     if (planes.length > 0) {
@@ -269,48 +297,105 @@ export const useCoberturasOpcionales = () => {
       // Para clientChoosen === 1 (individuales): incluir automáticamente todas las opcionales básicas
       // Para clientChoosen === 2 (colectivos): solo incluir las que están marcadas en los filtros
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.altoCosto)) {
-        const prima = parseFloat(data.primaCosto) || 0;
-        opcionales.push({
-          nombre: "ALTO COSTO",
-          descripcion: data.altoCosto,
-          prima: prima * cantidadAfiliados
-        });
-        subTotalOpcional += prima * cantidadAfiliados;
-        console.log(`✅ ALTO COSTO INCLUIDO - Plan ${planName}:`, {
-          prima: prima * cantidadAfiliados,
-          descripcion: data.altoCosto,
-          clientChoosen: cliente?.clientChoosen
-        });
+        if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.altoCosto) {
+          // Para colectivos, usar la selección específica del dropdown
+          const selectedOption = altoCostoOptions.find(opt => opt.value === coberturaSelections[planName]?.altoCosto);
+          if (selectedOption) {
+            opcionales.push({
+              nombre: "ALTO COSTO",
+              descripcion: selectedOption.descripcion,
+              prima: selectedOption.prima * cantidadAfiliados
+            });
+            subTotalOpcional += selectedOption.prima * cantidadAfiliados;
+            console.log(`✅ ALTO COSTO INCLUIDO (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
+              prima: selectedOption.prima * cantidadAfiliados,
+              descripcion: selectedOption.descripcion,
+              porcentaje: selectedOption.porcentaje
+            });
+          }
+        } else {
+          // Para individuales, usar el valor estático original
+          const prima = parseFloat(data.primaCosto) || 0;
+          opcionales.push({
+            nombre: "ALTO COSTO",
+            descripcion: data.altoCosto,
+            prima: prima * cantidadAfiliados
+          });
+          subTotalOpcional += prima * cantidadAfiliados;
+          console.log(`✅ ALTO COSTO INCLUIDO - Plan ${planName}:`, {
+            prima: prima * cantidadAfiliados,
+            descripcion: data.altoCosto,
+            clientChoosen: cliente?.clientChoosen
+          });
+        }
       }
 
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.medicamentos)) {
-        const prima = parseFloat(data.medicamentoCosto) || 0;
-        opcionales.push({
-          nombre: "MEDICAMENTOS",
-          descripcion: data.medicamento,
-          prima: prima * cantidadAfiliados
-        });
-        subTotalOpcional += prima * cantidadAfiliados;
-        console.log(`✅ MEDICAMENTOS INCLUIDO - Plan ${planName}:`, {
-          prima: prima * cantidadAfiliados,
-          descripcion: data.medicamento,
-          clientChoosen: cliente?.clientChoosen
-        });
+        if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.medicamentos) {
+          // Para colectivos, usar la selección específica del dropdown
+          const selectedOption = medicamentosOptions.find(opt => opt.value === coberturaSelections[planName]?.medicamentos);
+          if (selectedOption) {
+            opcionales.push({
+              nombre: "MEDICAMENTOS",
+              descripcion: selectedOption.descripcion,
+              prima: selectedOption.prima * cantidadAfiliados
+            });
+            subTotalOpcional += selectedOption.prima * cantidadAfiliados;
+            console.log(`✅ MEDICAMENTOS INCLUIDO (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
+              prima: selectedOption.prima * cantidadAfiliados,
+              descripcion: selectedOption.descripcion,
+              porcentaje: selectedOption.porcentaje
+            });
+          }
+        } else {
+          // Para individuales, usar el valor estático original
+          const prima = parseFloat(data.medicamentoCosto) || 0;
+          opcionales.push({
+            nombre: "MEDICAMENTOS",
+            descripcion: data.medicamento,
+            prima: prima * cantidadAfiliados
+          });
+          subTotalOpcional += prima * cantidadAfiliados;
+          console.log(`✅ MEDICAMENTOS INCLUIDO - Plan ${planName}:`, {
+            prima: prima * cantidadAfiliados,
+            descripcion: data.medicamento,
+            clientChoosen: cliente?.clientChoosen
+          });
+        }
       }
 
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.habitacion)) {
-        const prima = parseFloat(data.habitacionCosto) || 0;
-        opcionales.push({
-          nombre: "HABITACIÓN",
-          descripcion: data.habitacion,
-          prima: prima * cantidadAfiliados
-        });
-        subTotalOpcional += prima * cantidadAfiliados;
-        console.log(`✅ HABITACIÓN INCLUIDA - Plan ${planName}:`, {
-          prima: prima * cantidadAfiliados,
-          descripcion: data.habitacion,
-          clientChoosen: cliente?.clientChoosen
-        });
+        if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.habitacion) {
+          // Para colectivos, usar la selección específica del dropdown
+          const selectedOption = habitacionOptions.find(opt => opt.value === coberturaSelections[planName]?.habitacion);
+          if (selectedOption) {
+            opcionales.push({
+              nombre: "HABITACIÓN",
+              descripcion: selectedOption.descripcion,
+              prima: selectedOption.prima * cantidadAfiliados
+            });
+            subTotalOpcional += selectedOption.prima * cantidadAfiliados;
+            console.log(`✅ HABITACIÓN INCLUIDA (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
+              prima: selectedOption.prima * cantidadAfiliados,
+              descripcion: selectedOption.descripcion,
+              porcentaje: selectedOption.porcentaje
+            });
+          }
+        } else {
+          // Para individuales, usar el valor estático original
+          const prima = parseFloat(data.habitacionCosto) || 0;
+          opcionales.push({
+            nombre: "HABITACIÓN",
+            descripcion: data.habitacion,
+            prima: prima * cantidadAfiliados
+          });
+          subTotalOpcional += prima * cantidadAfiliados;
+          console.log(`✅ HABITACIÓN INCLUIDA - Plan ${planName}:`, {
+            prima: prima * cantidadAfiliados,
+            descripcion: data.habitacion,
+            clientChoosen: cliente?.clientChoosen
+          });
+        }
       }
 
       // Odontología - es opcional para ambos tipos de cliente
@@ -382,7 +467,7 @@ export const useCoberturasOpcionales = () => {
       
       setIsUpdating(false);
     }, 100);
-  }, [planesData, planes, cliente, globalFilters, updatePlanByName]); // Agregar las dependencias necesarias
+  }, [planesData, planes, cliente, globalFilters, coberturaSelections, updatePlanByName]); // Agregar las dependencias necesarias
 
   // Actualizar todos los planes cuando cambian los filtros globales (solo para clientChoosen === 2)
   useEffect(() => {
@@ -472,6 +557,22 @@ export const useCoberturasOpcionales = () => {
     }, 50);
   };
 
+  const handleCoberturaChange = (planName: string, coberturaType: keyof CoberturaSelections, value: string) => {
+    setCoberturaSelections(prev => ({
+      ...prev,
+      [planName]: {
+        ...prev[planName],
+        [coberturaType]: value
+      }
+    }));
+    
+    // Actualizar inmediatamente
+    setTimeout(() => {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    }, 50);
+  };
+
   // Estados derivados
   const isLoading = planQueriesData.some(q => q.isLoading);
   const hasError = planQueriesData.some(q => q.error);
@@ -481,10 +582,16 @@ export const useCoberturasOpcionales = () => {
     // Estados
     globalFilters,
     planSelections,
+    coberturaSelections,
     planesData,
     cliente,
     planes,
     odontologiaOptions,
+    
+    // Opciones de cobertura
+    altoCostoOptions,
+    medicamentosOptions,
+    habitacionOptions,
     
     // Estados derivados
     isLoading,
@@ -493,6 +600,7 @@ export const useCoberturasOpcionales = () => {
     
     // Handlers
     handleGlobalFilterChange,
-    handleOdontologiaChange
+    handleOdontologiaChange,
+    handleCoberturaChange
   };
 };

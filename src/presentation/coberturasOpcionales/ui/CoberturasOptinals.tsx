@@ -9,15 +9,20 @@ const CoberturasOpcionales = () => {
   const {
     globalFilters,
     planSelections,
+    coberturaSelections,
     planesData,
     cliente,
     planes,
     odontologiaOptions,
+    altoCostoOptions,
+    medicamentosOptions,
+    habitacionOptions,
     isLoading,
     hasError,
     isEmpty,
     handleGlobalFilterChange,
-    handleOdontologiaChange
+    handleOdontologiaChange,
+    handleCoberturaChange
   } = useCoberturasOpcionales();
 
   // Mostrar estados de carga/error/vacío
@@ -44,6 +49,7 @@ const CoberturasOpcionales = () => {
       {planes.map(plan => {
         const planData = planesData[plan.plan];
         const odontologiaSelection = planSelections[plan.plan]?.odontologia || "0";
+        const coberturaSelection = coberturaSelections[plan.plan];
         
         return (
           <PlanTable
@@ -55,7 +61,12 @@ const CoberturasOpcionales = () => {
             globalFilters={globalFilters}
             odontologiaSelection={odontologiaSelection}
             odontologiaOptions={odontologiaOptions}
+            coberturaSelections={coberturaSelection}
+            altoCostoOptions={altoCostoOptions}
+            medicamentosOptions={medicamentosOptions}
+            habitacionOptions={habitacionOptions}
             onOdontologiaChange={handleOdontologiaChange}
+            onCoberturaChange={handleCoberturaChange}
           />
         );
       })}
