@@ -4,18 +4,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Plan } from '../../quotations/interface/createQuotation.interface';
 import { PeriodoPago, MULTIPLICADORES } from '../hooks/usePaymentOptions';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
+import PaymentIntervalSelector from './PaymentIntervalSelector';
 
 interface PlanPaymentCardProps {
   plan: Plan;
   selectedPeriod?: PeriodoPago;
-  onPeriodChange: (period: PeriodoPago) => void;
+  onPeriodChange: (period: PeriodoPago | undefined) => void;
 }
 
-const PERIODO_OPTIONS: PeriodoPago[] = ['Mensual', 'Trimestral', 'Semestral', 'Anual'];
 
 export const PlanPaymentCard: React.FC<PlanPaymentCardProps> = ({
   plan,
-  selectedPeriod = 'Mensual',
+  selectedPeriod,
   onPeriodChange
 }) => {
   
@@ -29,8 +29,8 @@ export const PlanPaymentCard: React.FC<PlanPaymentCardProps> = ({
   );
 
   const total = subTotalAfiliado + subTotalOpcional;
-  const multiplicador = MULTIPLICADORES[selectedPeriod];
-  const totalPagar = total * multiplicador;
+  const multiplicador = selectedPeriod ? MULTIPLICADORES[selectedPeriod] : 0;
+  const totalPagar = selectedPeriod ? total * multiplicador : 0;
 
   return (
     <Card className="w-full">
@@ -59,33 +59,18 @@ export const PlanPaymentCard: React.FC<PlanPaymentCardProps> = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-600">
-              Período de Pago
-            </label>
-            <Select 
-              value={selectedPeriod} 
-              onValueChange={(value) => onPeriodChange(value as PeriodoPago)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar" />
-              </SelectTrigger>
-              <SelectContent>
-                {PERIODO_OPTIONS.map((periodo) => (
-                  <SelectItem key={periodo} value={periodo}>
-                    {periodo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          
+          <PaymentIntervalSelector
+            value={selectedPeriod}
+            onChange={onPeriodChange}
+          />
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-600">
               Total a Pagar
             </label>
             <div className="text-lg font-bold text-[#005BBB]">
-              {formatCurrency(totalPagar)}
+              {selectedPeriod ? formatCurrency(totalPagar) : "Seleccionar período"}
             </div>
           </div>
         </div>

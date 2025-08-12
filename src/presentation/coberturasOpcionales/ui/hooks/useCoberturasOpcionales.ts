@@ -19,14 +19,6 @@ export const useCoberturasOpcionales = () => {
   // Obtener el objeto una sola vez al inicio del render para evitar bucles
   const finalObject = getFinalObject();
   const { cliente, planes } = finalObject;
-
-  console.log("🔍 DEBUG useCoberturasOpcionales - Estado inicial:", {
-    clientChoosen: cliente?.clientChoosen,
-    planesCount: planes.length,
-    planesNames: planes.map(p => p.plan),
-    primeraEjecucion: true
-  });
-  
   
   
   // Estados locales

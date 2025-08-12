@@ -5,7 +5,7 @@ import { paymentService } from "../services/payment.service";
 import { Plan } from "../../quotations/interface/createQuotation.interface";
 import { useQueryClient } from "@tanstack/react-query";
 
-export type PeriodoPago = "Mensual" | "Trimestral" | "Semestral" | "Anual";
+export type PeriodoPago = "Mensual" | "Trimestral" | "Semestral" | "Anual" | "seleccionar";
 
 interface PaymentPlan extends Plan {
   selectedPeriod?: PeriodoPago;
@@ -18,6 +18,7 @@ interface PaymentSummary {
 }
 
 export const MULTIPLICADORES: Record<PeriodoPago, number> = {
+  seleccionar: 0,
   Mensual: 1,
   Trimestral: 3,
   Semestral: 6,
@@ -38,8 +39,7 @@ export const usePaymentOptions = () => {
     if (planes.length > 0) {
       const initializedPlans = planes.map((plan) => ({
         ...plan,
-        selectedPeriod:
-          (plan.resumenPago?.periodoPago as PeriodoPago) || "Mensual",
+        selectedPeriod: undefined, // Siempre comenzar sin período seleccionado
       }));
 
       // Solo actualizar si los planes han cambiado
@@ -84,10 +84,33 @@ export const usePaymentOptions = () => {
 
   // Manejar cambio de período de pago
   const handlePeriodChange = useCallback(
-    (planName: string, periodo: PeriodoPago) => {
+    (planName: string, periodo: PeriodoPago | undefined) => {
       setPaymentPlans((prev) =>
         prev.map((plan) => {
           if (plan.plan === planName) {
+            if (!periodo) {
+              // Si no hay período seleccionado, limpiar el resumen de pago
+              const updatedPlan = {
+                ...plan,
+                selectedPeriod: undefined,
+                resumenPago: {
+                  ...plan.resumenPago,
+                  periodoPago: "",
+                  subTotalAfiliado: 0,
+                  subTotalOpcional: 0,
+                  totalPagar: 0,
+                },
+              };
+
+              setTimeout(() => {
+                updatePlanByName(planName, {
+                  resumenPago: updatedPlan.resumenPago,
+                });
+              }, 0);
+
+              return updatedPlan;
+            }
+
             const summary = calculatePaymentSummary(plan, periodo);
             const updatedPlan = {
               ...plan,
