@@ -98,7 +98,7 @@ export const PaymentOptions: React.FC = () => {
             key={plan.plan}
             plan={plan}
             selectedPeriod={plan.selectedPeriod}
-            onPeriodChange={(period: PeriodoPago) => handlePeriodChange(plan.plan, period)}
+            onPeriodChange={(period: PeriodoPago | undefined) => handlePeriodChange(plan.plan, period)}
           />
         ))}
       </div>
