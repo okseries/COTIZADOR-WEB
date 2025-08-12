@@ -175,7 +175,7 @@ export const usePaymentOptions = () => {
       // Descargar automáticamente
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = filename || "cotizacion.pdf";
+      link.download = `cotizacion-${Date.now()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
