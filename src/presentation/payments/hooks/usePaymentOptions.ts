@@ -4,6 +4,8 @@ import { useAuth } from "../../auth/store/useAuth.store";
 import { paymentService } from "../services/payment.service";
 import { Plan } from "../../quotations/interface/createQuotation.interface";
 import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export type PeriodoPago = "Mensual" | "Trimestral" | "Semestral" | "Anual" | "seleccionar";
 
@@ -172,10 +174,12 @@ export const usePaymentOptions = () => {
       // Abrir en nueva ventana
       window.open(blobUrl, "_blank");
 
+      const fechaHora = format(new Date(), "dd-MMMM-yyyy_hh-mm-a", { locale: es });
+
       // Descargar automáticamente
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = `cotizacion-${Date.now()}.pdf`;
+      link.download = `cotizacion-${fechaHora}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
