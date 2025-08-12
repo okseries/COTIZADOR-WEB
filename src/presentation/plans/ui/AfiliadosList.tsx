@@ -37,36 +37,48 @@ const AfiliadosList = ({
       <CardContent>
         <div className="space-y-2">
           {/* Header */}
-          <div className="grid grid-cols-4 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
+          <div className="grid grid-cols-5 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
             <div>Parentesco</div>
             <div>{clienteChousen === 2 ? 'Cantidad' : 'Edad'}</div>
             <div>Prima Plan</div>
+            <div>Prima Total</div>
             <div>Acciones</div>
           </div>
 
           {/* Afiliados */}
-          {afiliados.map((afiliado, index) => (
-            <div
-              key={index}
-              className="grid grid-cols-4 gap-4 py-2 border-b last:border-b-0"
-            >
-              <div className="text-sm">{afiliado.parentesco}</div>
-              <div className="text-sm">{afiliado.edad}</div>
-              <div className="text-sm font-medium">
-                {formatCurrency(afiliado.subtotal)}
+          {afiliados.map((afiliado, index) => {
+            // Para colectivos, calcular prima unitaria dividiendo el subtotal por la cantidad
+            const primaUnitaria = clienteChousen === 2 
+              ? parseFloat(afiliado.subtotal) / afiliado.edad
+              : parseFloat(afiliado.subtotal);
+            const primaTotal = parseFloat(afiliado.subtotal);
+            
+            return (
+              <div
+                key={index}
+                className="grid grid-cols-5 gap-4 py-2 border-b last:border-b-0"
+              >
+                <div className="text-sm">{afiliado.parentesco}</div>
+                <div className="text-sm">{afiliado.edad}</div>
+                <div className="text-sm font-medium">
+                  {formatCurrency(primaUnitaria)}
+                </div>
+                <div className="text-sm font-medium">
+                  {formatCurrency(primaTotal)}
+                </div>
+                <div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onRemoveAfiliado(index)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => onRemoveAfiliado(index)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

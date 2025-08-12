@@ -167,10 +167,13 @@ const CategoryPlan = () => {
               clientChoosen
             );
             
+            // Para colectivos, multiplicar prima por cantidad (afiliado.edad representa cantidad)
+            const totalPrima = clientChoosen === 2 ? primaValue * afiliado.edad : primaValue;
+            
             const afiliadoForPlan: Afiliado = {
               ...afiliado,
               plan: plan.plan_name,
-              subtotal: primaValue.toFixed(2)
+              subtotal: totalPrima.toFixed(2)
             };
             
             const updatedAfiliados = [...existingPlan.afiliados, afiliadoForPlan];
@@ -187,11 +190,14 @@ const CategoryPlan = () => {
             });
           } catch (error) {
             console.error(`Error al calcular prima para plan ${plan.plan_name}:`, error);
-            // Usar valor por defecto si hay error
+            // Usar valor por defecto si hay error, multiplicar por cantidad si es colectivo
+            const defaultPrima = 1186.57;
+            const totalPrima = clientChoosen === 2 ? defaultPrima * afiliado.edad : defaultPrima;
+            
             const afiliadoForPlan: Afiliado = {
               ...afiliado,
               plan: plan.plan_name,
-              subtotal: "1186.57"
+              subtotal: totalPrima.toFixed(2)
             };
             
             const updatedAfiliados = [...existingPlan.afiliados, afiliadoForPlan];
@@ -329,7 +335,7 @@ const CategoryPlan = () => {
 
       {/* Resumen - Solo mostrar si hay planes con afiliados */}
       {currentQuotationPlans.length > 0 && (
-        <PlanesResumen planes={currentQuotationPlans} />
+        <PlanesResumen planes={currentQuotationPlans} clienteChousen={subTipoPoliza} />
       )}
     </div>
   )

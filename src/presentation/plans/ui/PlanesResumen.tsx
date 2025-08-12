@@ -6,18 +6,33 @@ import { formatCurrency } from '@/presentation/helpers/FormattCurrency'
 
 interface Props {
   planes: Plan[]
+  clienteChousen?: number // Agregar para saber si es colectivo (2) o individual (1)
 }
 
-const PlanesResumen = ({ planes }: Props) => {
-  if (planes.length === 0) return null
+const PlanesResumen = ({ planes, clienteChousen = 1 }: Props) => {
+  if (planes.length === 0) return null;
 
-  const totalMonto = planes.reduce((acc, plan) => {
-    const planTotal = plan.afiliados.reduce((planAcc, afiliado) => 
-      planAcc + parseFloat(afiliado.subtotal || '0'), 0)
-    const opcionalesTotal = plan.opcionales.reduce((optAcc, opcional) => 
-      optAcc + opcional.prima, 0)
-    return acc + planTotal + opcionalesTotal
-  }, 0)
+  // Calcular totales por plan
+  const getPlanTotal = (plan: Plan) => {
+    // Para colectivos, la prima ya está calculada correctamente en subtotal
+    const afiliadosTotal = plan.afiliados.reduce((acc, afiliado) => acc + parseFloat(afiliado.subtotal || '0'), 0);
+    const opcionalesTotal = plan.opcionales.reduce((acc, opcional) => acc + opcional.prima, 0);
+    return afiliadosTotal + opcionalesTotal;
+  };
+
+  // Calcular cantidad total de afiliados
+  const getTotalAfiliados = () => {
+    if (clienteChousen === 2) {
+      // Para colectivos, sumar las cantidades (campo edad)
+      return planes.reduce((acc, plan) => acc + plan.afiliados.reduce((a, af) => a + af.edad, 0), 0);
+    } else {
+      // Para individuales, contar número de afiliados
+      return planes.reduce((acc, plan) => acc + plan.afiliados.length, 0);
+    }
+  };
+
+  // Calcular total general
+  const totalMonto = planes.reduce((acc, plan) => acc + getPlanTotal(plan), 0);
 
   return (
     <Card className="mt-6">
@@ -32,36 +47,35 @@ const PlanesResumen = ({ planes }: Props) => {
             <div>Cantidad</div>
             <div>Total</div>
           </div>
-          
+
           {/* Planes */}
           {planes.map((plan, index) => {
-            const planTotalAfiliados = plan.afiliados.reduce((acc, afiliado) => 
-              acc + parseFloat(afiliado.subtotal || '0'), 0)
-            const planTotalOpcionales = plan.opcionales.reduce((acc, opcional) => 
-              acc + opcional.prima, 0)
-            const planTotal = planTotalAfiliados + planTotalOpcionales
-            
+            // Cantidad: para colectivo usar el campo edad (que representa cantidad), para individual usar length
+            const cantidad = clienteChousen === 2
+              ? plan.afiliados.reduce((acc, af) => acc + af.edad, 0) // edad = cantidad en colectivos
+              : plan.afiliados.length;
+            const planTotal = getPlanTotal(plan);
             return (
               <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b last:border-b-0">
                 <div className="text-sm font-medium">{plan.plan}</div>
-                <div className="text-sm">{plan.afiliados.length}</div>
+                <div className="text-sm">{cantidad}</div>
                 <div className="text-sm font-medium">{formatCurrency(planTotal)}</div>
               </div>
-            )
+            );
           })}
-          
+
           {/* Total general */}
           {planes.length > 1 && (
             <div className="grid grid-cols-3 gap-4 pt-2 border-t font-bold">
               <div className="text-sm">TOTAL</div>
-              <div className="text-sm">{planes.reduce((acc, plan) => acc + plan.afiliados.length, 0)}</div>
+              <div className="text-sm">{getTotalAfiliados()}</div>
               <div className="text-sm">{formatCurrency(totalMonto)}</div>
             </div>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default PlanesResumen

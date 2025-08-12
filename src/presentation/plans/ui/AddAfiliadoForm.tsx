@@ -117,11 +117,14 @@ const AddAfiliadoForm = ({
     } else {
       // Para plan específico
       const primaValue = prima || 1186.57; // Valor por defecto
+      // Para colectivos, multiplicar prima por cantidad (edad representa cantidad)
+      const totalPrima = clienteChousen === 2 ? primaValue * Number(edad) : primaValue;
+      
       const newAfiliado: Afiliado = {
         plan: selectedPlanName,
         parentesco: selectedParentesco.nomebreParentesco,
         edad: Number(edad),
-        subtotal: primaValue.toFixed(2),
+        subtotal: totalPrima.toFixed(2),
         cantidadAfiliados: 1,
       };
       onAddAfiliado(selectedPlanName, newAfiliado);
@@ -230,11 +233,19 @@ const AddAfiliadoForm = ({
               <Spinner size="sm" color="primary" className="mr-2" />
             ) : (
               `RD$ ${
-                prima ? prima.toFixed(2) : shouldFetchPrima ? "0.00" : "--"
+                prima 
+                  ? (clienteChousen === 2 && edad 
+                      ? (prima * Number(edad)).toFixed(2) 
+                      : prima.toFixed(2)
+                    )
+                  : shouldFetchPrima ? "0.00" : "--"
               }`
             )}
           </div>
         </div>
+
+
+        
 
         {/* Botón agregar */}
         <div className="space-y-2">
