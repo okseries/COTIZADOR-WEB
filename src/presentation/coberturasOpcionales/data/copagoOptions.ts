@@ -6,6 +6,3 @@ export const copagoMedicamentosOptions: CopagoOption[] = [
   { value: 'copago_30', label: 'Copago 30%', porcentaje: 30, prima: 42.33 },
 ];
 
-export const copagoHabitacionOptions: CopagoOption[] = [
-  { value: 'copago_10', label: 'Copago 10%', porcentaje: 10, prima: 1.02, limite: 690, planId: '21200106' }
-];

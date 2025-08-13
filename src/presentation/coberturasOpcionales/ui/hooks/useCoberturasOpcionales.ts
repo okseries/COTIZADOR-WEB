@@ -12,7 +12,7 @@ import {
   medicamentosOptions,
   habitacionOptions
 } from '../../data/coberturaOptions';
-import { copagoMedicamentosOptions, copagoHabitacionOptions } from '../../data/copagoOptions';
+import { copagoMedicamentosOptions } from '../../data/copagoOptions';
 
 // Datos estáticos para odontología
 const odontologiaOptions: OdontologiaOption[] = [
@@ -412,17 +412,17 @@ export const useCoberturasOpcionales = () => {
           if (selectedOption) {
             let primaTotal = selectedOption.prima * cantidadAfiliados;
             // Sumar prima de copago si hay selección
-            if (copagoHabitacionSelections && copagoHabitacionSelections[planName]) {
-              const copagoOpt = copagoHabitacionOptions.find(opt => opt.value === copagoHabitacionSelections[planName]);
-              if (copagoOpt) {
-                primaTotal += copagoOpt.prima * cantidadAfiliados;
-                opcionales.push({
-                  nombre: "COPAGO HABITACIÓN",
-                  descripcion: copagoOpt.label,
-                  prima: copagoOpt.prima * cantidadAfiliados
-                });
-              }
-            }
+            // if (copagoHabitacionSelections && copagoHabitacionSelections[planName]) {
+            //   // const copagoOpt = copagoHabitacionOptions.find(opt => opt.value === copagoHabitacionSelections[planName]);
+            //   if (copagoOpt) {
+            //     primaTotal += copagoOpt.prima * cantidadAfiliados;
+            //     opcionales.push({
+            //       nombre: "COPAGO HABITACIÓN",
+            //       descripcion: copagoOpt.label,
+            //       prima: copagoOpt.prima * cantidadAfiliados
+            //     });
+            //   }
+            // }
             opcionales.push({
               nombre: "HABITACIÓN",
               descripcion: selectedOption.descripcion,
@@ -649,7 +649,7 @@ export const useCoberturasOpcionales = () => {
     medicamentosOptions,
     habitacionOptions,
     copagoMedicamentosOptions,
-    copagoHabitacionOptions,
+    // copagoHabitacionOptions,
     
     // Estados derivados
     isLoading,

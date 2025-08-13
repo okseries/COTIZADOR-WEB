@@ -29,7 +29,7 @@ interface PlanTableProps {
   copagoSelection: string;
   copagoMedicamentosOptions: CopagoOption[];
   copagoHabitacionSelection: string;
-  copagoHabitacionOptions: CopagoOption[];
+  // copagoHabitacionOptions: CopagoOption[];
   onOdontologiaChange: (planName: string, value: string) => void;
   onCoberturaChange: (planName: string, coberturaType: keyof CoberturaSelections, value: string) => void;
   onCopagoChange: (planName: string, value: string) => void;
@@ -51,7 +51,7 @@ const PlanTable = ({
   copagoSelection,
   copagoMedicamentosOptions,
   copagoHabitacionSelection,
-  copagoHabitacionOptions,
+  // copagoHabitacionOptions,
   onOdontologiaChange,
   onCoberturaChange,
   onCopagoChange,
@@ -164,14 +164,14 @@ const PlanTable = ({
                       placeholder="Seleccionar opción"
                     />
                     {/* Mostrar select de copago si hay habitación seleccionada */}
-                    {coberturaSelections?.habitacion && (
+                    {/* {coberturaSelections?.habitacion && (
                       <CopagoSelect
                         value={copagoHabitacionSelection}
                         onChange={(value) => onCopagoHabitacionChange(planName, value)}
                         options={copagoHabitacionOptions}
                         placeholder="Seleccionar copago habitación"
                       />
-                    )}
+                    )} */}
                   </div>
                 ) : (
                   <div className="font-medium">HABITACIÓN {data.habitacion}</div>

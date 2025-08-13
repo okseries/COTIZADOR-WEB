@@ -20,7 +20,7 @@ const CoberturasOpcionales = () => {
     medicamentosOptions,
     habitacionOptions,
     copagoMedicamentosOptions,
-    copagoHabitacionOptions,
+    // copagoHabitacionOptions,
     isLoading,
     hasError,
     isEmpty,
@@ -76,7 +76,7 @@ const CoberturasOpcionales = () => {
             copagoSelection={copagoSelection}
             copagoMedicamentosOptions={copagoMedicamentosOptions}
             copagoHabitacionSelection={copagoHabitacionSelection}
-            copagoHabitacionOptions={copagoHabitacionOptions}
+            // copagoHabitacionOptions={copagoHabitacionOptions}
             onOdontologiaChange={handleOdontologiaChange}
             onCoberturaChange={handleCoberturaChange}
             onCopagoChange={handleCopagoChange}
