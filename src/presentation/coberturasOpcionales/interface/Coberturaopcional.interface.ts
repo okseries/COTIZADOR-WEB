@@ -10,3 +10,21 @@ export interface CoberturasOpcional {
     idCotizante:      number;
     idTipoPlan:       number;
 }
+
+
+
+
+
+export interface CoberturasOpcionaleColectivo {
+    opt_id:         number;
+    opt_percentage: string;
+    opt_prima:      string;
+    limit_price:    string;
+    tipoNombre:     string;
+    descripcion:    string;
+}
+
+
+
+
+

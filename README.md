@@ -85,3 +85,30 @@ Cuando el usuario termine el proceso, simplemente toma el objeto completo del st
 Al montar el componente, si hay datos en el store, el formulario los muestra.
 Al guardar, se actualiza el store con los nuevos datos.
 Si el usuario regresa a este step, verá los datos previamente ingresados.
+
+
+
+{{baseURL}}/opcionales-planes/optionaltype/plantype
+{{baseURL}}/opcionales-planes/1/1
+
+
+export interface Opt {
+  opt_id:           number;
+  opt_percentage:   string;
+  opt_prima:        string;
+  id_opcional_type: number;
+  id_plan_type:     number;
+  limit_price:      string;
+  tipoNombre:       TipoNombre;
+  descripcion:      string;
+}
+
+export enum TipoNombre {
+  Medicamentos = "Medicamentos",
+}
+
+
+solo medicamentos tiene copagos 
+1 = medicamento
+2 = clientechousen (colectivo) 
+/opcionales-planes/copagos/1/2
