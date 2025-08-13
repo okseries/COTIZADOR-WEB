@@ -8,8 +8,6 @@ interface DocumentTypeSelectProps {
   error?: boolean;
   placeholder?: string;
   className?: string;
-  label?: string;
-  required?: boolean;
 }
 
 export const DocumentTypeSelect = React.forwardRef<
@@ -23,8 +21,6 @@ export const DocumentTypeSelect = React.forwardRef<
       error,
       placeholder = "Selecciona tipo",
       className,
-      label = "Tipo de documento",
-      required = false,
       ...props
     },
     ref

@@ -158,10 +158,8 @@ const FilterClient = () => {
               render={({ field }) => (
                 <DocumentTypeSelect
                   {...field}
-                  label="Tipo de documento"
                   placeholder="Selecciona tipo"
                   error={!!errors.tipoDocumento}
-                  required
                 />
               )}
             />
