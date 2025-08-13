@@ -6,6 +6,7 @@ import { Plan } from '@/presentation/quotations/interface/createQuotation.interf
 import OdontologiaSelect, { OdontologiaOption } from './OdontologiaSelect';
 import CoberturaSelect, { CoberturaOption } from './CoberturaSelect';
 import { CoberturaSelections } from '../../data/coberturaOptions';
+import CopagoSelect, { CopagoOption } from './CopagoSelect';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
 
 interface PlanTableProps {
@@ -25,8 +26,14 @@ interface PlanTableProps {
   altoCostoOptions: CoberturaOption[];
   medicamentosOptions: CoberturaOption[];
   habitacionOptions: CoberturaOption[];
+  copagoSelection: string;
+  copagoMedicamentosOptions: CopagoOption[];
+  copagoHabitacionSelection: string;
+  copagoHabitacionOptions: CopagoOption[];
   onOdontologiaChange: (planName: string, value: string) => void;
   onCoberturaChange: (planName: string, coberturaType: keyof CoberturaSelections, value: string) => void;
+  onCopagoChange: (planName: string, value: string) => void;
+  onCopagoHabitacionChange: (planName: string, value: string) => void;
 }
 
 const PlanTable = ({
@@ -41,8 +48,14 @@ const PlanTable = ({
   altoCostoOptions,
   medicamentosOptions,
   habitacionOptions,
+  copagoSelection,
+  copagoMedicamentosOptions,
+  copagoHabitacionSelection,
+  copagoHabitacionOptions,
   onOdontologiaChange,
-  onCoberturaChange
+  onCoberturaChange,
+  onCopagoChange,
+  onCopagoHabitacionChange
 }: PlanTableProps) => {
   if (!planData || !planData[0]) return null;
   
@@ -106,6 +119,15 @@ const PlanTable = ({
                       options={medicamentosOptions}
                       placeholder="Seleccionar opción"
                     />
+                    {/* Mostrar select de copago si hay medicamentos seleccionados */}
+                    {coberturaSelections?.medicamentos && (
+                      <CopagoSelect
+                        value={copagoSelection}
+                        onChange={(value) => onCopagoChange(planName, value)}
+                        options={copagoMedicamentosOptions}
+                        placeholder="Seleccionar copago"
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="font-medium">MEDICAMENTOS {data.medicamento}</div>
@@ -137,6 +159,15 @@ const PlanTable = ({
                       options={habitacionOptions}
                       placeholder="Seleccionar opción"
                     />
+                    {/* Mostrar select de copago si hay habitación seleccionada */}
+                    {coberturaSelections?.habitacion && (
+                      <CopagoSelect
+                        value={copagoHabitacionSelection}
+                        onChange={(value) => onCopagoHabitacionChange(planName, value)}
+                        options={copagoHabitacionOptions}
+                        placeholder="Seleccionar copago habitación"
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="font-medium">HABITACIÓN {data.habitacion}</div>

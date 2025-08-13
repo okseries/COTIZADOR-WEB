@@ -4,6 +4,7 @@ import { usePlanesOpcionales } from '../../hooks/usePlanesOpcionales';
 import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { OdontologiaOption } from '../components/OdontologiaSelect';
+
 import { 
   CoberturaSelections, 
   defaultCoberturaSelections,
@@ -11,6 +12,7 @@ import {
   medicamentosOptions,
   habitacionOptions
 } from '../../data/coberturaOptions';
+import { copagoMedicamentosOptions, copagoHabitacionOptions } from '../../data/copagoOptions';
 
 // Datos estáticos para odontología
 const odontologiaOptions: OdontologiaOption[] = [
@@ -39,7 +41,29 @@ export const useCoberturasOpcionales = () => {
   const [planSelections, setPlanSelections] = useState<{[planName: string]: {[key: string]: string}}>({});
   const [coberturaSelections, setCoberturaSelections] = useState<{[planName: string]: CoberturaSelections}>({});
   const [planesData, setPlanesData] = useState<{[planName: string]: CoberturasOpcional[]}>({});
+  const [copagoSelections, setCopagoSelections] = useState<{[planName: string]: string}>({});
+  const [copagoHabitacionSelections, setCopagoHabitacionSelections] = useState<{[planName: string]: string}>({});
+  const handleCopagoHabitacionChange = (planName: string, value: string) => {
+    setCopagoHabitacionSelections(prev => ({
+      ...prev,
+      [planName]: value
+    }));
+    setTimeout(() => {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    }, 50);
+  };
   const [isUpdating, setIsUpdating] = useState(false);
+  const handleCopagoChange = (planName: string, value: string) => {
+    setCopagoSelections(prev => ({
+      ...prev,
+      [planName]: value
+    }));
+    setTimeout(() => {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    }, 50);
+  };
 
   // Crear hooks individuales para cada plan - siempre llamar los hooks con condición de enabled
   const plan1Query = usePlanesOpcionales(
@@ -292,7 +316,12 @@ export const useCoberturasOpcionales = () => {
       }
 
       let subTotalOpcional = 0;
-      const cantidadAfiliados = plan.afiliados.length;
+      // Si es colectivo, la cantidad de afiliados la define el campo edad del primer afiliado (por requerimiento del backend)
+      let cantidadAfiliados = plan.afiliados.length;
+      if (cliente?.clientChoosen === 2 && plan.afiliados.length > 0) {
+        const cantidad = Number(plan.afiliados[0].edad);
+        cantidadAfiliados = isNaN(cantidad) ? 1 : cantidad;
+      }
 
       // Para clientChoosen === 1 (individuales): incluir automáticamente todas las opcionales básicas
       // Para clientChoosen === 2 (colectivos): solo incluir las que están marcadas en los filtros
@@ -335,14 +364,27 @@ export const useCoberturasOpcionales = () => {
           // Para colectivos, usar la selección específica del dropdown
           const selectedOption = medicamentosOptions.find(opt => opt.value === coberturaSelections[planName]?.medicamentos);
           if (selectedOption) {
+            let primaTotal = selectedOption.prima * cantidadAfiliados;
+            // Sumar prima de copago si hay selección
+            if (copagoSelections && copagoSelections[planName]) {
+              const copagoOpt = copagoMedicamentosOptions.find(opt => opt.value === copagoSelections[planName]);
+              if (copagoOpt) {
+                primaTotal += copagoOpt.prima * cantidadAfiliados;
+                opcionales.push({
+                  nombre: "COPAGO MEDICAMENTOS",
+                  descripcion: copagoOpt.label,
+                  prima: copagoOpt.prima * cantidadAfiliados
+                });
+              }
+            }
             opcionales.push({
               nombre: "MEDICAMENTOS",
               descripcion: selectedOption.descripcion,
               prima: selectedOption.prima * cantidadAfiliados
             });
-            subTotalOpcional += selectedOption.prima * cantidadAfiliados;
+            subTotalOpcional += primaTotal;
             console.log(`✅ MEDICAMENTOS INCLUIDO (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
-              prima: selectedOption.prima * cantidadAfiliados,
+              prima: primaTotal,
               descripcion: selectedOption.descripcion,
               porcentaje: selectedOption.porcentaje
             });
@@ -369,14 +411,27 @@ export const useCoberturasOpcionales = () => {
           // Para colectivos, usar la selección específica del dropdown
           const selectedOption = habitacionOptions.find(opt => opt.value === coberturaSelections[planName]?.habitacion);
           if (selectedOption) {
+            let primaTotal = selectedOption.prima * cantidadAfiliados;
+            // Sumar prima de copago si hay selección
+            if (copagoHabitacionSelections && copagoHabitacionSelections[planName]) {
+              const copagoOpt = copagoHabitacionOptions.find(opt => opt.value === copagoHabitacionSelections[planName]);
+              if (copagoOpt) {
+                primaTotal += copagoOpt.prima * cantidadAfiliados;
+                opcionales.push({
+                  nombre: "COPAGO HABITACIÓN",
+                  descripcion: copagoOpt.label,
+                  prima: copagoOpt.prima * cantidadAfiliados
+                });
+              }
+            }
             opcionales.push({
               nombre: "HABITACIÓN",
               descripcion: selectedOption.descripcion,
               prima: selectedOption.prima * cantidadAfiliados
             });
-            subTotalOpcional += selectedOption.prima * cantidadAfiliados;
+            subTotalOpcional += primaTotal;
             console.log(`✅ HABITACIÓN INCLUIDA (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
-              prima: selectedOption.prima * cantidadAfiliados,
+              prima: primaTotal,
               descripcion: selectedOption.descripcion,
               porcentaje: selectedOption.porcentaje
             });
@@ -583,6 +638,8 @@ export const useCoberturasOpcionales = () => {
     globalFilters,
     planSelections,
     coberturaSelections,
+    copagoSelections,
+    copagoHabitacionSelections,
     planesData,
     cliente,
     planes,
@@ -592,6 +649,8 @@ export const useCoberturasOpcionales = () => {
     altoCostoOptions,
     medicamentosOptions,
     habitacionOptions,
+    copagoMedicamentosOptions,
+    copagoHabitacionOptions,
     
     // Estados derivados
     isLoading,
@@ -601,6 +660,8 @@ export const useCoberturasOpcionales = () => {
     // Handlers
     handleGlobalFilterChange,
     handleOdontologiaChange,
-    handleCoberturaChange
+    handleCoberturaChange,
+    handleCopagoChange,
+    handleCopagoHabitacionChange
   };
 };

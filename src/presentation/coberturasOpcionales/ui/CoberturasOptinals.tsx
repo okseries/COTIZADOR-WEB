@@ -10,6 +10,8 @@ const CoberturasOpcionales = () => {
     globalFilters,
     planSelections,
     coberturaSelections,
+    copagoSelections,
+    copagoHabitacionSelections,
     planesData,
     cliente,
     planes,
@@ -17,12 +19,16 @@ const CoberturasOpcionales = () => {
     altoCostoOptions,
     medicamentosOptions,
     habitacionOptions,
+    copagoMedicamentosOptions,
+    copagoHabitacionOptions,
     isLoading,
     hasError,
     isEmpty,
     handleGlobalFilterChange,
     handleOdontologiaChange,
-    handleCoberturaChange
+    handleCoberturaChange,
+    handleCopagoChange,
+    handleCopagoHabitacionChange
   } = useCoberturasOpcionales();
 
   // Mostrar estados de carga/error/vacío
@@ -50,6 +56,8 @@ const CoberturasOpcionales = () => {
         const planData = planesData[plan.plan];
         const odontologiaSelection = planSelections[plan.plan]?.odontologia || "0";
         const coberturaSelection = coberturaSelections[plan.plan];
+        const copagoSelection = copagoSelections[plan.plan] || "";
+        const copagoHabitacionSelection = copagoHabitacionSelections[plan.plan] || "";
         
         return (
           <PlanTable
@@ -65,8 +73,14 @@ const CoberturasOpcionales = () => {
             altoCostoOptions={altoCostoOptions}
             medicamentosOptions={medicamentosOptions}
             habitacionOptions={habitacionOptions}
+            copagoSelection={copagoSelection}
+            copagoMedicamentosOptions={copagoMedicamentosOptions}
+            copagoHabitacionSelection={copagoHabitacionSelection}
+            copagoHabitacionOptions={copagoHabitacionOptions}
             onOdontologiaChange={handleOdontologiaChange}
             onCoberturaChange={handleCoberturaChange}
+            onCopagoChange={handleCopagoChange}
+            onCopagoHabitacionChange={handleCopagoHabitacionChange}
           />
         );
       })}
