@@ -22,16 +22,16 @@ export interface Plan {
   afiliados: Afiliado[];
   opcionales: Opcional[];
   resumenPago: ResumenPago;
-  cantidadAfiliados: number;
+  cantidadAfiliados: number; // Para colectivos: cantidad ingresada manualmente. Para individuales: length de afiliados
   tipo: string; // e.g., "VOLUNTARIO"
 }
 
 export interface Afiliado {
   plan: string;
   parentesco: string;
-  edad: number;
+  edad: number; // Para colectivos: debe ser null/0. Para individuales: edad real del afiliado
   subtotal: string; // puede ser number si lo manejas como número
-  cantidadAfiliados: number;
+  cantidadAfiliados: number; // Deprecado en favor de Plan.cantidadAfiliados
 }
 
 export interface Opcional {

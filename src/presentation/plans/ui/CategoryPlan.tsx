@@ -151,6 +151,13 @@ const CategoryPlan = () => {
     const tipoPlan = finalObject.cliente?.tipoPlan ?? 0;
     const clientChoosen = finalObject.cliente?.clientChoosen ?? 0;
 
+    console.log("🔧 CategoryPlan - handleAddAfiliado:", {
+      planName,
+      afiliado,
+      clientChoosen,
+      tipoPlan
+    });
+
     if (planName === "Todos") {
       // Agregar el afiliado a todos los planes seleccionados con prima específica para cada uno
       for (const plan of Array.from(selectedPlans.values())) {
@@ -160,15 +167,18 @@ const CategoryPlan = () => {
         if (existingPlan) {
           try {
             // Calcular prima específica para este plan
+            // Para colectivos, usar edad estándar (ej: 30) ya que la cantidad no es edad
+            const edadParaCalculo = clientChoosen === 2 ? 30 : afiliado.edad;
             const primaValue = await GetPrimaPlan(
               plan.plan_name, 
-              afiliado.edad, 
+              edadParaCalculo, 
               tipoPlan, 
               clientChoosen
             );
             
-            // Para colectivos, multiplicar prima por cantidad (afiliado.edad representa cantidad)
-            const totalPrima = clientChoosen === 2 ? primaValue * afiliado.edad : primaValue;
+            // Para colectivos, multiplicar prima por cantidad (afiliado.cantidadAfiliados)
+            const cantidad = clientChoosen === 2 ? afiliado.cantidadAfiliados : 1;
+            const totalPrima = primaValue * cantidad;
             
             const afiliadoForPlan: Afiliado = {
               ...afiliado,
@@ -181,7 +191,7 @@ const CategoryPlan = () => {
             
             updatePlanByName(plan.plan_name, {
               afiliados: updatedAfiliados,
-              cantidadAfiliados: updatedAfiliados.length,
+              cantidadAfiliados: clientChoosen === 2 ? afiliado.cantidadAfiliados : updatedAfiliados.length,
               resumenPago: {
                 ...existingPlan.resumenPago,
                 subTotalAfiliado,
@@ -192,7 +202,8 @@ const CategoryPlan = () => {
             console.error(`Error al calcular prima para plan ${plan.plan_name}:`, error);
             // Usar valor por defecto si hay error, multiplicar por cantidad si es colectivo
             const defaultPrima = 1186.57;
-            const totalPrima = clientChoosen === 2 ? defaultPrima * afiliado.edad : defaultPrima;
+            const cantidad = clientChoosen === 2 ? afiliado.cantidadAfiliados : 1;
+            const totalPrima = defaultPrima * cantidad;
             
             const afiliadoForPlan: Afiliado = {
               ...afiliado,
@@ -205,7 +216,7 @@ const CategoryPlan = () => {
             
             updatePlanByName(plan.plan_name, {
               afiliados: updatedAfiliados,
-              cantidadAfiliados: updatedAfiliados.length,
+              cantidadAfiliados: clientChoosen === 2 ? afiliado.cantidadAfiliados : updatedAfiliados.length,
               resumenPago: {
                 ...existingPlan.resumenPago,
                 subTotalAfiliado,
@@ -226,7 +237,9 @@ const CategoryPlan = () => {
         
         updatePlanByName(planName, {
           afiliados: updatedAfiliados,
-          cantidadAfiliados: updatedAfiliados.length,
+          cantidadAfiliados: clientChoosen === 2 && afiliado.cantidadAfiliados 
+            ? afiliado.cantidadAfiliados 
+            : updatedAfiliados.length,
           resumenPago: {
             ...existingPlan.resumenPago,
             subTotalAfiliado,
@@ -242,12 +255,15 @@ const CategoryPlan = () => {
     const existingPlan = currentPlanes.find(p => p.plan === plan.plan_name);
     
     if (existingPlan) {
+      const removedAfiliado = existingPlan.afiliados[afiliadoIndex];
       const updatedAfiliados = existingPlan.afiliados.filter((_, index) => index !== afiliadoIndex);
       const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
       
       updatePlanByName(plan.plan_name, {
         afiliados: updatedAfiliados,
-        cantidadAfiliados: updatedAfiliados.length,
+        cantidadAfiliados: finalObject.cliente?.clientChoosen === 2 && removedAfiliado?.cantidadAfiliados 
+          ? (updatedAfiliados.length > 0 ? updatedAfiliados[0].cantidadAfiliados : 0)
+          : updatedAfiliados.length,
         resumenPago: {
           ...existingPlan.resumenPago,
           subTotalAfiliado,

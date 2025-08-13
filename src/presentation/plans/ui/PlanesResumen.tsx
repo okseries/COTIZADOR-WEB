@@ -23,8 +23,8 @@ const PlanesResumen = ({ planes, clienteChousen = 1 }: Props) => {
   // Calcular cantidad total de afiliados
   const getTotalAfiliados = () => {
     if (clienteChousen === 2) {
-      // Para colectivos, sumar las cantidades (campo edad)
-      return planes.reduce((acc, plan) => acc + plan.afiliados.reduce((a, af) => a + af.edad, 0), 0);
+      // Para colectivos, sumar las cantidades (campo cantidadAfiliados)
+      return planes.reduce((acc, plan) => acc + plan.afiliados.reduce((a, af) => a + af.cantidadAfiliados, 0), 0);
     } else {
       // Para individuales, contar número de afiliados
       return planes.reduce((acc, plan) => acc + plan.afiliados.length, 0);
@@ -50,9 +50,9 @@ const PlanesResumen = ({ planes, clienteChousen = 1 }: Props) => {
 
           {/* Planes */}
           {planes.map((plan, index) => {
-            // Cantidad: para colectivo usar el campo edad (que representa cantidad), para individual usar length
+            // Cantidad: para colectivo usar cantidadAfiliados, para individual usar length
             const cantidad = clienteChousen === 2
-              ? plan.afiliados.reduce((acc, af) => acc + af.edad, 0) // edad = cantidad en colectivos
+              ? plan.afiliados.reduce((acc, af) => acc + af.cantidadAfiliados, 0) // cantidadAfiliados para colectivos
               : plan.afiliados.length;
             const planTotal = getPlanTotal(plan);
             return (

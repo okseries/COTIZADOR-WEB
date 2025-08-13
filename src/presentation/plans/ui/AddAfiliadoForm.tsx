@@ -56,9 +56,13 @@ const AddAfiliadoForm = ({
     edad !== "" &&
     !isNaN(Number(edad)) &&
     Number(edad) > 0;
+  
+  // Para colectivos, usar edad estándar para el cálculo de prima
+  const edadParaCalculo = clienteChousen === 2 ? 30 : Number(edad);
+  
   const { data: prima, isLoading: loadingPrima } = usePrimaPlan(
     selectedPlanName,
-    Number(edad),
+    edadParaCalculo,
     tipoPlan,
     clientChoosen,
     shouldFetchPrima
@@ -87,8 +91,10 @@ const AddAfiliadoForm = ({
     }
 
     if (!edad) {
-      newErrors.edad = "La edad es obligatoria";
-    } else if (isNaN(Number(edad)) || Number(edad) <= 0 || Number(edad) > 120) {
+      newErrors.edad = clienteChousen === 2 ? "La cantidad es obligatoria" : "La edad es obligatoria";
+    } else if (isNaN(Number(edad)) || Number(edad) <= 0) {
+      newErrors.edad = clienteChousen === 2 ? "Ingrese una cantidad válida (mayor a 0)" : "Ingrese una edad válida (1-120)";
+    } else if (clienteChousen !== 2 && Number(edad) > 120) {
       newErrors.edad = "Ingrese una edad válida (1-120)";
     }
 
@@ -104,29 +110,47 @@ const AddAfiliadoForm = ({
     );
     if (!selectedParentesco) return;
 
+    console.log("🔧 AddAfiliadoForm - handleAddAfiliado:", {
+      selectedPlanName,
+      clienteChousen,
+      edad,
+      edadNumber: Number(edad),
+      isColectivo: clienteChousen === 2
+    });
+
     if (selectedPlanName === "Todos") {
       // Para "Todos", crear un afiliado base sin prima específica
       const newAfiliado: Afiliado = {
         plan: "Todos", // Se actualizará en CategoryPlan
         parentesco: selectedParentesco.nomebreParentesco,
-        edad: Number(edad),
+        edad: clienteChousen === 2 ? 0 : Number(edad), // Para colectivos, edad es 0
         subtotal: "0", // Se calculará por cada plan en CategoryPlan
-        cantidadAfiliados: 1,
+        cantidadAfiliados: clienteChousen === 2 ? Number(edad) : 1, // Para colectivos, cantidad va aquí
       };
+      
+      console.log("🔧 AddAfiliadoForm - Afiliado creado (Todos):", newAfiliado);
       onAddAfiliado(selectedPlanName, newAfiliado);
     } else {
       // Para plan específico
       const primaValue = prima || 1186.57; // Valor por defecto
-      // Para colectivos, multiplicar prima por cantidad (edad representa cantidad)
-      const totalPrima = clienteChousen === 2 ? primaValue * Number(edad) : primaValue;
+      // Para colectivos, multiplicar prima por cantidad
+      const cantidad = clienteChousen === 2 ? Number(edad) : 1;
+      const totalPrima = primaValue * cantidad;
       
       const newAfiliado: Afiliado = {
         plan: selectedPlanName,
         parentesco: selectedParentesco.nomebreParentesco,
-        edad: Number(edad),
+        edad: clienteChousen === 2 ? 0 : Number(edad), // Para colectivos, edad es 0
         subtotal: totalPrima.toFixed(2),
-        cantidadAfiliados: 1,
+        cantidadAfiliados: cantidad, // La cantidad real va aquí
       };
+      
+      console.log("🔧 AddAfiliadoForm - Afiliado creado (Específico):", {
+        newAfiliado,
+        primaValue,
+        cantidad,
+        totalPrima
+      });
       onAddAfiliado(selectedPlanName, newAfiliado);
     }
 
@@ -218,7 +242,7 @@ const AddAfiliadoForm = ({
             onChange={(e) => setEdad(e.target.value)}
             className={`h-10 ${errors.edad ? "border-red-500" : ""}`}
             min="1"
-            max="120"
+            max={clienteChousen === 2 ? "999999" : "120"}
           />
           {errors.edad && <p className="text-red-500 text-xs">{errors.edad}</p>}
         </div>
@@ -234,10 +258,7 @@ const AddAfiliadoForm = ({
             ) : (
               `RD$ ${
                 prima 
-                  ? (clienteChousen === 2 && edad 
-                      ? (prima * Number(edad)).toFixed(2) 
-                      : prima.toFixed(2)
-                    )
+                  ? prima.toFixed(2) + (clienteChousen === 2 && edad ? ` x ${edad} = ${(prima * Number(edad)).toFixed(2)}` : "")
                   : shouldFetchPrima ? "0.00" : "--"
               }`
             )}

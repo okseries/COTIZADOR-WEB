@@ -47,10 +47,12 @@ const AfiliadosList = ({
 
           {/* Afiliados */}
           {afiliados.map((afiliado, index) => {
-            // Para colectivos, calcular prima unitaria dividiendo el subtotal por la cantidad
-            const primaUnitaria = clienteChousen === 2 
-              ? parseFloat(afiliado.subtotal) / afiliado.edad
-              : parseFloat(afiliado.subtotal);
+            // Para colectivos, usar cantidadAfiliados. Para individuales, usar edad y cantidad 1
+            const cantidad = clienteChousen === 2 ? afiliado.cantidadAfiliados : 1;
+            const edadOCantidad = clienteChousen === 2 ? afiliado.cantidadAfiliados : afiliado.edad;
+            
+            // Calcular prima unitaria dividiendo el subtotal por la cantidad
+            const primaUnitaria = cantidad > 0 ? parseFloat(afiliado.subtotal) / cantidad : 0;
             const primaTotal = parseFloat(afiliado.subtotal);
             
             return (
@@ -59,7 +61,7 @@ const AfiliadosList = ({
                 className="grid grid-cols-5 gap-4 py-2 border-b last:border-b-0"
               >
                 <div className="text-sm">{afiliado.parentesco}</div>
-                <div className="text-sm">{afiliado.edad}</div>
+                <div className="text-sm">{edadOCantidad}</div>
                 <div className="text-sm font-medium">
                   {formatCurrency(primaUnitaria)}
                 </div>

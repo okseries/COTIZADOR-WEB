@@ -316,12 +316,11 @@ export const useCoberturasOpcionales = () => {
       }
 
       let subTotalOpcional = 0;
-      // Si es colectivo, la cantidad de afiliados la define el campo edad del primer afiliado (por requerimiento del backend)
-      let cantidadAfiliados = plan.afiliados.length;
-      if (cliente?.clientChoosen === 2 && plan.afiliados.length > 0) {
-        const cantidad = Number(plan.afiliados[0].edad);
-        cantidadAfiliados = isNaN(cantidad) ? 1 : cantidad;
-      }
+      // Para colectivos: usar plan.cantidadAfiliados
+      // Para individuales: usar plan.afiliados.length
+      let cantidadAfiliados = cliente?.clientChoosen === 2 
+        ? (plan.cantidadAfiliados || 1)
+        : plan.afiliados.length;
 
       // Para clientChoosen === 1 (individuales): incluir automáticamente todas las opcionales básicas
       // Para clientChoosen === 2 (colectivos): solo incluir las que están marcadas en los filtros

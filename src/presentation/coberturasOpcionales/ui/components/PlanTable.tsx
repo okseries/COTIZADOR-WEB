@@ -60,7 +60,11 @@ const PlanTable = ({
   if (!planData || !planData[0]) return null;
   
   const data = planData[0];
-  const cantidadAfiliados = plan.afiliados.length;
+  // Para colectivos: usar plan.cantidadAfiliados
+  // Para individuales: usar plan.afiliados.length
+  const cantidadAfiliados = clientChoosen === 2 
+    ? (plan.cantidadAfiliados || 1)
+    : plan.afiliados.length;
 
   return (
     <Card className="mb-6">
