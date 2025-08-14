@@ -11,9 +11,6 @@ interface Props {
 const PaymentIntervalSelector = ({ value, onChange }: Props) => {
   const OPTIONS: PeriodoPago[] = ['Mensual', 'Trimestral', 'Semestral', 'Anual'];
   
-  // Debug log para verificar el valor que llega
-  console.log('PaymentIntervalSelector value:', value);
-  
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-gray-600">
@@ -22,7 +19,6 @@ const PaymentIntervalSelector = ({ value, onChange }: Props) => {
       <Select
         value={value ? value : "unselected"}
         onValueChange={(newValue) => {
-          console.log('Selected value:', newValue);
           if (newValue === "unselected") {
             onChange(undefined);
           } else {

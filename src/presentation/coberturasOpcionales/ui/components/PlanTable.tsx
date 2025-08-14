@@ -139,12 +139,7 @@ const PlanTable = ({
                     {/* Mostrar select de copago solo para complementarios colectivos */}
                     {(() => {
                       const shouldShowCopago = dynamicCoberturaSelections?.altoCosto && cliente?.tipoPlan === 2 && clientChoosen === 2;
-                      console.log("🔍 Copago Alto Costo visibility check:", {
-                        hasAltoCostoSelected: !!dynamicCoberturaSelections?.altoCosto,
-                        tipoPlan: cliente?.tipoPlan,
-                        clientChoosen: clientChoosen,
-                        shouldShow: shouldShowCopago
-                      });
+                     
                       return shouldShowCopago;
                     })() && (
                       <DynamicCopagoSelect
@@ -188,12 +183,7 @@ const PlanTable = ({
                     {/* Mostrar select de copago solo para complementarios colectivos */}
                     {(() => {
                       const shouldShowCopago = dynamicCoberturaSelections?.medicamentos && cliente?.tipoPlan === 2 && clientChoosen === 2;
-                      console.log("🔍 Copago visibility check:", {
-                        hasMedicamentosSelected: !!dynamicCoberturaSelections?.medicamentos,
-                        tipoPlan: cliente?.tipoPlan,
-                        clientChoosen: clientChoosen,
-                        shouldShow: shouldShowCopago
-                      });
+                    
                       return shouldShowCopago;
                     })() && (
                       <DynamicCopagoSelect
@@ -248,12 +238,7 @@ const PlanTable = ({
                     {/* Mostrar select de copago solo para complementarios colectivos */}
                     {(() => {
                       const shouldShowCopago = dynamicCoberturaSelections?.habitacion && cliente?.tipoPlan === 2 && clientChoosen === 2;
-                      console.log("🔍 Copago habitación visibility check:", {
-                        hasHabitacionSelected: !!dynamicCoberturaSelections?.habitacion,
-                        tipoPlan: cliente?.tipoPlan,
-                        clientChoosen: clientChoosen,
-                        shouldShow: shouldShowCopago
-                      });
+                     
                       return shouldShowCopago;
                     })() && (
                       <DynamicCopagoSelect

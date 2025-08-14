@@ -109,14 +109,6 @@ const AddAfiliadoForm = ({
     );
     if (!selectedParentesco) return;
 
-    console.log("🔧 AddAfiliadoForm - handleAddAfiliado:", {
-      selectedPlanName,
-      clienteChousen,
-      edad,
-      edadNumber: Number(edad),
-      isColectivo: clienteChousen === 2
-    });
-
     if (selectedPlanName === "Todos") {
       // Para "Todos", crear un afiliado base sin prima específica
       const newAfiliado: Afiliado = {
@@ -127,7 +119,6 @@ const AddAfiliadoForm = ({
         cantidadAfiliados: clienteChousen === 2 ? Number(edad) : 1, // Para colectivos, cantidad va aquí
       };
       
-      console.log("🔧 AddAfiliadoForm - Afiliado creado (Todos):", newAfiliado);
       onAddAfiliado(selectedPlanName, newAfiliado);
     } else {
       // Para plan específico
@@ -144,12 +135,6 @@ const AddAfiliadoForm = ({
         cantidadAfiliados: cantidad, // La cantidad real va aquí
       };
       
-      console.log("🔧 AddAfiliadoForm - Afiliado creado (Específico):", {
-        newAfiliado,
-        primaValue,
-        cantidad,
-        totalPrima
-      });
       onAddAfiliado(selectedPlanName, newAfiliado);
     }
 

@@ -49,9 +49,6 @@ export default function QuotationTable({
   const router = useRouter();
   const { loadExistingQuotation } = useQuotationStore();
 
-  console.log("QuotationTable data:", data);
-  
-
   // Estados para búsqueda y paginación
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,7 +110,8 @@ export default function QuotationTable({
           ...afiliado,
           subtotal: String(afiliado.subtotal), // Ensure subtotal is a string
         })),
-        opcionales: plane.opcionales.map((opcional) => ({
+        opcionales: plane.opcionales.map((opcional, index) => ({
+          id: index + 1, // Generate a unique ID for each opcional
           nombre: opcional.nombre,
           descripcion: opcional.descripcion,
           prima: opcional.prima,

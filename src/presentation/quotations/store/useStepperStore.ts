@@ -157,7 +157,6 @@ const useStepperStore = create<StepperState>()(
           
           return quotationObject;
         } catch (error) {
-          console.error('Error generando objeto de cotización:', error);
           return null;
         }
       },

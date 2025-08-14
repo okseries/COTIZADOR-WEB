@@ -107,7 +107,6 @@ const CategoryPlan = () => {
     }
     
     setSelectedPlans(newSelectedPlans);
-    console.log('Planes seleccionados:', Array.from(newSelectedPlans.keys()));
   };
 
   const handleSelectAllPlans = (checked: boolean) => {
@@ -150,13 +149,6 @@ const CategoryPlan = () => {
     const tipoPlan = cliente?.tipoPlan ?? 0;
     const clientChoosen = cliente?.clientChoosen ?? 0;
 
-    console.log("🔧 CategoryPlan - handleAddAfiliado:", {
-      planName,
-      afiliado,
-      clientChoosen,
-      tipoPlan
-    });
-
     if (planName === "Todos") {
       // Agregar el afiliado a todos los planes seleccionados con prima específica para cada uno
       for (const plan of Array.from(selectedPlans.values())) {
@@ -198,7 +190,6 @@ const CategoryPlan = () => {
               }
             });
           } catch (error) {
-            console.error(`Error al calcular prima para plan ${plan.plan_name}:`, error);
             // Usar valor por defecto si hay error, multiplicar por cantidad si es colectivo
             const defaultPrima = 1186.57;
             const cantidad = clientChoosen === 2 ? afiliado.cantidadAfiliados : 1;
