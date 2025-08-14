@@ -1,18 +1,27 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
-import { usePlanesOpcionales } from '../../hooks/usePlanesOpcionales';
+import { usePlanesOpcionales, useCoberturasOpcionalesByType, useCopagos } from '../../hooks/usePlanesOpcionales';
 import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { OdontologiaOption } from '../components/OdontologiaSelect';
 
-import { 
-  CoberturaSelections, 
-  defaultCoberturaSelections,
-  altoCostoOptions,
-  medicamentosOptions,
-  habitacionOptions
-} from '../../data/coberturaOptions';
-import { copagoMedicamentosOptions } from '../../data/copagoOptions';
+// Definir el tipo para las selecciones de cobertura
+interface CoberturaSelections {
+  altoCosto: string;
+  medicamentos: string;
+  habitacion: string;
+  odontologia: string;
+}
+
+// Valores por defecto para las selecciones de cobertura
+const defaultCoberturaSelections: CoberturaSelections = {
+  altoCosto: "0",
+  medicamentos: "0", 
+  habitacion: "0",
+  odontologia: "0"
+};
+
+
 
 // Datos estáticos para odontología
 const odontologiaOptions: OdontologiaOption[] = [
@@ -43,6 +52,17 @@ export const useCoberturasOpcionales = () => {
   const [planesData, setPlanesData] = useState<{[planName: string]: CoberturasOpcional[]}>({});
   const [copagoSelections, setCopagoSelections] = useState<{[planName: string]: string}>({});
   const [copagoHabitacionSelections, setCopagoHabitacionSelections] = useState<{[planName: string]: string}>({});
+  
+  // Nuevos estados para selecciones dinámicas desde la API
+  const [dynamicCoberturaSelections, setDynamicCoberturaSelections] = useState<{
+    [planName: string]: {
+      altoCosto: string;
+      medicamentos: string;
+      habitacion: string;
+      odontologia: string;
+    }
+  }>({});
+  const [dynamicCopagoSelections, setDynamicCopagoSelections] = useState<{[planName: string]: string}>({});
   const handleCopagoHabitacionChange = (planName: string, value: string) => {
     setCopagoHabitacionSelections(prev => ({
       ...prev,
@@ -95,6 +115,55 @@ export const useCoberturasOpcionales = () => {
     cliente?.tipoPlan || 1, 
     cliente?.clientChoosen || 1, 
     !!planes[4]?.plan
+  );
+
+  // Hooks para opciones dinámicas por tipo de cobertura (solo para colectivos)
+  const isColectivo = cliente?.clientChoosen === 2;
+  
+  // Alto Costo
+  const altoCostoOptionsQuery = useCoberturasOpcionalesByType(
+    'altoCosto', 
+    cliente?.tipoPlan || 1, 
+    isColectivo && globalFilters.altoCosto
+  );
+  
+  // Medicamentos
+  const medicamentosOptionsQuery = useCoberturasOpcionalesByType(
+    'medicamentos', 
+    cliente?.tipoPlan || 1, 
+    isColectivo && globalFilters.medicamentos
+  );
+  
+  // Habitación
+  const habitacionOptionsQuery = useCoberturasOpcionalesByType(
+    'habitacion', 
+    cliente?.tipoPlan || 1, 
+    isColectivo && globalFilters.habitacion
+  );
+  
+  // Odontología
+  const odontologiaOptionsQuery = useCoberturasOpcionalesByType(
+    'odontologia', 
+    cliente?.tipoPlan || 1, 
+    isColectivo && globalFilters.odontologia
+  );
+
+  // Copagos para medicamentos (solo si medicamentos está seleccionado)
+  const copagosQuery = useCopagos(
+    1, // ID para medicamentos
+    cliente?.clientChoosen || 1
+  );
+
+  // Copagos para alto costo
+  const copagosAltoCostoQuery = useCopagos(
+    3, // ID para alto costo
+    cliente?.clientChoosen || 1
+  );
+
+  // Copagos para habitación  
+  const copagosHabitacionQuery = useCopagos(
+    2, // ID para habitación
+    cliente?.clientChoosen || 1
   );
 
   // Combinar resultados en un array
@@ -281,6 +350,21 @@ export const useCoberturasOpcionales = () => {
     }
   }, [cliente?.clientChoosen, planes.length, planes.map(p => p.opcionales.length).join(',')]);
 
+  // Inicializar selecciones dinámicas cuando hay datos disponibles
+  useEffect(() => {
+    // Ya no inicializamos automáticamente las selecciones dinámicas
+    // Solo se seleccionarán cuando el usuario haga check en los filtros globales
+    console.log("✅ Selecciones dinámicas listas - esperando selección del usuario");
+  }, [
+    cliente?.clientChoosen, 
+    planes.length, 
+    altoCostoOptionsQuery.data, 
+    medicamentosOptionsQuery.data, 
+    habitacionOptionsQuery.data, 
+    odontologiaOptionsQuery.data,
+    Object.keys(dynamicCoberturaSelections).length
+  ]);
+
   const updatePlanOpcionales = useCallback((planName: string, odontologiaValue: string) => {
     console.log(`🚀 updatePlanOpcionales ejecutándose:`, {
       planName,
@@ -325,26 +409,31 @@ export const useCoberturasOpcionales = () => {
       // Para clientChoosen === 1 (individuales): incluir automáticamente todas las opcionales básicas
       // Para clientChoosen === 2 (colectivos): solo incluir las que están marcadas en los filtros
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.altoCosto)) {
-        if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.altoCosto) {
-          // Para colectivos, usar la selección específica del dropdown
-          const selectedOption = altoCostoOptions.find(opt => opt.value === coberturaSelections[planName]?.altoCosto);
+        if (cliente?.clientChoosen === 2 && dynamicCoberturaSelections[planName]?.altoCosto) {
+          // Para colectivos, usar la selección específica del dropdown dinámico
+          const selectedOption = altoCostoOptionsQuery.data?.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections[planName]?.altoCosto);
           if (selectedOption) {
             opcionales.push({
+              id: selectedOption.opt_id,
               nombre: "ALTO COSTO",
               descripcion: selectedOption.descripcion,
-              prima: selectedOption.prima * cantidadAfiliados
+              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
             });
-            subTotalOpcional += selectedOption.prima * cantidadAfiliados;
-            console.log(`✅ ALTO COSTO INCLUIDO (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
-              prima: selectedOption.prima * cantidadAfiliados,
+            subTotalOpcional += parseFloat(selectedOption.opt_prima) * cantidadAfiliados;
+            console.log(`✅ ALTO COSTO INCLUIDO (COLECTIVO DINÁMICO) - Plan ${planName}:`, {
+              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados,
               descripcion: selectedOption.descripcion,
-              porcentaje: selectedOption.porcentaje
+              porcentaje: selectedOption.opt_percentage
             });
           }
+        } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.altoCosto) {
+          // Ya no hay fallback estático - solo datos dinámicos
+          console.log("⚠️ Alto Costo: No hay selección dinámica para el plan", planName);
         } else {
           // Para individuales, usar el valor estático original
           const prima = parseFloat(data.primaCosto) || 0;
           opcionales.push({
+            id: 2, // ID para Alto Costo
             nombre: "ALTO COSTO",
             descripcion: data.altoCosto,
             prima: prima * cantidadAfiliados
@@ -359,39 +448,48 @@ export const useCoberturasOpcionales = () => {
       }
 
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.medicamentos)) {
-        if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.medicamentos) {
-          // Para colectivos, usar la selección específica del dropdown
-          const selectedOption = medicamentosOptions.find(opt => opt.value === coberturaSelections[planName]?.medicamentos);
+        if (cliente?.clientChoosen === 2 && dynamicCoberturaSelections[planName]?.medicamentos) {
+          // Para colectivos, usar la selección específica del dropdown dinámico
+          const selectedOption = medicamentosOptionsQuery.data?.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections[planName]?.medicamentos);
           if (selectedOption) {
-            let primaTotal = selectedOption.prima * cantidadAfiliados;
-            // Sumar prima de copago si hay selección
-            if (copagoSelections && copagoSelections[planName]) {
-              const copagoOpt = copagoMedicamentosOptions.find(opt => opt.value === copagoSelections[planName]);
+            let primaTotal = parseFloat(selectedOption.opt_prima) * cantidadAfiliados;
+            
+            // Sumar prima de copago dinámico si hay selección
+            if (dynamicCopagoSelections && dynamicCopagoSelections[planName]) {
+              const copagoOpt = copagosQuery.data?.find(opt => opt.id.toString() === dynamicCopagoSelections[planName]);
               if (copagoOpt) {
-                primaTotal += copagoOpt.prima * cantidadAfiliados;
+                primaTotal += copagoOpt.price * cantidadAfiliados;
                 opcionales.push({
+                  id: 1, // ID para Medicamentos (copago)
+                  idCopago: parseInt(dynamicCopagoSelections[planName]), // ID del copago seleccionado
                   nombre: "COPAGO MEDICAMENTOS",
-                  descripcion: copagoOpt.label,
-                  prima: copagoOpt.prima * cantidadAfiliados
+                  descripcion: copagoOpt.descripcion,
+                  prima: copagoOpt.price * cantidadAfiliados
                 });
               }
             }
             opcionales.push({
+              id: selectedOption.opt_id,
+              idCopago: dynamicCopagoSelections[planName] ? parseInt(dynamicCopagoSelections[planName]) : undefined,
               nombre: "MEDICAMENTOS",
               descripcion: selectedOption.descripcion,
-              prima: selectedOption.prima * cantidadAfiliados
+              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
             });
             subTotalOpcional += primaTotal;
-            console.log(`✅ MEDICAMENTOS INCLUIDO (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
+            console.log(`✅ MEDICAMENTOS INCLUIDO (COLECTIVO DINÁMICO) - Plan ${planName}:`, {
               prima: primaTotal,
               descripcion: selectedOption.descripcion,
-              porcentaje: selectedOption.porcentaje
+              porcentaje: selectedOption.opt_percentage
             });
           }
+        } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.medicamentos) {
+          // Ya no hay fallback estático - solo datos dinámicos
+          console.log("⚠️ Medicamentos: No hay selección dinámica para el plan", planName);
         } else {
           // Para individuales, usar el valor estático original
           const prima = parseFloat(data.medicamentoCosto) || 0;
           opcionales.push({
+            id: 1, // ID para Medicamentos
             nombre: "MEDICAMENTOS",
             descripcion: data.medicamento,
             prima: prima * cantidadAfiliados
@@ -406,39 +504,33 @@ export const useCoberturasOpcionales = () => {
       }
 
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.habitacion)) {
-        if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.habitacion) {
-          // Para colectivos, usar la selección específica del dropdown
-          const selectedOption = habitacionOptions.find(opt => opt.value === coberturaSelections[planName]?.habitacion);
+        if (cliente?.clientChoosen === 2 && dynamicCoberturaSelections[planName]?.habitacion) {
+          // Para colectivos, usar la selección específica del dropdown dinámico
+          const selectedOption = habitacionOptionsQuery.data?.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections[planName]?.habitacion);
           if (selectedOption) {
-            let primaTotal = selectedOption.prima * cantidadAfiliados;
-            // Sumar prima de copago si hay selección
-            // if (copagoHabitacionSelections && copagoHabitacionSelections[planName]) {
-            //   // const copagoOpt = copagoHabitacionOptions.find(opt => opt.value === copagoHabitacionSelections[planName]);
-            //   if (copagoOpt) {
-            //     primaTotal += copagoOpt.prima * cantidadAfiliados;
-            //     opcionales.push({
-            //       nombre: "COPAGO HABITACIÓN",
-            //       descripcion: copagoOpt.label,
-            //       prima: copagoOpt.prima * cantidadAfiliados
-            //     });
-            //   }
-            // }
+            let primaTotal = parseFloat(selectedOption.opt_prima) * cantidadAfiliados;
+            
             opcionales.push({
+              id: selectedOption.opt_id,
               nombre: "HABITACIÓN",
               descripcion: selectedOption.descripcion,
-              prima: selectedOption.prima * cantidadAfiliados
+              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
             });
             subTotalOpcional += primaTotal;
-            console.log(`✅ HABITACIÓN INCLUIDA (COLECTIVO PERSONALIZADO) - Plan ${planName}:`, {
+            console.log(`✅ HABITACIÓN INCLUIDA (COLECTIVO DINÁMICO) - Plan ${planName}:`, {
               prima: primaTotal,
               descripcion: selectedOption.descripcion,
-              porcentaje: selectedOption.porcentaje
+              porcentaje: selectedOption.opt_percentage
             });
           }
+        } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.habitacion) {
+          // Ya no hay fallback estático - solo datos dinámicos
+          console.log("⚠️ Habitación: No hay selección dinámica para el plan", planName);
         } else {
           // Para individuales, usar el valor estático original
           const prima = parseFloat(data.habitacionCosto) || 0;
           opcionales.push({
+            id: 3, // ID para Habitación
             nombre: "HABITACIÓN",
             descripcion: data.habitacion,
             prima: prima * cantidadAfiliados
@@ -464,6 +556,7 @@ export const useCoberturasOpcionales = () => {
           
         if (shouldIncludeOdontologia) {
           opcionales.push({
+            id: 4, // ID para Odontología
             nombre: "ODONTOLOGIA",
             descripcion: odontologiaSelected.label,
             prima: odontologiaSelected.prima * cantidadAfiliados
@@ -521,7 +614,20 @@ export const useCoberturasOpcionales = () => {
       
       setIsUpdating(false);
     }, 100);
-  }, [planesData, planes, cliente, globalFilters, coberturaSelections, updatePlanByName]); // Agregar las dependencias necesarias
+  }, [
+    planesData, 
+    planes, 
+    cliente, 
+    globalFilters, 
+    coberturaSelections, 
+    dynamicCoberturaSelections, 
+    dynamicCopagoSelections,
+    altoCostoOptionsQuery.data,
+    medicamentosOptionsQuery.data,
+    habitacionOptionsQuery.data,
+    copagosQuery.data,
+    updatePlanByName
+  ]); // Agregar las dependencias necesarias incluyendo las dinámicas
 
   // Actualizar todos los planes cuando cambian los filtros globales (solo para clientChoosen === 2)
   useEffect(() => {
@@ -594,6 +700,55 @@ export const useCoberturasOpcionales = () => {
       ...prev,
       [filter]: checked
     }));
+
+    // Si se está activando una cobertura en modo colectivo, inicializar la selección dinámica
+    if (checked && cliente?.clientChoosen === 2) {
+      planes.forEach(plan => {
+        // Solo inicializar si no hay selección previa para este filtro
+        if (!dynamicCoberturaSelections[plan.plan]?.[filter as keyof typeof dynamicCoberturaSelections[string]]) {
+          let firstOption: any = null;
+          
+          switch (filter) {
+            case 'altoCosto':
+              firstOption = altoCostoOptionsQuery.data?.[0];
+              break;
+            case 'medicamentos':
+              firstOption = medicamentosOptionsQuery.data?.[0];
+              break;
+            case 'habitacion':
+              firstOption = habitacionOptionsQuery.data?.[0];
+              break;
+            case 'odontologia':
+              firstOption = odontologiaOptionsQuery.data?.[0];
+              break;
+          }
+
+          if (firstOption) {
+            setDynamicCoberturaSelections(prev => ({
+              ...prev,
+              [plan.plan]: {
+                ...prev[plan.plan],
+                [filter]: firstOption.opt_id.toString()
+              }
+            }));
+            console.log(`✅ Inicializada selección dinámica para ${filter} en plan ${plan.plan}:`, firstOption.opt_id);
+          }
+        }
+      });
+    }
+
+    // Si se está desactivando, limpiar la selección dinámica
+    if (!checked && cliente?.clientChoosen === 2) {
+      planes.forEach(plan => {
+        setDynamicCoberturaSelections(prev => ({
+          ...prev,
+          [plan.plan]: {
+            ...prev[plan.plan],
+            [filter]: ''
+          }
+        }));
+      });
+    }
   };
 
   const handleOdontologiaChange = (planName: string, value: string) => {
@@ -627,6 +782,36 @@ export const useCoberturasOpcionales = () => {
     }, 50);
   };
 
+  // Nuevos handlers para selecciones dinámicas
+  const handleDynamicCoberturaChange = (planName: string, coberturaType: string, value: string) => {
+    setDynamicCoberturaSelections(prev => ({
+      ...prev,
+      [planName]: {
+        ...prev[planName],
+        [coberturaType]: value
+      }
+    }));
+    
+    // Actualizar inmediatamente
+    setTimeout(() => {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    }, 50);
+  };
+
+  const handleDynamicCopagoChange = (planName: string, value: string) => {
+    setDynamicCopagoSelections(prev => ({
+      ...prev,
+      [planName]: value
+    }));
+    
+    // Actualizar inmediatamente
+    setTimeout(() => {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    }, 50);
+  };
+
   // Estados derivados
   const isLoading = planQueriesData.some(q => q.isLoading);
   const hasError = planQueriesData.some(q => q.error);
@@ -639,17 +824,21 @@ export const useCoberturasOpcionales = () => {
     coberturaSelections,
     copagoSelections,
     copagoHabitacionSelections,
+    dynamicCoberturaSelections,
+    dynamicCopagoSelections,
     planesData,
     cliente,
     planes,
     odontologiaOptions,
     
-    // Opciones de cobertura
-    altoCostoOptions,
-    medicamentosOptions,
-    habitacionOptions,
-    copagoMedicamentosOptions,
-    // copagoHabitacionOptions,
+    // Opciones dinámicas desde API
+    dynamicAltoCostoOptions: altoCostoOptionsQuery.data || [],
+    dynamicMedicamentosOptions: medicamentosOptionsQuery.data || [],
+    dynamicHabitacionOptions: habitacionOptionsQuery.data || [],
+    dynamicOdontologiaOptions: odontologiaOptionsQuery.data || [],
+    dynamicCopagosOptions: copagosQuery.data || [],
+    dynamicCopagosAltoCostoOptions: copagosAltoCostoQuery.data || [],
+    dynamicCopagosHabitacionOptions: copagosHabitacionQuery.data || [],
     
     // Estados derivados
     isLoading,
@@ -661,6 +850,8 @@ export const useCoberturasOpcionales = () => {
     handleOdontologiaChange,
     handleCoberturaChange,
     handleCopagoChange,
-    handleCopagoHabitacionChange
+    handleCopagoHabitacionChange,
+    handleDynamicCoberturaChange,
+    handleDynamicCopagoChange
   };
 };

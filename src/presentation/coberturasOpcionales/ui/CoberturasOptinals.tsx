@@ -12,15 +12,22 @@ const CoberturasOpcionales = () => {
     coberturaSelections,
     copagoSelections,
     copagoHabitacionSelections,
+    dynamicCoberturaSelections,
+    dynamicCopagoSelections,
     planesData,
     cliente,
     planes,
     odontologiaOptions,
-    altoCostoOptions,
-    medicamentosOptions,
-    habitacionOptions,
-    copagoMedicamentosOptions,
-    // copagoHabitacionOptions,
+    
+    // Opciones dinámicas desde API
+    dynamicAltoCostoOptions,
+    dynamicMedicamentosOptions,
+    dynamicHabitacionOptions,
+    dynamicOdontologiaOptions,
+    dynamicCopagosOptions,
+    dynamicCopagosAltoCostoOptions,
+    dynamicCopagosHabitacionOptions,
+    
     isLoading,
     hasError,
     isEmpty,
@@ -28,7 +35,9 @@ const CoberturasOpcionales = () => {
     handleOdontologiaChange,
     handleCoberturaChange,
     handleCopagoChange,
-    handleCopagoHabitacionChange
+    handleCopagoHabitacionChange,
+    handleDynamicCoberturaChange,
+    handleDynamicCopagoChange
   } = useCoberturasOpcionales();
 
   // Mostrar estados de carga/error/vacío
@@ -59,28 +68,42 @@ const CoberturasOpcionales = () => {
         const copagoSelection = copagoSelections[plan.plan] || "";
         const copagoHabitacionSelection = copagoHabitacionSelections[plan.plan] || "";
         
+        // Selecciones dinámicas
+        const dynamicCoberturaSelection = dynamicCoberturaSelections[plan.plan];
+        const dynamicCopagoSelection = dynamicCopagoSelections[plan.plan] || "";
+        
         return (
           <PlanTable
             key={plan.plan}
             planName={plan.plan}
             planData={planData}
             plan={plan}
+            cliente={cliente}
             clientChoosen={cliente?.clientChoosen || 1}
             globalFilters={globalFilters}
             odontologiaSelection={odontologiaSelection}
             odontologiaOptions={odontologiaOptions}
             coberturaSelections={coberturaSelection}
-            altoCostoOptions={altoCostoOptions}
-            medicamentosOptions={medicamentosOptions}
-            habitacionOptions={habitacionOptions}
             copagoSelection={copagoSelection}
-            copagoMedicamentosOptions={copagoMedicamentosOptions}
             copagoHabitacionSelection={copagoHabitacionSelection}
-            // copagoHabitacionOptions={copagoHabitacionOptions}
+            
+            // Nuevas props dinámicas
+            dynamicCoberturaSelections={dynamicCoberturaSelection}
+            dynamicCopagoSelection={dynamicCopagoSelection}
+            dynamicAltoCostoOptions={dynamicAltoCostoOptions}
+            dynamicMedicamentosOptions={dynamicMedicamentosOptions}
+            dynamicHabitacionOptions={dynamicHabitacionOptions}
+            dynamicOdontologiaOptions={dynamicOdontologiaOptions}
+            dynamicCopagosOptions={dynamicCopagosOptions}
+            dynamicCopagosAltoCostoOptions={dynamicCopagosAltoCostoOptions}
+            dynamicCopagosHabitacionOptions={dynamicCopagosHabitacionOptions}
+            
             onOdontologiaChange={handleOdontologiaChange}
             onCoberturaChange={handleCoberturaChange}
             onCopagoChange={handleCopagoChange}
             onCopagoHabitacionChange={handleCopagoHabitacionChange}
+            onDynamicCoberturaChange={handleDynamicCoberturaChange}
+            onDynamicCopagoChange={handleDynamicCopagoChange}
           />
         );
       })}

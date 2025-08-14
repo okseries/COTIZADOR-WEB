@@ -35,6 +35,8 @@ export interface Afiliado {
 }
 
 export interface Opcional {
+  id: number;
+  idCopago?: number ;
   nombre: string;
   descripcion: string | null;
   prima: number;

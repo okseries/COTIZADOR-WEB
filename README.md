@@ -108,7 +108,11 @@ export enum TipoNombre {
 }
 
 
-solo medicamentos tiene copagos 
+
 1 = medicamento
 2 = clientechousen (colectivo) 
 /opcionales-planes/copagos/1/2
+
+
+
+solo los complementarios colectivos llevan copagos   y son todos 

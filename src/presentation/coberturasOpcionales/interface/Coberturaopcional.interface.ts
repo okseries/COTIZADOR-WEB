@@ -26,5 +26,14 @@ export interface CoberturasOpcionaleColectivo {
 
 
 
+export interface Copago {
+    id:          number;
+    name:        string;
+    price:       number;
+    descripcion: string;
+}
+
+
+
 
 
