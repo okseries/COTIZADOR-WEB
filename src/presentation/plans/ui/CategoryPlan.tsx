@@ -11,12 +11,11 @@ import { Plan as PlanInterface } from '../interface/plan.interface';
 import { Plan as QuotationPlan, Afiliado } from '@/presentation/quotations/interface/createQuotation.interface';
 
 const CategoryPlan = () => {
-  const { getFinalObject, addPlan, updatePlanByName, removePlan } = useQuotationStore();
+  // Acceder directamente a los datos del store sin usar getFinalObject en cada render
+  const { cliente, planes, addPlan, updatePlanByName, removePlan } = useQuotationStore();
   
-  // Obtener el objeto una sola vez al inicio del render
-  const finalObject = getFinalObject();
-  const tipoPoliza = finalObject.cliente?.tipoPlan;
-  const subTipoPoliza = finalObject.cliente?.clientChoosen;
+  const tipoPoliza = cliente?.tipoPlan;
+  const subTipoPoliza = cliente?.clientChoosen;
 
   const [selectedPlans, setSelectedPlans] = useState<Map<number, PlanInterface>>(new Map());
   
@@ -67,19 +66,19 @@ const CategoryPlan = () => {
 
   // Sincronizar con el store
   useEffect(() => {
-    const currentPlanes = finalObject.planes || [];
+    const currentPlanes = planes || [];
     const newSelectedPlans = new Map<number, PlanInterface>();
     
     // Solo agregar a selectedPlans los planes que están en el store Y existen en la lista de planes
-    currentPlanes.forEach(quotationPlan => {
-      const planFromAPI = orderedPlans?.find(plan => plan.plan_name === quotationPlan.plan);
+    currentPlanes.forEach((quotationPlan: QuotationPlan) => {
+      const planFromAPI = orderedPlans?.find((plan: PlanInterface) => plan.plan_name === quotationPlan.plan);
       if (planFromAPI) {
         newSelectedPlans.set(planFromAPI.id, planFromAPI);
       }
     });
     
     setSelectedPlans(newSelectedPlans);
-  }, [orderedPlans?.length, finalObject.planes?.length]); // Solo depender de las longitudes para evitar referencias cambiantes
+  }, [orderedPlans?.length, planes?.length]); // Solo depender de las longitudes para evitar referencias cambiantes
 
   const handlePlanChange = (plan: PlanInterface, checked: boolean) => {
     const newSelectedPlans = new Map(selectedPlans);
@@ -115,10 +114,10 @@ const CategoryPlan = () => {
     if (checked) {
       // Seleccionar todos los planes
       const newSelectedPlans = new Map<number, PlanInterface>();
-      orderedPlans?.forEach(plan => {
+      orderedPlans?.forEach((plan: PlanInterface) => {
         newSelectedPlans.set(plan.id, plan);
         // Agregar al store si no existe
-        const existingPlan = finalObject.planes?.find(p => p.plan === plan.plan_name);
+        const existingPlan = planes?.find((p: QuotationPlan) => p.plan === plan.plan_name);
         if (!existingPlan) {
           const newQuotationPlan: QuotationPlan = {
             plan: plan.plan_name,
@@ -141,15 +140,15 @@ const CategoryPlan = () => {
       // Deseleccionar todos los planes
       setSelectedPlans(new Map());
       // Remover todos del store
-      plans?.forEach(plan => {
-        removePlan(plan.plan_name);
+      planes?.forEach((plan: QuotationPlan) => {
+        removePlan(plan.plan);
       });
     }
   };
 
   const handleAddAfiliado = async (planName: string, afiliado: Afiliado) => {
-    const tipoPlan = finalObject.cliente?.tipoPlan ?? 0;
-    const clientChoosen = finalObject.cliente?.clientChoosen ?? 0;
+    const tipoPlan = cliente?.tipoPlan ?? 0;
+    const clientChoosen = cliente?.clientChoosen ?? 0;
 
     console.log("🔧 CategoryPlan - handleAddAfiliado:", {
       planName,
@@ -161,8 +160,8 @@ const CategoryPlan = () => {
     if (planName === "Todos") {
       // Agregar el afiliado a todos los planes seleccionados con prima específica para cada uno
       for (const plan of Array.from(selectedPlans.values())) {
-        const currentPlanes = finalObject.planes || [];
-        const existingPlan = currentPlanes.find(p => p.plan === plan.plan_name);
+        const currentPlanes = planes || [];
+        const existingPlan = currentPlanes.find((p: QuotationPlan) => p.plan === plan.plan_name);
         
         if (existingPlan) {
           try {
@@ -187,7 +186,7 @@ const CategoryPlan = () => {
             };
             
             const updatedAfiliados = [...existingPlan.afiliados, afiliadoForPlan];
-            const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
+            const subTotalAfiliado = updatedAfiliados.reduce((acc: number, af: Afiliado) => acc + parseFloat(af.subtotal), 0);
             
             updatePlanByName(plan.plan_name, {
               afiliados: updatedAfiliados,
@@ -212,7 +211,7 @@ const CategoryPlan = () => {
             };
             
             const updatedAfiliados = [...existingPlan.afiliados, afiliadoForPlan];
-            const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
+            const subTotalAfiliado = updatedAfiliados.reduce((acc: number, af: Afiliado) => acc + parseFloat(af.subtotal), 0);
             
             updatePlanByName(plan.plan_name, {
               afiliados: updatedAfiliados,
@@ -228,12 +227,12 @@ const CategoryPlan = () => {
       }
     } else {
       // Agregar solo al plan específico
-      const currentPlanes = finalObject.planes || [];
-      const existingPlan = currentPlanes.find(p => p.plan === planName);
+      const currentPlanes = planes || [];
+      const existingPlan = currentPlanes.find((p: QuotationPlan) => p.plan === planName);
       
       if (existingPlan) {
         const updatedAfiliados = [...existingPlan.afiliados, afiliado];
-        const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
+        const subTotalAfiliado = updatedAfiliados.reduce((acc: number, af: Afiliado) => acc + parseFloat(af.subtotal), 0);
         
         updatePlanByName(planName, {
           afiliados: updatedAfiliados,
@@ -251,17 +250,17 @@ const CategoryPlan = () => {
   };
 
   const handleRemoveAfiliado = (plan: PlanInterface, afiliadoIndex: number) => {
-    const currentPlanes = finalObject.planes || [];
-    const existingPlan = currentPlanes.find(p => p.plan === plan.plan_name);
+    const currentPlanes = planes || [];
+    const existingPlan = currentPlanes.find((p: QuotationPlan) => p.plan === plan.plan_name);
     
     if (existingPlan) {
       const removedAfiliado = existingPlan.afiliados[afiliadoIndex];
-      const updatedAfiliados = existingPlan.afiliados.filter((_, index) => index !== afiliadoIndex);
-      const subTotalAfiliado = updatedAfiliados.reduce((acc, af) => acc + parseFloat(af.subtotal), 0);
+      const updatedAfiliados = existingPlan.afiliados.filter((_: Afiliado, index: number) => index !== afiliadoIndex);
+      const subTotalAfiliado = updatedAfiliados.reduce((acc: number, af: Afiliado) => acc + parseFloat(af.subtotal), 0);
       
       updatePlanByName(plan.plan_name, {
         afiliados: updatedAfiliados,
-        cantidadAfiliados: finalObject.cliente?.clientChoosen === 2 && removedAfiliado?.cantidadAfiliados 
+        cantidadAfiliados: cliente?.clientChoosen === 2 && removedAfiliado?.cantidadAfiliados 
           ? (updatedAfiliados.length > 0 ? updatedAfiliados[0].cantidadAfiliados : 0)
           : updatedAfiliados.length,
         resumenPago: {
@@ -289,7 +288,7 @@ const CategoryPlan = () => {
     return <div>No se encontraron planes.</div>;
   }
 
-  const currentQuotationPlans = finalObject.planes || [];
+  const currentQuotationPlans = planes || [];
   const isAllPlansSelected = orderedPlans?.length > 0 && selectedPlans.size === orderedPlans.length;
 
   return (
@@ -305,7 +304,7 @@ const CategoryPlan = () => {
           isChecked={isAllPlansSelected}
           onChange={handleSelectAllPlans}
         />
-        {orderedPlans?.map((plan) => (
+        {orderedPlans?.map((plan: PlanInterface) => (
           <CheckBoxPlans 
             key={plan.id} 
             plan={plan}
@@ -326,13 +325,11 @@ const CategoryPlan = () => {
         </div>
       )}
 
-      
-
       {/* Lista de afiliados por plan - Solo mostrar si hay afiliados */}
       {currentQuotationPlans.length > 0 && (
         <div className="space-y-4">
-          {currentQuotationPlans.map((quotationPlan) => {
-            const originalPlan = plans?.find(p => p.plan_name === quotationPlan.plan);
+          {currentQuotationPlans.map((quotationPlan: QuotationPlan) => {
+            const originalPlan = plans?.find((p: PlanInterface) => p.plan_name === quotationPlan.plan);
             if (!originalPlan || quotationPlan.afiliados.length === 0) return null;
             
             return (

@@ -37,17 +37,16 @@ const AddAfiliadoForm = ({
     edad?: string;
   }>({});
 
-  const { getFinalObject } = useQuotationStore();
+  // Acceder directamente a los datos del store sin usar getFinalObject en cada render  
+  const { cliente } = useQuotationStore();
   const {
     data: parentescos,
     isLoading: loadingParentescos,
     error: errorParentescos,
   } = useParentesco();
 
-  // Obtener el objeto una sola vez al inicio del render
-  const finalObject = getFinalObject();
-  const tipoPlan = finalObject.cliente?.tipoPlan ?? 0;
-  const clientChoosen = finalObject.cliente?.clientChoosen ?? 0;
+  const tipoPlan = cliente?.tipoPlan ?? 0;
+  const clientChoosen = cliente?.clientChoosen ?? 0;
 
   // Obtener prima cuando tenemos todos los datos necesarios (no para "Todos")
   const shouldFetchPrima =
