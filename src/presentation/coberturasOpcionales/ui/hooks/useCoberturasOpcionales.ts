@@ -230,8 +230,6 @@ export const useCoberturasOpcionales = () => {
           if (found) {
             odontologiaValue = found.value;
             
-          } else {
-            console.log(`⚠️ Descripción de odontología no encontrada:`);
           }
         }
         
@@ -261,7 +259,6 @@ export const useCoberturasOpcionales = () => {
       });
 
       if (needsCoberturaUpdate) {
-        console.log("🔄 Inicializando coberturaSelections:", initialCoberturaSelections);
         setCoberturaSelections(prev => ({ ...prev, ...initialCoberturaSelections }));
       }
     }
@@ -364,10 +361,6 @@ export const useCoberturasOpcionales = () => {
       // Obtener planesData actual del estado
       const planDataCurrent = planesData[planName];
       if (!planDataCurrent || !planDataCurrent[0]) {
-        console.log(`❌ No hay datos para el plan ${planName}:`, {
-          planDataCurrent,
-          planesDataKeys: Object.keys(planesData)
-        });
         setIsUpdating(false);
         return;
       }
@@ -401,15 +394,9 @@ export const useCoberturasOpcionales = () => {
               prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
             });
             subTotalOpcional += parseFloat(selectedOption.opt_prima) * cantidadAfiliados;
-            console.log(`✅ ALTO COSTO INCLUIDO (COLECTIVO DINÁMICO) - Plan ${planName}:`, {
-              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados,
-              descripcion: selectedOption.descripcion,
-              porcentaje: selectedOption.opt_percentage
-            });
           }
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.altoCosto) {
           // Ya no hay fallback estático - solo datos dinámicos
-          console.log("⚠️ Alto Costo: No hay selección dinámica para el plan", planName);
         } else {
           // Para individuales, usar el valor estático original
           const prima = parseFloat(data.primaCosto) || 0;
@@ -420,11 +407,6 @@ export const useCoberturasOpcionales = () => {
             prima: prima * cantidadAfiliados
           });
           subTotalOpcional += prima * cantidadAfiliados;
-          console.log(`✅ ALTO COSTO INCLUIDO - Plan ${planName}:`, {
-            prima: prima * cantidadAfiliados,
-            descripcion: data.altoCosto,
-            clientChoosen: cliente?.clientChoosen
-          });
         }
       }
 
@@ -457,15 +439,9 @@ export const useCoberturasOpcionales = () => {
               prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
             });
             subTotalOpcional += primaTotal;
-            console.log(`✅ MEDICAMENTOS INCLUIDO (COLECTIVO DINÁMICO) - Plan ${planName}:`, {
-              prima: primaTotal,
-              descripcion: selectedOption.descripcion,
-              porcentaje: selectedOption.opt_percentage
-            });
           }
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.medicamentos) {
           // Ya no hay fallback estático - solo datos dinámicos
-          console.log("⚠️ Medicamentos: No hay selección dinámica para el plan", planName);
         } else {
           // Para individuales, usar el valor estático original
           const prima = parseFloat(data.medicamentoCosto) || 0;
@@ -476,11 +452,6 @@ export const useCoberturasOpcionales = () => {
             prima: prima * cantidadAfiliados
           });
           subTotalOpcional += prima * cantidadAfiliados;
-          console.log(`✅ MEDICAMENTOS INCLUIDO - Plan ${planName}:`, {
-            prima: prima * cantidadAfiliados,
-            descripcion: data.medicamento,
-            clientChoosen: cliente?.clientChoosen
-          });
         }
       }
 
@@ -502,7 +473,6 @@ export const useCoberturasOpcionales = () => {
           }
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.habitacion) {
           // Ya no hay fallback estático - solo datos dinámicos
-          console.log("⚠️ Habitación: No hay selección dinámica para el plan", planName);
         } else {
           // Para individuales, usar el valor estático original
           const prima = parseFloat(data.habitacionCosto) || 0;
@@ -537,11 +507,7 @@ export const useCoberturasOpcionales = () => {
           subTotalOpcional += odontologiaSelected.prima * cantidadAfiliados;
           
          
-        } else {
-          console.log(`❌ ODONTOLOGÍA NO INCLUIDA - Plan ${planName}:`);
         }
-      } else {
-        console.log(`ℹ️ ODONTOLOGÍA NO SELECCIONADA - Plan ${planName}:`);
       }
 
       // Actualizar el plan en el store
