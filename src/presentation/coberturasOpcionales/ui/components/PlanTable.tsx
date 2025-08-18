@@ -129,10 +129,9 @@ const PlanTable = ({
         <div className="space-y-4">
           {/* Header */}
           {clientChoosen === 2 ? (
-            <div className="grid grid-cols-3 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
+            <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
               <div>Opcional</div>
-              <div>Prima Base</div>
-              <div>Copago</div>
+              <div>Prima Base y Copago</div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
@@ -143,30 +142,56 @@ const PlanTable = ({
           
           {/* Alto Costo */}
           {(clientChoosen === 1 || globalFilters.altoCosto) && (
-            <div className="grid grid-cols-3 gap-4 py-2 border-b items-end">
+            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
               <div className="text-sm">
                 {clientChoosen === 2 ? (
                   <div>
                     <div className="font-medium">ALTO COSTO</div>
-                    <DynamicCoberturaSelect
-                      value={dynamicCoberturaSelections?.altoCosto || ''}
-                      onChange={(value) => onDynamicCoberturaChange(planName, 'altoCosto', value)}
-                      options={dynamicAltoCostoOptions}
-                      placeholder="Seleccionar opción de Alto Costo"
-                    />
+                    <div className="flex items-center gap-2 mt-1">
+                      <DynamicCoberturaSelect
+                        value={dynamicCoberturaSelections?.altoCosto || ''}
+                        onChange={(value) => onDynamicCoberturaChange(planName, 'altoCosto', value)}
+                        options={dynamicAltoCostoOptions}
+                        placeholder="Seleccionar opción de Alto Costo"
+                      />
+                      <div className="text-sm font-medium min-w-[80px]">
+                        {(() => {
+                          const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
+                          if (selectedAltoCosto && selectedAltoCosto !== "0") {
+                            const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
+                            if (cobertura) {
+                              return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                            }
+                          }
+                          return formatCurrency(0);
+                        })()}
+                      </div>
+                    </div>
                     {/* Mostrar select de copago solo para complementarios colectivos */}
                     {(() => {
                       const shouldShowCopago = dynamicCoberturaSelections?.altoCosto && cliente?.tipoPlan === 2 && clientChoosen === 2;
                      
                       return shouldShowCopago;
                     })() && (
-                      <div className="mt-2">
+                      <div className="flex items-center gap-2 mt-2">
                         <DynamicCopagoSelect
                           value={dynamicCopagoSelection.altoCosto}
                           onChange={(value) => onDynamicCopagoChange(planName, 'altoCosto', value)}
                           options={dynamicCopagosAltoCostoOptions}
                           placeholder="Seleccionar copago (opcional)"
                         />
+                        <div className="text-sm font-medium min-w-[80px]">
+                          {(() => {
+                            const selectedCopago = dynamicCopagoSelection?.altoCosto;
+                            if (selectedCopago && selectedCopago !== "0") {
+                              const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                              if (copago) {
+                                return formatCurrency(copago.price || 0);
+                              }
+                            }
+                            return formatCurrency(0);
+                          })()}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -176,40 +201,12 @@ const PlanTable = ({
               </div>
               <div className="text-sm font-medium">
                 {clientChoosen === 2 ? (
-                  (() => {
-                    // Solo mostrar prima base de la cobertura seleccionada (SIN multiplicar)
-                    const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
-                    if (selectedAltoCosto && selectedAltoCosto !== "0") {
-                      const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
-                      if (cobertura) {
-                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
-                      }
-                    }
-                    return formatCurrency(0);
-                  })()
+                  "."
                 ) : (
-                  // Para individuales, leer también del store
                   (() => {
                     const altoCostoOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "ALTO COSTO");
                     return formatCurrency(altoCostoOpcional?.prima || 0);
                   })()
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {clientChoosen === 2 ? (
-                  (() => {
-                    // Mostrar precio del copago seleccionado (SIN multiplicar)
-                    const selectedCopago = dynamicCopagoSelection?.altoCosto;
-                    if (selectedCopago && selectedCopago !== "0") {
-                      const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopago));
-                      if (copago) {
-                        return formatCurrency(copago.price || 0);
-                      }
-                    }
-                    return formatCurrency(0);
-                  })()
-                ) : (
-                  formatCurrency(0)
                 )}
               </div>
             </div>
@@ -217,30 +214,56 @@ const PlanTable = ({
 
           {/* Medicamentos */}
           {(clientChoosen === 1 || globalFilters.medicamentos) && (
-            <div className="grid grid-cols-3 gap-4 py-2 border-b items-end">
+            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
               <div className="text-sm">
                 {clientChoosen === 2 ? (
                   <div>
                     <div className="font-medium">MEDICAMENTOS</div>
-                    <DynamicCoberturaSelect
-                      value={dynamicCoberturaSelections?.medicamentos || ''}
-                      onChange={(value) => onDynamicCoberturaChange(planName, 'medicamentos', value)}
-                      options={dynamicMedicamentosOptions}
-                      placeholder="Seleccionar opción de Medicamentos"
-                    />
+                    <div className="flex items-center gap-2 mt-1">
+                      <DynamicCoberturaSelect
+                        value={dynamicCoberturaSelections?.medicamentos || ''}
+                        onChange={(value) => onDynamicCoberturaChange(planName, 'medicamentos', value)}
+                        options={dynamicMedicamentosOptions}
+                        placeholder="Seleccionar opción de Medicamentos"
+                      />
+                      <div className="text-sm font-medium min-w-[80px]">
+                        {(() => {
+                          const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
+                          if (selectedMedicamentos && selectedMedicamentos !== "0") {
+                            const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
+                            if (cobertura) {
+                              return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                            }
+                          }
+                          return formatCurrency(0);
+                        })()}
+                      </div>
+                    </div>
                     {/* Mostrar select de copago solo para complementarios colectivos */}
                     {(() => {
                       const shouldShowCopago = dynamicCoberturaSelections?.medicamentos && cliente?.tipoPlan === 2 && clientChoosen === 2;
                     
                       return shouldShowCopago;
                     })() && (
-                      <div className="mt-2">
+                      <div className="flex items-center gap-2 mt-2">
                         <DynamicCopagoSelect
                           value={dynamicCopagoSelection.medicamentos}
                           onChange={(value) => onDynamicCopagoChange(planName, 'medicamentos', value)}
                           options={dynamicCopagosOptions}
                           placeholder="Seleccionar copago (opcional)"
                         />
+                        <div className="text-sm font-medium min-w-[80px]">
+                          {(() => {
+                            const selectedCopago = dynamicCopagoSelection?.medicamentos;
+                            if (selectedCopago && selectedCopago !== "0") {
+                              const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                              if (copago) {
+                                return formatCurrency(copago.price || 0);
+                              }
+                            }
+                            return formatCurrency(0);
+                          })()}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -250,40 +273,12 @@ const PlanTable = ({
               </div>
               <div className="text-sm font-medium">
                 {clientChoosen === 2 ? (
-                  (() => {
-                    // Solo mostrar prima base de la cobertura seleccionada (SIN multiplicar)
-                    const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
-                    if (selectedMedicamentos && selectedMedicamentos !== "0") {
-                      const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
-                      if (cobertura) {
-                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
-                      }
-                    }
-                    return formatCurrency(0);
-                  })()
+                  "."
                 ) : (
-                  // Para individuales, leer del store
                   (() => {
                     const medicamentosOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "MEDICAMENTOS");
                     return formatCurrency(medicamentosOpcional?.prima || 0);
                   })()
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {clientChoosen === 2 ? (
-                  (() => {
-                    // Mostrar precio del copago seleccionado (SIN multiplicar)
-                    const selectedCopago = dynamicCopagoSelection?.medicamentos;
-                    if (selectedCopago && selectedCopago !== "0") {
-                      const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopago));
-                      if (copago) {
-                        return formatCurrency(copago.price || 0);
-                      }
-                    }
-                    return formatCurrency(0);
-                  })()
-                ) : (
-                  formatCurrency(0)
                 )}
               </div>
             </div>
@@ -291,30 +286,56 @@ const PlanTable = ({
 
           {/* Habitación */}
           {(clientChoosen === 1 || globalFilters.habitacion) && (
-            <div className="grid grid-cols-3 gap-4 py-2 border-b items-end">
+            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
               <div className="text-sm">
                 {clientChoosen === 2 ? (
                   <div>
                     <div className="font-medium">HABITACIÓN</div>
-                    <DynamicCoberturaSelect
-                      value={dynamicCoberturaSelections?.habitacion || ''}
-                      onChange={(value) => onDynamicCoberturaChange(planName, 'habitacion', value)}
-                      options={dynamicHabitacionOptions}
-                      placeholder="Seleccionar opción de Habitación"
-                    />
+                    <div className="flex items-center gap-2 mt-1">
+                      <DynamicCoberturaSelect
+                        value={dynamicCoberturaSelections?.habitacion || ''}
+                        onChange={(value) => onDynamicCoberturaChange(planName, 'habitacion', value)}
+                        options={dynamicHabitacionOptions}
+                        placeholder="Seleccionar opción de Habitación"
+                      />
+                      <div className="text-sm font-medium min-w-[80px]">
+                        {(() => {
+                          const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
+                          if (selectedHabitacion && selectedHabitacion !== "0") {
+                            const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
+                            if (cobertura) {
+                              return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                            }
+                          }
+                          return formatCurrency(0);
+                        })()}
+                      </div>
+                    </div>
                     {/* Mostrar select de copago solo para complementarios colectivos */}
                     {(() => {
                       const shouldShowCopago = dynamicCoberturaSelections?.habitacion && cliente?.tipoPlan === 2 && clientChoosen === 2;
                      
                       return shouldShowCopago;
                     })() && (
-                      <div className="mt-2">
+                      <div className="flex items-center gap-2 mt-2">
                         <DynamicCopagoSelect
                           value={dynamicCopagoSelection.habitacion}
                           onChange={(value) => onDynamicCopagoChange(planName, 'habitacion', value)}
                           options={dynamicCopagosHabitacionOptions}
                           placeholder="Seleccionar copago (opcional)"
                         />
+                        <div className="text-sm font-medium min-w-[80px]">
+                          {(() => {
+                            const selectedCopago = dynamicCopagoSelection?.habitacion;
+                            if (selectedCopago && selectedCopago !== "0") {
+                              const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                              if (copago) {
+                                return formatCurrency(copago.price || 0);
+                              }
+                            }
+                            return formatCurrency(0);
+                          })()}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -324,40 +345,12 @@ const PlanTable = ({
               </div>
               <div className="text-sm font-medium">
                 {clientChoosen === 2 ? (
-                  (() => {
-                    // Solo mostrar prima base de la cobertura seleccionada (SIN multiplicar)
-                    const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
-                    if (selectedHabitacion && selectedHabitacion !== "0") {
-                      const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
-                      if (cobertura) {
-                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
-                      }
-                    }
-                    return formatCurrency(0);
-                  })()
+                  "."
                 ) : (
-                  // Para individuales, leer también del store
                   (() => {
                     const habitacionOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "HABITACIÓN");
                     return formatCurrency(habitacionOpcional?.prima || 0);
                   })()
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {clientChoosen === 2 ? (
-                  (() => {
-                    // Mostrar precio del copago seleccionado (SIN multiplicar)
-                    const selectedCopago = dynamicCopagoSelection?.habitacion;
-                    if (selectedCopago && selectedCopago !== "0") {
-                      const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopago));
-                      if (copago) {
-                        return formatCurrency(copago.price || 0);
-                      }
-                    }
-                    return formatCurrency(0);
-                  })()
-                ) : (
-                  formatCurrency(0)
                 )}
               </div>
             </div>
@@ -367,29 +360,40 @@ const PlanTable = ({
           {(clientChoosen === 1 || globalFilters.odontologia) && (
             <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
               <div className="text-sm">
-                <div className="font-medium">ODONTOLOGÍA</div>
-                <OdontologiaSelect
-                  value={odontologiaSelection}
-                  onChange={(value) => onOdontologiaChange(planName, value)}
-                  options={odontologiaOptions}
-                />
+                {clientChoosen === 2 ? (
+                  <div>
+                    <div className="font-medium">ODONTOLOGÍA</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <OdontologiaSelect
+                        value={odontologiaSelection}
+                        onChange={(value) => onOdontologiaChange(planName, value)}
+                        options={odontologiaOptions}
+                      />
+                      <div className="text-sm font-medium min-w-[80px]">
+                        {(() => {
+                          // Para colectivos, mostrar el valor al lado del select
+                          const selectedOption = odontologiaOptions?.find(opt => opt.value === odontologiaSelection);
+                          return formatCurrency(selectedOption?.prima || 0);
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="font-medium">ODONTOLOGÍA</div>
+                    <OdontologiaSelect
+                      value={odontologiaSelection}
+                      onChange={(value) => onOdontologiaChange(planName, value)}
+                      options={odontologiaOptions}
+                    />
+                  </div>
+                )}
               </div>
               <div className="text-sm font-medium">
                 {clientChoosen === 2 ? (
-                  (() => {
-                    // Para colectivos, calcular dinámicamente basado en las selecciones actuales
-                    const selectedOdontologia = dynamicCoberturaSelections?.odontologia;
-                    if (selectedOdontologia && selectedOdontologia !== "0") {
-                      const cobertura = dynamicOdontologiaOptions?.find((o: any) => o.opt_id === parseInt(selectedOdontologia));
-                      if (cobertura) {
-                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
-                      }
-                    }
-                    return formatCurrency(0);
-                  })()
+                  "."
                 ) : (
                   (() => {
-                    // Para individuales, usar las opciones tradicionales
                     const selectedOption = odontologiaOptions?.find(opt => opt.value === odontologiaSelection);
                     return formatCurrency(selectedOption?.prima || 0);
                   })()
@@ -400,7 +404,7 @@ const PlanTable = ({
 
           {/* Subtotal */}
           <div className="grid grid-cols-2 gap-4 pt-2 border-t font-bold">
-            <div className="text-sm">SubTotal Opcionales</div>
+            <div className="text-sm">SubTotal Opcionales - {cantidadAfiliados} Afiliados</div>
             <div className="text-sm">
               {(() => {
                 if (clientChoosen === 2) {
