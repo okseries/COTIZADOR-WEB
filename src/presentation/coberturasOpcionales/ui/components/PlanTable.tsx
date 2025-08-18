@@ -128,286 +128,288 @@ const PlanTable = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Header */}
-          {clientChoosen === 2 ? (
-            <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
-              <div>Opcional</div>
-              <div>Prima Base y Copago</div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
-              <div>Opcional</div>
-              <div>Prima Opcional</div>
-            </div>
-          )}
+          {/* Header - Simplificado sin columnas */}
+          <div className="pb-2 border-b">
+            <h2 className="font-medium text-gray-700">Coberturas Opcionales</h2>
+            <p className="text-sm text-gray-500">
+              {clientChoosen === 2 
+                ? "Selecciona las coberturas deseadas. Los precios mostrados son unitarios." 
+                : "Coberturas opcionales disponibles para tu plan."}
+            </p>
+          </div>
           
           {/* Alto Costo */}
           {(clientChoosen === 1 || globalFilters.altoCosto) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
-              <div className="text-sm">
-                {clientChoosen === 2 ? (
-                  <div>
-                    <div className="font-medium">ALTO COSTO</div>
-                    <div className="flex items-center gap-2 mt-1">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-800 mb-3">Alto Costo</h3>
+              {clientChoosen === 2 ? (
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">
+                      Cobertura:
+                    </label>
+                    <div className="flex-1 min-w-0">
                       <DynamicCoberturaSelect
                         value={dynamicCoberturaSelections?.altoCosto || ''}
                         onChange={(value) => onDynamicCoberturaChange(planName, 'altoCosto', value)}
                         options={dynamicAltoCostoOptions}
                         placeholder="Seleccionar opción de Alto Costo"
                       />
-                      <div className="text-sm font-medium min-w-[80px]">
-                        {(() => {
-                          const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
-                          if (selectedAltoCosto && selectedAltoCosto !== "0") {
-                            const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
-                            if (cobertura) {
-                              return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
-                            }
-                          }
-                          return formatCurrency(0);
-                        })()}
-                      </div>
                     </div>
-                    {/* Mostrar select de copago solo para complementarios colectivos */}
-                    {(() => {
-                      const shouldShowCopago = dynamicCoberturaSelections?.altoCosto && cliente?.tipoPlan === 2 && clientChoosen === 2;
-                     
-                      return shouldShowCopago;
-                    })() && (
-                      <div className="flex items-center gap-2 mt-2">
+                    <div className="text-base font-medium text-blue-600 w-24 flex-shrink-0 text-right">
+                      {(() => {
+                        const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
+                        if (selectedAltoCosto && selectedAltoCosto !== "0") {
+                          const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
+                          if (cobertura) {
+                            return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                          }
+                        }
+                        return formatCurrency(0);
+                      })()}
+                    </div>
+                  </div>
+                  
+                  {/* Mostrar select de copago solo para complementarios colectivos */}
+                  {(() => {
+                    const shouldShowCopago = dynamicCoberturaSelections?.altoCosto && cliente?.tipoPlan === 2 && clientChoosen === 2;
+                    
+                    return shouldShowCopago;
+                  })() && (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">
+                        Copago:
+                      </label>
+                      <div className="flex-1 min-w-0">
                         <DynamicCopagoSelect
                           value={dynamicCopagoSelection.altoCosto}
                           onChange={(value) => onDynamicCopagoChange(planName, 'altoCosto', value)}
                           options={dynamicCopagosAltoCostoOptions}
                           placeholder="Seleccionar copago (opcional)"
                         />
-                        <div className="text-sm font-medium min-w-[80px]">
-                          {(() => {
-                            const selectedCopago = dynamicCopagoSelection?.altoCosto;
-                            if (selectedCopago && selectedCopago !== "0") {
-                              const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopago));
-                              if (copago) {
-                                return formatCurrency(copago.price || 0);
-                              }
-                            }
-                            return formatCurrency(0);
-                          })()}
-                        </div>
                       </div>
-                    )}
+                      <div className="text-base font-medium text-green-600 w-24 flex-shrink-0 text-right">
+                        {(() => {
+                          const selectedCopago = dynamicCopagoSelection?.altoCosto;
+                          if (selectedCopago && selectedCopago !== "0") {
+                            const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                            if (copago) {
+                              return formatCurrency(copago.price || 0);
+                            }
+                          }
+                          return formatCurrency(0);
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <div className="text-gray-700">{data.altoCosto}</div>
+                  <div className="text-base font-medium text-blue-600">
+                    {(() => {
+                      const altoCostoOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "ALTO COSTO");
+                      return formatCurrency(altoCostoOpcional?.prima || 0);
+                    })()}
                   </div>
-                ) : (
-                  <div className="font-medium">ALTO COSTO {data.altoCosto}</div>
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {clientChoosen === 2 ? (
-                  "."
-                ) : (
-                  (() => {
-                    const altoCostoOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "ALTO COSTO");
-                    return formatCurrency(altoCostoOpcional?.prima || 0);
-                  })()
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Medicamentos */}
           {(clientChoosen === 1 || globalFilters.medicamentos) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
-              <div className="text-sm">
-                {clientChoosen === 2 ? (
-                  <div>
-                    <div className="font-medium">MEDICAMENTOS</div>
-                    <div className="flex items-center gap-2 mt-1">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-800 mb-3">Medicamentos</h3>
+              {clientChoosen === 2 ? (
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">
+                      Cobertura:
+                    </label>
+                    <div className="flex-1 min-w-0">
                       <DynamicCoberturaSelect
                         value={dynamicCoberturaSelections?.medicamentos || ''}
                         onChange={(value) => onDynamicCoberturaChange(planName, 'medicamentos', value)}
                         options={dynamicMedicamentosOptions}
                         placeholder="Seleccionar opción de Medicamentos"
                       />
-                      <div className="text-sm font-medium min-w-[80px]">
-                        {(() => {
-                          const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
-                          if (selectedMedicamentos && selectedMedicamentos !== "0") {
-                            const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
-                            if (cobertura) {
-                              return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
-                            }
-                          }
-                          return formatCurrency(0);
-                        })()}
-                      </div>
                     </div>
-                    {/* Mostrar select de copago solo para complementarios colectivos */}
-                    {(() => {
-                      const shouldShowCopago = dynamicCoberturaSelections?.medicamentos && cliente?.tipoPlan === 2 && clientChoosen === 2;
-                    
-                      return shouldShowCopago;
-                    })() && (
-                      <div className="flex items-center gap-2 mt-2">
+                    <div className="text-base font-medium text-blue-600 w-24 flex-shrink-0 text-right">
+                      {(() => {
+                        const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
+                        if (selectedMedicamentos && selectedMedicamentos !== "0") {
+                          const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
+                          if (cobertura) {
+                            return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                          }
+                        }
+                        return formatCurrency(0);
+                      })()}
+                    </div>
+                  </div>
+                  
+                  {/* Mostrar select de copago solo para complementarios colectivos */}
+                  {(() => {
+                    const shouldShowCopago = dynamicCoberturaSelections?.medicamentos && cliente?.tipoPlan === 2 && clientChoosen === 2;
+                  
+                    return shouldShowCopago;
+                  })() && (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">
+                        Copago:
+                      </label>
+                      <div className="flex-1 min-w-0">
                         <DynamicCopagoSelect
                           value={dynamicCopagoSelection.medicamentos}
                           onChange={(value) => onDynamicCopagoChange(planName, 'medicamentos', value)}
                           options={dynamicCopagosOptions}
                           placeholder="Seleccionar copago (opcional)"
                         />
-                        <div className="text-sm font-medium min-w-[80px]">
-                          {(() => {
-                            const selectedCopago = dynamicCopagoSelection?.medicamentos;
-                            if (selectedCopago && selectedCopago !== "0") {
-                              const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopago));
-                              if (copago) {
-                                return formatCurrency(copago.price || 0);
-                              }
-                            }
-                            return formatCurrency(0);
-                          })()}
-                        </div>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="font-medium">MEDICAMENTOS {data.medicamento}</div>
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {clientChoosen === 2 ? (
-                  "."
-                ) : (
-                  (() => {
-                    const medicamentosOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "MEDICAMENTOS");
-                    return formatCurrency(medicamentosOpcional?.prima || 0);
-                  })()
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Habitación */}
-          {(clientChoosen === 1 || globalFilters.habitacion) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
-              <div className="text-sm">
-                {clientChoosen === 2 ? (
-                  <div>
-                    <div className="font-medium">HABITACIÓN</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <DynamicCoberturaSelect
-                        value={dynamicCoberturaSelections?.habitacion || ''}
-                        onChange={(value) => onDynamicCoberturaChange(planName, 'habitacion', value)}
-                        options={dynamicHabitacionOptions}
-                        placeholder="Seleccionar opción de Habitación"
-                      />
-                      <div className="text-sm font-medium min-w-[80px]">
+                      <div className="text-base font-medium text-green-600 w-24 flex-shrink-0 text-right">
                         {(() => {
-                          const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
-                          if (selectedHabitacion && selectedHabitacion !== "0") {
-                            const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
-                            if (cobertura) {
-                              return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                          const selectedCopago = dynamicCopagoSelection?.medicamentos;
+                          if (selectedCopago && selectedCopago !== "0") {
+                            const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                            if (copago) {
+                              return formatCurrency(copago.price || 0);
                             }
                           }
                           return formatCurrency(0);
                         })()}
                       </div>
                     </div>
-                    {/* Mostrar select de copago solo para complementarios colectivos */}
+                  )}
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <div className="text-gray-700">{data.medicamento}</div>
+                  <div className="text-base font-medium text-blue-600">
                     {(() => {
-                      const shouldShowCopago = dynamicCoberturaSelections?.habitacion && cliente?.tipoPlan === 2 && clientChoosen === 2;
-                     
-                      return shouldShowCopago;
-                    })() && (
-                      <div className="flex items-center gap-2 mt-2">
+                      const medicamentosOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "MEDICAMENTOS");
+                      return formatCurrency(medicamentosOpcional?.prima || 0);
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Habitación */}
+          {(clientChoosen === 1 || globalFilters.habitacion) && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-800 mb-3">Habitación</h3>
+              {clientChoosen === 2 ? (
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">
+                      Cobertura:
+                    </label>
+                    <div className="flex-1 min-w-0">
+                      <DynamicCoberturaSelect
+                        value={dynamicCoberturaSelections?.habitacion || ''}
+                        onChange={(value) => onDynamicCoberturaChange(planName, 'habitacion', value)}
+                        options={dynamicHabitacionOptions}
+                        placeholder="Seleccionar opción de Habitación"
+                      />
+                    </div>
+                    <div className="text-base font-medium text-blue-600 w-24 flex-shrink-0 text-right">
+                      {(() => {
+                        const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
+                        if (selectedHabitacion && selectedHabitacion !== "0") {
+                          const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
+                          if (cobertura) {
+                            return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                          }
+                        }
+                        return formatCurrency(0);
+                      })()}
+                    </div>
+                  </div>
+                  
+                  {/* Mostrar select de copago solo para complementarios colectivos */}
+                  {(() => {
+                    const shouldShowCopago = dynamicCoberturaSelections?.habitacion && cliente?.tipoPlan === 2 && clientChoosen === 2;
+                   
+                    return shouldShowCopago;
+                  })() && (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">
+                        Copago:
+                      </label>
+                      <div className="flex-1 min-w-0">
                         <DynamicCopagoSelect
                           value={dynamicCopagoSelection.habitacion}
                           onChange={(value) => onDynamicCopagoChange(planName, 'habitacion', value)}
                           options={dynamicCopagosHabitacionOptions}
                           placeholder="Seleccionar copago (opcional)"
                         />
-                        <div className="text-sm font-medium min-w-[80px]">
-                          {(() => {
-                            const selectedCopago = dynamicCopagoSelection?.habitacion;
-                            if (selectedCopago && selectedCopago !== "0") {
-                              const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopago));
-                              if (copago) {
-                                return formatCurrency(copago.price || 0);
-                              }
-                            }
-                            return formatCurrency(0);
-                          })()}
-                        </div>
                       </div>
-                    )}
+                      <div className="text-base font-medium text-green-600 w-24 flex-shrink-0 text-right">
+                        {(() => {
+                          const selectedCopago = dynamicCopagoSelection?.habitacion;
+                          if (selectedCopago && selectedCopago !== "0") {
+                            const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                            if (copago) {
+                              return formatCurrency(copago.price || 0);
+                            }
+                          }
+                          return formatCurrency(0);
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <div className="text-gray-700">{data.habitacion}</div>
+                  <div className="text-base font-medium text-blue-600">
+                    {(() => {
+                      const habitacionOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "HABITACIÓN");
+                      return formatCurrency(habitacionOpcional?.prima || 0);
+                    })()}
                   </div>
-                ) : (
-                  <div className="font-medium">HABITACIÓN {data.habitacion}</div>
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {clientChoosen === 2 ? (
-                  "."
-                ) : (
-                  (() => {
-                    const habitacionOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "HABITACIÓN");
-                    return formatCurrency(habitacionOpcional?.prima || 0);
-                  })()
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Odontología */}
           {(clientChoosen === 1 || globalFilters.odontologia) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b items-end">
-              <div className="text-sm">
-                {clientChoosen === 2 ? (
-                  <div>
-                    <div className="font-medium">ODONTOLOGÍA</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <OdontologiaSelect
-                        value={odontologiaSelection}
-                        onChange={(value) => onOdontologiaChange(planName, value)}
-                        options={odontologiaOptions}
-                      />
-                      <div className="text-sm font-medium min-w-[80px]">
-                        {(() => {
-                          // Para colectivos, mostrar el valor al lado del select
-                          const selectedOption = odontologiaOptions?.find(opt => opt.value === odontologiaSelection);
-                          return formatCurrency(selectedOption?.prima || 0);
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="font-medium">ODONTOLOGÍA</div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-800 mb-3">Odontología</h3>
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">
+                    Cobertura:
+                  </label>
+                  <div className="flex-1 min-w-0">
                     <OdontologiaSelect
                       value={odontologiaSelection}
                       onChange={(value) => onOdontologiaChange(planName, value)}
                       options={odontologiaOptions}
                     />
                   </div>
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {clientChoosen === 2 ? (
-                  "."
-                ) : (
-                  (() => {
-                    const selectedOption = odontologiaOptions?.find(opt => opt.value === odontologiaSelection);
-                    return formatCurrency(selectedOption?.prima || 0);
-                  })()
-                )}
+                  <div className="text-base font-medium text-blue-600 w-24 flex-shrink-0 text-right">
+                    {(() => {
+                      const selectedOption = odontologiaOptions?.find(opt => opt.value === odontologiaSelection);
+                      return formatCurrency(selectedOption?.prima || 0);
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           {/* Subtotal */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t font-bold">
-            <div className="text-sm">SubTotal Opcionales - {cantidadAfiliados} Afiliados</div>
-            <div className="text-sm">
-              {(() => {
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div className="flex justify-between items-center">
+              <div className="font-bold text-gray-800">
+                SubTotal Opcionales - {cantidadAfiliados} Afiliados
+              </div>
+              <div className="font-bold text-lg text-blue-700">
+                {(() => {
                 if (clientChoosen === 2) {
                   // Para colectivos, calcular dinámicamente sumando valores unitarios y multiplicando por cantidad
                   let subtotalUnitario = 0;
@@ -483,6 +485,7 @@ const PlanTable = ({
                   return formatCurrency(currentPlan?.resumenPago.subTotalOpcional || 0);
                 }
               })()}
+              </div>
             </div>
           </div>
         </div>
