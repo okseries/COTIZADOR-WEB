@@ -137,11 +137,11 @@ const FilterClient = () => {
 
   return (
     <Card className="mb-2 py-4 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
-      <CardContent className="flex flex-row items-center justify-between">
-        <div>
+      <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="w-full sm:w-auto">
           <Button
             onClick={handleClearAll}
-            className="bg-red-500 hover:bg-red-600 text-white"
+            className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
             variant="outline"
             size="sm"
           >
@@ -149,43 +149,49 @@ const FilterClient = () => {
             Limpiar Todo
           </Button>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex flex-col md:flex-row items-end justify-end  gap-4">
+
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full">
             {/* Tipo de Documento */}
-            <Controller
-              name="tipoDocumento"
-              control={control}
-              render={({ field }) => (
-                <DocumentTypeSelect
-                  {...field}
-                  placeholder="Selecciona tipo"
-                  error={!!errors.tipoDocumento}
-                />
-              )}
-            />
+            <div className="w-full sm:w-36">
+              <Controller
+                name="tipoDocumento"
+                control={control}
+                render={({ field }) => (
+                  <DocumentTypeSelect
+                    {...field}
+                    placeholder="Selecciona tipo"
+                    error={!!errors.tipoDocumento}
+                    className="w-full"
+                  />
+                )}
+              />
+            </div>
 
             {/* Identificación */}
-            <Controller
-              name="identificacion"
-              control={control}
-              render={({ field }) => (
-                <IdentificationInput
-                  {...field}
-                  id="identificacion"
-                  label="Identificación"
-                  error={!!errors.identificacion}
-                  required
-                  tipoDocumento={tipoDocumento as "1" | "2" | "3"}
-                />
-              )}
-            />
+            <div className="flex-1 min-w-0 lg:max-w-lg">
+              <Controller
+                name="identificacion"
+                control={control}
+                render={({ field }) => (
+                  <IdentificationInput
+                    {...field}
+                    id="identificacion"
+                    label="Identificación"
+                    error={!!errors.identificacion}
+                    required
+                    tipoDocumento={tipoDocumento as "1" | "2" | "3"}
+                  />
+                )}
+              />
+            </div>
 
             {/* Botón de búsqueda */}
-            <div className="flex justify-start">
+            <div className="w-full sm:w-auto">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-10.5 px-6 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2"
+                className="h-10 px-4 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2 w-full sm:w-auto"
               >
                 {isLoading ? (
                   <Spinner className="text-white w-4 h-4 mr-2" />
