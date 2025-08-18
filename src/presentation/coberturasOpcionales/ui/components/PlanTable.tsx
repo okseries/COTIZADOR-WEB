@@ -10,6 +10,7 @@ import DynamicCoberturaSelect from './DynamicCoberturaSelect';
 import DynamicCopagoSelect from './DynamicCopagoSelect';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
 import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
+import { Cliente } from '@/presentation/quotations/interface/quotation.interface';
 
 // Tipo para las selecciones de cobertura
 type CoberturaSelections = {
@@ -23,7 +24,7 @@ interface PlanTableProps {
   planName: string;
   planData: CoberturasOpcional[];
   plan: Plan;
-  cliente?: any; // Agregar cliente para acceder a tipoPlan
+  cliente: Cliente | null; // Agregar cliente para acceder a tipoPlan
   clientChoosen: number;
   globalFilters: {
     altoCosto: boolean;
