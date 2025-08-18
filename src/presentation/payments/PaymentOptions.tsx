@@ -58,7 +58,7 @@ export const PaymentOptions: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="container mx-auto px-4 py-6 max-w-6xl space-y-6">
       {/* Header */}
      
 
@@ -71,7 +71,7 @@ export const PaymentOptions: React.FC = () => {
       )}
 
       {/* Plan Payment Cards */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {paymentPlans.map((plan) => (
           <PlanPaymentCard
             key={plan.plan}

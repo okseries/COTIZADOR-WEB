@@ -33,14 +33,14 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
           Resumen Final
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Total General */}
-        <div className="p-4 bg-gradient-to-r from-[#005BBB]/10 to-[#005BBB]/20 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-medium text-gray-700">
+        <div className="p-3 bg-gradient-to-r from-[#005BBB]/10 to-[#005BBB]/20 rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+            <span className="text-sm sm:text-lg font-medium text-gray-700">
               Total General a Pagar:
             </span>
-            <span className="text-2xl font-bold text-[#005BBB]">
+            <span className="text-xl sm:text-2xl font-bold text-[#005BBB] truncate">
               {formatCurrency(totalGeneral)}
             </span>
           </div>
@@ -58,20 +58,18 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
         {!isFormValid && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="text-sm">
               Por favor, selecciona el período de pago para todos los planes antes de continuar.
             </AlertDescription>
           </Alert>
         )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          
-          
+        <div className="flex flex-col gap-3 pt-2">
           <Button
             onClick={onSubmit}
             disabled={!isFormValid || isSubmitting}
-            className="flex bg-[#005BBB] hover:bg-[#003E7E] items-center gap-2 flex-1 "
+            className="flex bg-[#005BBB] hover:bg-[#003E7E] items-center justify-center gap-2 w-full h-10"
           >
             {isSubmitting ? (
               <>
