@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CoberturasOpcional, CoberturasOpcionaleColectivo, Copago } from '../../interface/Coberturaopcional.interface';
 import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
 import OdontologiaSelect, { OdontologiaOption } from './OdontologiaSelect';
-import CoberturaSelect, { CoberturaOption } from './CoberturaSelect';
-import CopagoSelect, { CopagoOption } from './CopagoSelect';
+import  { CoberturaOption } from './CoberturaSelect';
+import  { CopagoOption } from './CopagoSelect';
 import DynamicCoberturaSelect from './DynamicCoberturaSelect';
 import DynamicCopagoSelect from './DynamicCopagoSelect';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
@@ -80,13 +80,6 @@ const PlanTable = ({
   globalFilters,
   odontologiaSelection,
   odontologiaOptions,
-  coberturaSelections,
-  altoCostoOptions,
-  medicamentosOptions,
-  habitacionOptions,
-  copagoSelection,
-  copagoMedicamentosOptions,
-  copagoHabitacionSelection,
   // copagoHabitacionOptions,
   
   // Nuevas props dinámicas
@@ -95,15 +88,11 @@ const PlanTable = ({
   dynamicAltoCostoOptions,
   dynamicMedicamentosOptions,
   dynamicHabitacionOptions,
-  dynamicOdontologiaOptions,
   dynamicCopagosOptions,
   dynamicCopagosAltoCostoOptions,
   dynamicCopagosHabitacionOptions,
   
   onOdontologiaChange,
-  onCoberturaChange,
-  onCopagoChange,
-  onCopagoHabitacionChange,
   onDynamicCoberturaChange,
   onDynamicCopagoChange
 }: PlanTableProps) => {
@@ -404,87 +393,107 @@ const PlanTable = ({
 
           {/* Subtotal */}
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="font-bold text-gray-800">
-                SubTotal Opcionales - {cantidadAfiliados} Afiliados
+                SubTotal Opcionales
+                <div className="text-xs text-gray-600 font-normal mt-1">{cantidadAfiliados} Afiliados</div>
               </div>
-              <div className="font-bold text-lg text-blue-700">
+
+              <div className="flex items-end">
                 {(() => {
-                if (clientChoosen === 2) {
-                  // Para colectivos, calcular dinámicamente sumando valores unitarios y multiplicando por cantidad
-                  let subtotalUnitario = 0;
-                  
-                  // Alto Costo
-                  const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
-                  if (selectedAltoCosto && selectedAltoCosto !== "0") {
-                    const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
-                    if (cobertura) {
-                      subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+                  if (clientChoosen === 2) {
+                    // Calcular subtotal unitario (misma lógica que antes)
+                    let subtotalUnitario = 0;
+
+                    // Alto Costo
+                    const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
+                    if (selectedAltoCosto && selectedAltoCosto !== "0") {
+                      const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
+                      if (cobertura) {
+                        subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+                      }
                     }
-                  }
-                  
-                  // Copago Alto Costo
-                  const selectedCopagoAltoCosto = dynamicCopagoSelection?.altoCosto;
-                  if (selectedCopagoAltoCosto && selectedCopagoAltoCosto !== "0") {
-                    const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopagoAltoCosto));
-                    if (copago) {
-                      subtotalUnitario += copago.price || 0;
+
+                    // Copago Alto Costo
+                    const selectedCopagoAltoCosto = dynamicCopagoSelection?.altoCosto;
+                    if (selectedCopagoAltoCosto && selectedCopagoAltoCosto !== "0") {
+                      const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopagoAltoCosto));
+                      if (copago) {
+                        subtotalUnitario += copago.price || 0;
+                      }
                     }
-                  }
-                  
-                  // Medicamentos
-                  const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
-                  if (selectedMedicamentos && selectedMedicamentos !== "0") {
-                    const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
-                    if (cobertura) {
-                      subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+
+                    // Medicamentos
+                    const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
+                    if (selectedMedicamentos && selectedMedicamentos !== "0") {
+                      const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
+                      if (cobertura) {
+                        subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+                      }
                     }
-                  }
-                  
-                  // Copago Medicamentos
-                  const selectedCopagoMedicamentos = dynamicCopagoSelection?.medicamentos;
-                  if (selectedCopagoMedicamentos && selectedCopagoMedicamentos !== "0") {
-                    const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopagoMedicamentos));
-                    if (copago) {
-                      subtotalUnitario += copago.price || 0;
+
+                    // Copago Medicamentos
+                    const selectedCopagoMedicamentos = dynamicCopagoSelection?.medicamentos;
+                    if (selectedCopagoMedicamentos && selectedCopagoMedicamentos !== "0") {
+                      const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopagoMedicamentos));
+                      if (copago) {
+                        subtotalUnitario += copago.price || 0;
+                      }
                     }
-                  }
-                  
-                  // Habitación
-                  const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
-                  if (selectedHabitacion && selectedHabitacion !== "0") {
-                    const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
-                    if (cobertura) {
-                      subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+
+                    // Habitación
+                    const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
+                    if (selectedHabitacion && selectedHabitacion !== "0") {
+                      const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
+                      if (cobertura) {
+                        subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+                      }
                     }
-                  }
-                  
-                  // Copago Habitación
-                  const selectedCopagoHabitacion = dynamicCopagoSelection?.habitacion;
-                  if (selectedCopagoHabitacion && selectedCopagoHabitacion !== "0") {
-                    const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopagoHabitacion));
-                    if (copago) {
-                      subtotalUnitario += copago.price || 0;
+
+                    // Copago Habitación
+                    const selectedCopagoHabitacion = dynamicCopagoSelection?.habitacion;
+                    if (selectedCopagoHabitacion && selectedCopagoHabitacion !== "0") {
+                      const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopagoHabitacion));
+                      if (copago) {
+                        subtotalUnitario += copago.price || 0;
+                      }
                     }
-                  }
-                  
-                  // Odontología
-                  const selectedOdontologia = odontologiaSelection;
-                  if (selectedOdontologia && selectedOdontologia !== "0") {
-                    const odontologiaOption = odontologiaOptions?.find(opt => opt.value === selectedOdontologia);
-                    if (odontologiaOption) {
-                      subtotalUnitario += odontologiaOption.prima || 0;
+
+                    // Odontología
+                    const selectedOdontologia = odontologiaSelection;
+                    if (selectedOdontologia && selectedOdontologia !== "0") {
+                      const odontologiaOption = odontologiaOptions?.find(opt => opt.value === selectedOdontologia);
+                      if (odontologiaOption) {
+                        subtotalUnitario += odontologiaOption.prima || 0;
+                      }
                     }
+
+                    // Calcular total
+                    const totalSubtotal = subtotalUnitario * cantidadAfiliados;
+
+                    // Mostrar unitario + total de forma responsiva
+                    return (
+                      <div className="flex flex-col sm:flex-row sm:items-baseline sm:space-x-4 text-right">
+                        <div className="flex items-baseline gap-2">
+                          <div className="text-xs text-gray-600">Unitario:</div>
+                          <div className="text-sm font-medium text-blue-600">{formatCurrency(subtotalUnitario)}</div>
+                        </div>
+
+                        <div className="flex items-baseline gap-2">
+                          <div className="text-xs text-gray-600">Total:</div>
+                          <div className="text-lg font-bold text-blue-700">{formatCurrency(totalSubtotal)}</div>
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    // Individual: mostrar subtotal guardado
+                    return (
+                      <div className="text-lg font-bold text-blue-700">
+                        {formatCurrency(currentPlan?.resumenPago.subTotalOpcional || 0)}
+                      </div>
+                    );
                   }
-                  
-                  // Multiplicar por cantidad de afiliados
-                  const totalSubtotal = subtotalUnitario * cantidadAfiliados;
-                  return formatCurrency(totalSubtotal);
-                } else {
-                  // Para individuales, usar el valor del store como antes
-                  return formatCurrency(currentPlan?.resumenPago.subTotalOpcional || 0);
-                }
-              })()}
+                })()}
               </div>
             </div>
           </div>
