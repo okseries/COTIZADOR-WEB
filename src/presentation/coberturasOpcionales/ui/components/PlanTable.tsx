@@ -161,7 +161,8 @@ const PlanTable = ({
                     return selected ? formatCurrency(parseFloat(selected.opt_prima) * cantidadAfiliados) : formatCurrency(0);
                   })()
                 ) : (
-                  formatCurrency(Number(data.primaCosto) * cantidadAfiliados)
+                  // Para individuales, NO multiplicar por cantidad de afiliados
+                  formatCurrency(Number(data.primaCosto))
                 )}
               </div>
             </div>
@@ -216,7 +217,8 @@ const PlanTable = ({
                     return formatCurrency(totalPrima);
                   })()
                 ) : (
-                  formatCurrency(Number(data.medicamentoCosto) * cantidadAfiliados)
+                  // Para individuales, NO multiplicar por cantidad de afiliados
+                  formatCurrency(Number(data.medicamentoCosto))
                 )}
               </div>
             </div>
@@ -260,7 +262,8 @@ const PlanTable = ({
                     return selected ? formatCurrency(parseFloat(selected.opt_prima) * cantidadAfiliados) : formatCurrency(0);
                   })()
                 ) : (
-                  formatCurrency(Number(data.habitacionCosto) * cantidadAfiliados)
+                  // Para individuales, NO multiplicar por cantidad de afiliados
+                  formatCurrency(Number(data.habitacionCosto))
                 )}
               </div>
             </div>
@@ -280,7 +283,11 @@ const PlanTable = ({
               <div className="text-sm font-medium">
                 {(() => {
                   const selected = odontologiaOptions.find(opt => opt.value === odontologiaSelection);
-                  return selected ? (formatCurrency(selected.prima * cantidadAfiliados)) : "0";
+                  if (!selected) return "0";
+                  
+                  // Para individuales, NO multiplicar por cantidad de afiliados. Para colectivos, SÍ multiplicar
+                  const multiplicador = clientChoosen === 2 ? cantidadAfiliados : 1;
+                  return formatCurrency(selected.prima * multiplicador);
                 })()}
               </div>
             </div>

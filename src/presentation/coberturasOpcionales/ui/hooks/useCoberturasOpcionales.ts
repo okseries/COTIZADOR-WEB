@@ -375,10 +375,15 @@ export const useCoberturasOpcionales = () => {
 
       let subTotalOpcional = 0;
       // Para colectivos: usar plan.cantidadAfiliados
-      // Para individuales: usar plan.afiliados.length
+      // Para individuales: usar plan.afiliados.length (solo para mostrar, no para cálculos)
       let cantidadAfiliados = cliente?.clientChoosen === 2 
         ? (plan.cantidadAfiliados || 1)
         : plan.afiliados.length;
+
+      // Multiplicador para cálculos: 1 para individuales, cantidadAfiliados para colectivos
+      let multiplicadorPrima = cliente?.clientChoosen === 2 
+        ? cantidadAfiliados 
+        : 1;
 
       // Para clientChoosen === 1 (individuales): incluir automáticamente todas las opcionales básicas
       // Para clientChoosen === 2 (colectivos): solo incluir las que están marcadas en los filtros
@@ -387,26 +392,28 @@ export const useCoberturasOpcionales = () => {
           // Para colectivos, usar la selección específica del dropdown dinámico
           const selectedOption = altoCostoOptionsQuery.data?.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections[planName]?.altoCosto);
           if (selectedOption) {
+            const primaCalculada = parseFloat(selectedOption.opt_prima) * multiplicadorPrima;
             opcionales.push({
               id: selectedOption.opt_id,
               nombre: "ALTO COSTO",
               descripcion: selectedOption.descripcion,
-              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
+              prima: primaCalculada
             });
-            subTotalOpcional += parseFloat(selectedOption.opt_prima) * cantidadAfiliados;
+            subTotalOpcional += primaCalculada;
           }
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.altoCosto) {
           // Ya no hay fallback estático - solo datos dinámicos
         } else {
-          // Para individuales, usar el valor estático original
+          // Para individuales, usar el valor estático original SIN multiplicar
           const prima = parseFloat(data.primaCosto) || 0;
+          const primaCalculada = prima * multiplicadorPrima;
           opcionales.push({
             id: 2, // ID para Alto Costo
             nombre: "ALTO COSTO",
             descripcion: data.altoCosto,
-            prima: prima * cantidadAfiliados
+            prima: primaCalculada
           });
-          subTotalOpcional += prima * cantidadAfiliados;
+          subTotalOpcional += primaCalculada;
         }
       }
 
@@ -415,19 +422,20 @@ export const useCoberturasOpcionales = () => {
           // Para colectivos, usar la selección específica del dropdown dinámico
           const selectedOption = medicamentosOptionsQuery.data?.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections[planName]?.medicamentos);
           if (selectedOption) {
-            let primaTotal = parseFloat(selectedOption.opt_prima) * cantidadAfiliados;
+            let primaTotal = parseFloat(selectedOption.opt_prima) * multiplicadorPrima;
             
             // Sumar prima de copago dinámico si hay selección
             if (dynamicCopagoSelections && dynamicCopagoSelections[planName]) {
               const copagoOpt = copagosQuery.data?.find(opt => opt.id.toString() === dynamicCopagoSelections[planName]);
               if (copagoOpt) {
-                primaTotal += copagoOpt.price * cantidadAfiliados;
+                const primaCopago = copagoOpt.price * multiplicadorPrima;
+                primaTotal += primaCopago;
                 opcionales.push({
                   id: 1, // ID para Medicamentos (copago)
                   idCopago: parseInt(dynamicCopagoSelections[planName]), // ID del copago seleccionado
                   nombre: "COPAGO MEDICAMENTOS",
                   descripcion: copagoOpt.descripcion,
-                  prima: copagoOpt.price * cantidadAfiliados
+                  prima: primaCopago
                 });
               }
             }
@@ -436,22 +444,23 @@ export const useCoberturasOpcionales = () => {
               idCopago: dynamicCopagoSelections[planName] ? parseInt(dynamicCopagoSelections[planName]) : undefined,
               nombre: "MEDICAMENTOS",
               descripcion: selectedOption.descripcion,
-              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
+              prima: parseFloat(selectedOption.opt_prima) * multiplicadorPrima
             });
             subTotalOpcional += primaTotal;
           }
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.medicamentos) {
           // Ya no hay fallback estático - solo datos dinámicos
         } else {
-          // Para individuales, usar el valor estático original
+          // Para individuales, usar el valor estático original SIN multiplicar por cantidad de afiliados
           const prima = parseFloat(data.medicamentoCosto) || 0;
+          const primaCalculada = prima * multiplicadorPrima;
           opcionales.push({
             id: 1, // ID para Medicamentos
             nombre: "MEDICAMENTOS",
             descripcion: data.medicamento,
-            prima: prima * cantidadAfiliados
+            prima: primaCalculada
           });
-          subTotalOpcional += prima * cantidadAfiliados;
+          subTotalOpcional += primaCalculada;
         }
       }
 
@@ -460,29 +469,30 @@ export const useCoberturasOpcionales = () => {
           // Para colectivos, usar la selección específica del dropdown dinámico
           const selectedOption = habitacionOptionsQuery.data?.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections[planName]?.habitacion);
           if (selectedOption) {
-            let primaTotal = parseFloat(selectedOption.opt_prima) * cantidadAfiliados;
+            let primaCalculada = parseFloat(selectedOption.opt_prima) * multiplicadorPrima;
             
             opcionales.push({
               id: selectedOption.opt_id,
               nombre: "HABITACIÓN",
               descripcion: selectedOption.descripcion,
-              prima: parseFloat(selectedOption.opt_prima) * cantidadAfiliados
+              prima: primaCalculada
             });
-            subTotalOpcional += primaTotal;
+            subTotalOpcional += primaCalculada;
            
           }
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.habitacion) {
           // Ya no hay fallback estático - solo datos dinámicos
         } else {
-          // Para individuales, usar el valor estático original
+          // Para individuales, usar el valor estático original SIN multiplicar por cantidad de afiliados
           const prima = parseFloat(data.habitacionCosto) || 0;
+          const primaCalculada = prima * multiplicadorPrima;
           opcionales.push({
             id: 3, // ID para Habitación
             nombre: "HABITACIÓN",
             descripcion: data.habitacion,
-            prima: prima * cantidadAfiliados
+            prima: primaCalculada
           });
-          subTotalOpcional += prima * cantidadAfiliados;
+          subTotalOpcional += primaCalculada;
          
         }
       }
@@ -498,13 +508,14 @@ export const useCoberturasOpcionales = () => {
           (cliente?.clientChoosen === 2 && (globalFilters.odontologia || odontologiaValue !== "0"));
           
         if (shouldIncludeOdontologia) {
+          const primaCalculada = odontologiaSelected.prima * multiplicadorPrima;
           opcionales.push({
             id: 4, // ID para Odontología
             nombre: "ODONTOLOGIA",
             descripcion: odontologiaSelected.label,
-            prima: odontologiaSelected.prima * cantidadAfiliados
+            prima: primaCalculada
           });
-          subTotalOpcional += odontologiaSelected.prima * cantidadAfiliados;
+          subTotalOpcional += primaCalculada;
           
          
         }
