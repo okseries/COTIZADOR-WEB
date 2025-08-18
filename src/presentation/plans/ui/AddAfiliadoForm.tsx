@@ -159,98 +159,99 @@ const AddAfiliadoForm = ({
         {/* Selección de Plan */}
         <div className="space-y-2">
           <Label htmlFor="plan-select">Plan *</Label>
-          <Select value={selectedPlanName} onValueChange={setSelectedPlanName}>
-            <SelectTrigger
-              className={`h-10 ${errors.plan ? "border-red-500" : ""}`}
-            >
-              <SelectValue placeholder="Seleccionar plan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos los planes</SelectItem>
-              {selectedPlans.map((plan) => (
-                <SelectItem key={plan.id} value={plan.plan_name}>
-                  {plan.plan_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center space-x-2">
+            <Select value={selectedPlanName} onValueChange={setSelectedPlanName}>
+              <SelectTrigger className={`h-10 flex-1 min-w-0 ${errors.plan ? "border-red-500" : ""}`}>
+                <SelectValue placeholder="Seleccionar plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos">Todos los planes</SelectItem>
+                {selectedPlans.map((plan) => (
+                  <SelectItem key={plan.id} value={plan.plan_name}>
+                    {plan.plan_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {errors.plan && <p className="text-red-500 text-xs">{errors.plan}</p>}
         </div>
 
         {/* Parentesco */}
         <div className="space-y-2">
           <Label htmlFor="parentesco-select">Parentesco *</Label>
-          <Select value={parentescoId} onValueChange={setParentescoId}>
-            <SelectTrigger
-              className={`h-10 ${errors.parentesco ? "border-red-500" : ""}`}
-            >
-              <SelectValue placeholder="Seleccionar" />
-            </SelectTrigger>
-            <SelectContent>
-              {clientChoosen !== 2
-                ? parentescos?.map((parentesco) => (
-                    <SelectItem
-                      key={parentesco.id}
-                      value={parentesco.id.toString()}
-                    >
-                      {parentesco.nomebreParentesco}
-                    </SelectItem>
-                  ))
-                : parentescos?.[0] && (
-                    <SelectItem
-                      key={parentescos[0].id}
-                      value={parentescos[0].id.toString()}
-                    >
-                      {parentescos[0].nomebreParentesco}
-                    </SelectItem>
-                  )}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center space-x-2">
+            <Select value={parentescoId} onValueChange={setParentescoId}>
+              <SelectTrigger className={`h-10 flex-1 min-w-0 ${errors.parentesco ? "border-red-500" : ""}`}>
+                <SelectValue placeholder="Seleccionar" />
+              </SelectTrigger>
+              <SelectContent>
+                {clientChoosen !== 2
+                  ? parentescos?.map((parentesco) => (
+                      <SelectItem
+                        key={parentesco.id}
+                        value={parentesco.id.toString()}
+                      >
+                        {parentesco.nomebreParentesco}
+                      </SelectItem>
+                    ))
+                  : parentescos?.[0] && (
+                      <SelectItem
+                        key={parentescos[0].id}
+                        value={parentescos[0].id.toString()}
+                      >
+                        {parentescos[0].nomebreParentesco}
+                      </SelectItem>
+                    )}
+              </SelectContent>
+            </Select>
+          </div>
           {errors.parentesco && (
             <p className="text-red-500 text-xs">{errors.parentesco}</p>
           )}
         </div>
 
-        {/* Edad */}
+        {/* Edad / Cantidad */}
         <div className="space-y-2">
           <Label htmlFor="edad-input">
             {clienteChousen === 2 ? "Cantidad *" : "Edad *"}
           </Label>
-          <Input
-            id="edad-input"
-            type="number"
-            placeholder={
-              clienteChousen === 2 ? "Ingrese cantidad" : "Ingrese edad"
-            }
-            value={edad}
-            onChange={(e) => setEdad(e.target.value)}
-            className={`h-10 ${errors.edad ? "border-red-500" : ""}`}
-            min="1"
-            max={clienteChousen === 2 ? "999999" : "120"}
-          />
+          <div className="flex items-center space-x-2">
+            <Input
+              id="edad-input"
+              type="number"
+              placeholder={
+                clienteChousen === 2 ? "Ingrese cantidad" : "Ingrese edad"
+              }
+              value={edad}
+              onChange={(e) => setEdad(e.target.value)}
+              className={`h-10 flex-1 min-w-0 ${errors.edad ? "border-red-500" : ""}`}
+              min="1"
+              max={clienteChousen === 2 ? "999999" : "120"}
+            />
+          </div>
           {errors.edad && <p className="text-red-500 text-xs">{errors.edad}</p>}
         </div>
 
         {/* Prima Plan */}
         <div className="space-y-2">
           <Label>Prima Plan</Label>
-          <div className="h-10 px-3 py-2 border rounded-md bg-gray-100 flex items-center text-sm">
-            {selectedPlanName === "Todos" ? (
-              "Variable por plan"
-            ) : loadingPrima ? (
-              <Spinner size="sm" color="primary" className="mr-2" />
-            ) : (
-              `RD$ ${
-                prima 
-                  ? prima.toFixed(2) + (clienteChousen === 2 && edad ? ` x ${edad} = ${(prima * Number(edad)).toFixed(2)}` : "")
-                  : shouldFetchPrima ? "0.00" : "--"
-              }`
-            )}
+          <div className="h-10 px-3 py-2 border rounded-md bg-gray-100 flex items-center text-sm justify-end w-36 min-w-0">
+            <span className="truncate">
+              {selectedPlanName === "Todos" ? (
+                "Variable por plan"
+              ) : loadingPrima ? (
+                <span className="inline-flex items-center"><Spinner size="sm" color="primary" className="mr-2" /></span>
+              ) : (
+                `RD$ ${
+                  prima
+                    ? prima.toFixed(2) + (clienteChousen === 2 && edad ? ` x ${edad} = ${(prima * Number(edad)).toFixed(2)}` : "")
+                    : shouldFetchPrima ? "0.00" : "--"
+                }`
+              )}
+            </span>
           </div>
         </div>
-
-
-        
 
         {/* Botón agregar */}
         <div className="space-y-2">

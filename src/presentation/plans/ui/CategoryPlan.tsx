@@ -285,24 +285,58 @@ const CategoryPlan = () => {
   return (
     <div className="space-y-6">
       {/* Selección de planes */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        <CheckBoxPlans
-          plan={{
-            id: 0,
-            plan_name: "Todos",
-            poliza: "Seleccionar todos",
-          }}
-          isChecked={isAllPlansSelected}
-          onChange={handleSelectAllPlans}
-        />
-        {orderedPlans?.map((plan: PlanInterface) => (
-          <CheckBoxPlans 
-            key={plan.id} 
-            plan={plan}
-            isChecked={selectedPlans.has(plan.id)}
-            onChange={(checked) => handlePlanChange(plan, checked)}
+      <div>
+        {/* Mobile: lista compacta de planes (tarjetas pequeñas) */}
+        <div className="md:hidden space-y-2">
+          <label className="flex items-center justify-between p-2 rounded-lg border bg-white">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={isAllPlansSelected}
+                onChange={(e) => handleSelectAllPlans(e.target.checked)}
+              />
+              <div>
+                <div className="text-sm font-medium">Todos</div>
+                <div className="text-xs text-gray-500">Seleccionar todos</div>
+              </div>
+            </div>
+          </label>
+
+          {orderedPlans?.map((plan: PlanInterface) => (
+            <label key={plan.id} className="flex items-center justify-between p-2 rounded-lg border bg-white">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={selectedPlans.has(plan.id)}
+                  onChange={(e) => handlePlanChange(plan, e.target.checked)}
+                />
+                <div>
+                  <div className="text-sm font-medium">{plan.plan_name}</div>
+                  <div className="text-xs text-gray-500">{plan.poliza}</div>
+                </div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {/* Desktop / Tablet: grid original con CheckBoxPlans */}
+        <div className="hidden md:grid grid-cols-5 gap-6">
+          <CheckBoxPlans
+            plan={{ id: 0, plan_name: "Todos", poliza: "Seleccionar todos" }}
+            isChecked={isAllPlansSelected}
+            onChange={handleSelectAllPlans}
           />
-        ))}
+          {orderedPlans?.map((plan: PlanInterface) => (
+            <CheckBoxPlans
+              key={plan.id}
+              plan={plan}
+              isChecked={selectedPlans.has(plan.id)}
+              onChange={(checked) => handlePlanChange(plan, checked)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Formulario único para agregar afiliados - Solo mostrar si hay planes seleccionados */}
