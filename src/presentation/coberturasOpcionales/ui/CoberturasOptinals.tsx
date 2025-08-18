@@ -70,7 +70,7 @@ const CoberturasOpcionales = () => {
         
         // Selecciones dinámicas
         const dynamicCoberturaSelection = dynamicCoberturaSelections[plan.plan];
-        const dynamicCopagoSelection = dynamicCopagoSelections[plan.plan] || "";
+        const dynamicCopagoSelection = dynamicCopagoSelections[plan.plan] || { altoCosto: '', medicamentos: '', habitacion: '' };
         
         return (
           <PlanTable

@@ -9,6 +9,7 @@ import CopagoSelect, { CopagoOption } from './CopagoSelect';
 import DynamicCoberturaSelect from './DynamicCoberturaSelect';
 import DynamicCopagoSelect from './DynamicCopagoSelect';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
+import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
 
 // Tipo para las selecciones de cobertura
 type CoberturaSelections = {
@@ -48,7 +49,11 @@ interface PlanTableProps {
     habitacion: string;
     odontologia: string;
   };
-  dynamicCopagoSelection: string;
+  dynamicCopagoSelection: {
+    altoCosto: string;
+    medicamentos: string;
+    habitacion: string;
+  };
   dynamicAltoCostoOptions: CoberturasOpcionaleColectivo[];
   dynamicMedicamentosOptions: CoberturasOpcionaleColectivo[];
   dynamicHabitacionOptions: CoberturasOpcionaleColectivo[];
@@ -62,7 +67,7 @@ interface PlanTableProps {
   onCopagoChange: (planName: string, value: string) => void;
   onCopagoHabitacionChange: (planName: string, value: string) => void;
   onDynamicCoberturaChange: (planName: string, coberturaType: string, value: string) => void;
-  onDynamicCopagoChange: (planName: string, value: string) => void;
+  onDynamicCopagoChange: (planName: string, coberturaType: string, value: string) => void;
 }
 
 const PlanTable = ({
@@ -101,14 +106,19 @@ const PlanTable = ({
   onDynamicCoberturaChange,
   onDynamicCopagoChange
 }: PlanTableProps) => {
+  // Leer el plan actualizado directamente del store para asegurar que se muestren los valores más recientes
+  const currentPlan = useQuotationStore((state) => 
+    state.planes.find(p => p.plan === planName)
+  ) || plan;
+  
   if (!planData || !planData[0]) return null;
   
   const data = planData[0];
   // Para colectivos: usar plan.cantidadAfiliados
   // Para individuales: usar plan.afiliados.length
   const cantidadAfiliados = clientChoosen === 2 
-    ? (plan.cantidadAfiliados || 1)
-    : plan.afiliados.length;
+    ? (currentPlan.cantidadAfiliados || 1)
+    : currentPlan.afiliados.length;
 
   return (
     <Card className="mb-6">
@@ -118,14 +128,22 @@ const PlanTable = ({
       <CardContent>
         <div className="space-y-4">
           {/* Header */}
-          <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
-            <div>Opcional</div>
-            <div>Prima Opcional</div>
-          </div>
+          {clientChoosen === 2 ? (
+            <div className="grid grid-cols-3 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
+              <div>Opcional</div>
+              <div>Prima Base</div>
+              <div>Copago</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 pb-2 border-b font-medium text-sm text-gray-600">
+              <div>Opcional</div>
+              <div>Prima Opcional</div>
+            </div>
+          )}
           
           {/* Alto Costo */}
           {(clientChoosen === 1 || globalFilters.altoCosto) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b">
+            <div className="grid grid-cols-3 gap-4 py-2 border-b items-end">
               <div className="text-sm">
                 {clientChoosen === 2 ? (
                   <div>
@@ -142,12 +160,14 @@ const PlanTable = ({
                      
                       return shouldShowCopago;
                     })() && (
-                      <DynamicCopagoSelect
-                        value={dynamicCopagoSelection}
-                        onChange={(value) => onDynamicCopagoChange(planName, value)}
-                        options={dynamicCopagosAltoCostoOptions}
-                        placeholder="Seleccionar copago (opcional)"
-                      />
+                      <div className="mt-2">
+                        <DynamicCopagoSelect
+                          value={dynamicCopagoSelection.altoCosto}
+                          onChange={(value) => onDynamicCopagoChange(planName, 'altoCosto', value)}
+                          options={dynamicCopagosAltoCostoOptions}
+                          placeholder="Seleccionar copago (opcional)"
+                        />
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -157,12 +177,39 @@ const PlanTable = ({
               <div className="text-sm font-medium">
                 {clientChoosen === 2 ? (
                   (() => {
-                    const selected = dynamicAltoCostoOptions.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections?.altoCosto);
-                    return selected ? formatCurrency(parseFloat(selected.opt_prima) * cantidadAfiliados) : formatCurrency(0);
+                    // Solo mostrar prima base de la cobertura seleccionada (SIN multiplicar)
+                    const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
+                    if (selectedAltoCosto && selectedAltoCosto !== "0") {
+                      const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
+                      if (cobertura) {
+                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                      }
+                    }
+                    return formatCurrency(0);
                   })()
                 ) : (
-                  // Para individuales, NO multiplicar por cantidad de afiliados
-                  formatCurrency(Number(data.primaCosto))
+                  // Para individuales, leer también del store
+                  (() => {
+                    const altoCostoOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "ALTO COSTO");
+                    return formatCurrency(altoCostoOpcional?.prima || 0);
+                  })()
+                )}
+              </div>
+              <div className="text-sm font-medium">
+                {clientChoosen === 2 ? (
+                  (() => {
+                    // Mostrar precio del copago seleccionado (SIN multiplicar)
+                    const selectedCopago = dynamicCopagoSelection?.altoCosto;
+                    if (selectedCopago && selectedCopago !== "0") {
+                      const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                      if (copago) {
+                        return formatCurrency(copago.price || 0);
+                      }
+                    }
+                    return formatCurrency(0);
+                  })()
+                ) : (
+                  formatCurrency(0)
                 )}
               </div>
             </div>
@@ -170,7 +217,7 @@ const PlanTable = ({
 
           {/* Medicamentos */}
           {(clientChoosen === 1 || globalFilters.medicamentos) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b">
+            <div className="grid grid-cols-3 gap-4 py-2 border-b items-end">
               <div className="text-sm">
                 {clientChoosen === 2 ? (
                   <div>
@@ -187,12 +234,14 @@ const PlanTable = ({
                     
                       return shouldShowCopago;
                     })() && (
-                      <DynamicCopagoSelect
-                        value={dynamicCopagoSelection}
-                        onChange={(value) => onDynamicCopagoChange(planName, value)}
-                        options={dynamicCopagosOptions}
-                        placeholder="Seleccionar copago (opcional)"
-                      />
+                      <div className="mt-2">
+                        <DynamicCopagoSelect
+                          value={dynamicCopagoSelection.medicamentos}
+                          onChange={(value) => onDynamicCopagoChange(planName, 'medicamentos', value)}
+                          options={dynamicCopagosOptions}
+                          placeholder="Seleccionar copago (opcional)"
+                        />
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -202,23 +251,39 @@ const PlanTable = ({
               <div className="text-sm font-medium">
                 {clientChoosen === 2 ? (
                   (() => {
-                    // Calcular precio usando opciones dinámicas
-                    const selectedMedicamentos = dynamicMedicamentosOptions.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections?.medicamentos);
-                    const selectedCopago = dynamicCopagosOptions.find(opt => opt.id.toString() === dynamicCopagoSelection);
-                    
-                    let totalPrima = 0;
-                    if (selectedMedicamentos) {
-                      totalPrima += parseFloat(selectedMedicamentos.opt_prima) * cantidadAfiliados;
+                    // Solo mostrar prima base de la cobertura seleccionada (SIN multiplicar)
+                    const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
+                    if (selectedMedicamentos && selectedMedicamentos !== "0") {
+                      const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
+                      if (cobertura) {
+                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                      }
                     }
-                    if (selectedCopago) {
-                      totalPrima += selectedCopago.price * cantidadAfiliados;
-                    }
-                    
-                    return formatCurrency(totalPrima);
+                    return formatCurrency(0);
                   })()
                 ) : (
-                  // Para individuales, NO multiplicar por cantidad de afiliados
-                  formatCurrency(Number(data.medicamentoCosto))
+                  // Para individuales, leer del store
+                  (() => {
+                    const medicamentosOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "MEDICAMENTOS");
+                    return formatCurrency(medicamentosOpcional?.prima || 0);
+                  })()
+                )}
+              </div>
+              <div className="text-sm font-medium">
+                {clientChoosen === 2 ? (
+                  (() => {
+                    // Mostrar precio del copago seleccionado (SIN multiplicar)
+                    const selectedCopago = dynamicCopagoSelection?.medicamentos;
+                    if (selectedCopago && selectedCopago !== "0") {
+                      const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                      if (copago) {
+                        return formatCurrency(copago.price || 0);
+                      }
+                    }
+                    return formatCurrency(0);
+                  })()
+                ) : (
+                  formatCurrency(0)
                 )}
               </div>
             </div>
@@ -226,7 +291,7 @@ const PlanTable = ({
 
           {/* Habitación */}
           {(clientChoosen === 1 || globalFilters.habitacion) && (
-            <div className="grid grid-cols-2 gap-4 py-2 border-b">
+            <div className="grid grid-cols-3 gap-4 py-2 border-b items-end">
               <div className="text-sm">
                 {clientChoosen === 2 ? (
                   <div>
@@ -243,12 +308,14 @@ const PlanTable = ({
                      
                       return shouldShowCopago;
                     })() && (
-                      <DynamicCopagoSelect
-                        value={dynamicCopagoSelection}
-                        onChange={(value) => onDynamicCopagoChange(planName, value)}
-                        options={dynamicCopagosHabitacionOptions}
-                        placeholder="Seleccionar copago (opcional)"
-                      />
+                      <div className="mt-2">
+                        <DynamicCopagoSelect
+                          value={dynamicCopagoSelection.habitacion}
+                          onChange={(value) => onDynamicCopagoChange(planName, 'habitacion', value)}
+                          options={dynamicCopagosHabitacionOptions}
+                          placeholder="Seleccionar copago (opcional)"
+                        />
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -258,12 +325,39 @@ const PlanTable = ({
               <div className="text-sm font-medium">
                 {clientChoosen === 2 ? (
                   (() => {
-                    const selected = dynamicHabitacionOptions.find(opt => opt.opt_id.toString() === dynamicCoberturaSelections?.habitacion);
-                    return selected ? formatCurrency(parseFloat(selected.opt_prima) * cantidadAfiliados) : formatCurrency(0);
+                    // Solo mostrar prima base de la cobertura seleccionada (SIN multiplicar)
+                    const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
+                    if (selectedHabitacion && selectedHabitacion !== "0") {
+                      const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
+                      if (cobertura) {
+                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                      }
+                    }
+                    return formatCurrency(0);
                   })()
                 ) : (
-                  // Para individuales, NO multiplicar por cantidad de afiliados
-                  formatCurrency(Number(data.habitacionCosto))
+                  // Para individuales, leer también del store
+                  (() => {
+                    const habitacionOpcional = currentPlan?.opcionales?.find(opt => opt.nombre === "HABITACIÓN");
+                    return formatCurrency(habitacionOpcional?.prima || 0);
+                  })()
+                )}
+              </div>
+              <div className="text-sm font-medium">
+                {clientChoosen === 2 ? (
+                  (() => {
+                    // Mostrar precio del copago seleccionado (SIN multiplicar)
+                    const selectedCopago = dynamicCopagoSelection?.habitacion;
+                    if (selectedCopago && selectedCopago !== "0") {
+                      const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopago));
+                      if (copago) {
+                        return formatCurrency(copago.price || 0);
+                      }
+                    }
+                    return formatCurrency(0);
+                  })()
+                ) : (
+                  formatCurrency(0)
                 )}
               </div>
             </div>
@@ -281,14 +375,25 @@ const PlanTable = ({
                 />
               </div>
               <div className="text-sm font-medium">
-                {(() => {
-                  const selected = odontologiaOptions.find(opt => opt.value === odontologiaSelection);
-                  if (!selected) return "0";
-                  
-                  // Para individuales, NO multiplicar por cantidad de afiliados. Para colectivos, SÍ multiplicar
-                  const multiplicador = clientChoosen === 2 ? cantidadAfiliados : 1;
-                  return formatCurrency(selected.prima * multiplicador);
-                })()}
+                {clientChoosen === 2 ? (
+                  (() => {
+                    // Para colectivos, calcular dinámicamente basado en las selecciones actuales
+                    const selectedOdontologia = dynamicCoberturaSelections?.odontologia;
+                    if (selectedOdontologia && selectedOdontologia !== "0") {
+                      const cobertura = dynamicOdontologiaOptions?.find((o: any) => o.opt_id === parseInt(selectedOdontologia));
+                      if (cobertura) {
+                        return formatCurrency(parseFloat(cobertura.opt_prima || '0'));
+                      }
+                    }
+                    return formatCurrency(0);
+                  })()
+                ) : (
+                  (() => {
+                    // Para individuales, usar las opciones tradicionales
+                    const selectedOption = odontologiaOptions?.find(opt => opt.value === odontologiaSelection);
+                    return formatCurrency(selectedOption?.prima || 0);
+                  })()
+                )}
               </div>
             </div>
           )}
@@ -297,7 +402,82 @@ const PlanTable = ({
           <div className="grid grid-cols-2 gap-4 pt-2 border-t font-bold">
             <div className="text-sm">SubTotal Opcionales</div>
             <div className="text-sm">
-              {formatCurrency(plan?.resumenPago.subTotalOpcional || 0)}
+              {(() => {
+                if (clientChoosen === 2) {
+                  // Para colectivos, calcular dinámicamente sumando valores unitarios y multiplicando por cantidad
+                  let subtotalUnitario = 0;
+                  
+                  // Alto Costo
+                  const selectedAltoCosto = dynamicCoberturaSelections?.altoCosto;
+                  if (selectedAltoCosto && selectedAltoCosto !== "0") {
+                    const cobertura = dynamicAltoCostoOptions?.find((ac: any) => ac.opt_id === parseInt(selectedAltoCosto));
+                    if (cobertura) {
+                      subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+                    }
+                  }
+                  
+                  // Copago Alto Costo
+                  const selectedCopagoAltoCosto = dynamicCopagoSelection?.altoCosto;
+                  if (selectedCopagoAltoCosto && selectedCopagoAltoCosto !== "0") {
+                    const copago = dynamicCopagosAltoCostoOptions?.find((c: any) => c.id === parseInt(selectedCopagoAltoCosto));
+                    if (copago) {
+                      subtotalUnitario += copago.price || 0;
+                    }
+                  }
+                  
+                  // Medicamentos
+                  const selectedMedicamentos = dynamicCoberturaSelections?.medicamentos;
+                  if (selectedMedicamentos && selectedMedicamentos !== "0") {
+                    const cobertura = dynamicMedicamentosOptions?.find((m: any) => m.opt_id === parseInt(selectedMedicamentos));
+                    if (cobertura) {
+                      subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+                    }
+                  }
+                  
+                  // Copago Medicamentos
+                  const selectedCopagoMedicamentos = dynamicCopagoSelection?.medicamentos;
+                  if (selectedCopagoMedicamentos && selectedCopagoMedicamentos !== "0") {
+                    const copago = dynamicCopagosOptions?.find((c: any) => c.id === parseInt(selectedCopagoMedicamentos));
+                    if (copago) {
+                      subtotalUnitario += copago.price || 0;
+                    }
+                  }
+                  
+                  // Habitación
+                  const selectedHabitacion = dynamicCoberturaSelections?.habitacion;
+                  if (selectedHabitacion && selectedHabitacion !== "0") {
+                    const cobertura = dynamicHabitacionOptions?.find((h: any) => h.opt_id === parseInt(selectedHabitacion));
+                    if (cobertura) {
+                      subtotalUnitario += parseFloat(cobertura.opt_prima || '0');
+                    }
+                  }
+                  
+                  // Copago Habitación
+                  const selectedCopagoHabitacion = dynamicCopagoSelection?.habitacion;
+                  if (selectedCopagoHabitacion && selectedCopagoHabitacion !== "0") {
+                    const copago = dynamicCopagosHabitacionOptions?.find((c: any) => c.id === parseInt(selectedCopagoHabitacion));
+                    if (copago) {
+                      subtotalUnitario += copago.price || 0;
+                    }
+                  }
+                  
+                  // Odontología
+                  const selectedOdontologia = odontologiaSelection;
+                  if (selectedOdontologia && selectedOdontologia !== "0") {
+                    const odontologiaOption = odontologiaOptions?.find(opt => opt.value === selectedOdontologia);
+                    if (odontologiaOption) {
+                      subtotalUnitario += odontologiaOption.prima || 0;
+                    }
+                  }
+                  
+                  // Multiplicar por cantidad de afiliados
+                  const totalSubtotal = subtotalUnitario * cantidadAfiliados;
+                  return formatCurrency(totalSubtotal);
+                } else {
+                  // Para individuales, usar el valor del store como antes
+                  return formatCurrency(currentPlan?.resumenPago.subTotalOpcional || 0);
+                }
+              })()}
             </div>
           </div>
         </div>
