@@ -285,7 +285,7 @@ export const useCoberturasOpcionales = () => {
         if (firstPlan && firstPlan.opcionales.length > 0) {
           const hasAltoCosto = firstPlan.opcionales.some(opt => opt.nombre === "ALTO COSTO");
           const hasMedicamentos = firstPlan.opcionales.some(opt => opt.nombre === "MEDICAMENTOS");
-          const hasHabitacion = firstPlan.opcionales.some(opt => opt.nombre === "HABITACIÓN");
+          const hasHabitacion = firstPlan.opcionales.some(opt => opt.nombre === "HABITACION");
           const hasOdontologia = firstPlan.opcionales.some(opt => opt.nombre === "ODONTOLOGIA" || opt.nombre === "ODONTOLOGÍA");
 
           setGlobalFilters({
@@ -353,7 +353,7 @@ export const useCoberturasOpcionales = () => {
                 }
                 newDynamicCopagoSelections[plan.plan].medicamentos = opcional.idCopago.toString();
               }
-            } else if (opcional.nombre === "HABITACIÓN" && opcional.id) {
+            } else if (opcional.nombre === "HABITACION" && opcional.id) {
               selections.habitacion = opcional.id.toString();
               // Si hay copago asociado para habitación, también inicializarlo
               if (opcional.idCopago) {
@@ -538,7 +538,7 @@ export const useCoberturasOpcionales = () => {
             opcionales.push({
               id: selectedOption.opt_id,
               idCopago: currentDynamicCopagos.habitacion ? parseInt(currentDynamicCopagos.habitacion) : undefined,
-              nombre: "HABITACIÓN",
+              nombre: "HABITACION",
               descripcion: selectedOption.descripcion,
               prima: primaBase // Prima base de la cobertura
             });
@@ -570,7 +570,7 @@ export const useCoberturasOpcionales = () => {
           const primaCalculada = prima * multiplicadorPrima;
           opcionales.push({
             id: 3, // ID para Habitación
-            nombre: "HABITACIÓN",
+            nombre: "HABITACION",
             descripcion: data.habitacion,
             prima: primaCalculada
           });

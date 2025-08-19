@@ -498,7 +498,7 @@ const ClientInformation = forwardRef<
                   );
 
                   return (
-                    <FormItem className="flex flex-col">
+                    <FormItem className="flex flex-col ">
                       <FormLabel>Agente *</FormLabel>
                       <Popover open={openAgent} onOpenChange={setOpenAgent}>
                         <PopoverTrigger asChild>
@@ -508,7 +508,7 @@ const ClientInformation = forwardRef<
                               role="combobox"
                               aria-expanded={openAgent}
                               className={cn(
-                                "w-full justify-between h-11",
+                                "w-full truncate justify-between h-11 ",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
@@ -558,6 +558,7 @@ const ClientInformation = forwardRef<
                                         </span>
                                       )}
                                     </div>
+                                    
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
