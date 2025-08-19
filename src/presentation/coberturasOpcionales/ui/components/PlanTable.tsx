@@ -170,7 +170,7 @@ const PlanTable = ({
                           dynamicCoberturaSelections?.altoCosto;
                         if (selectedAltoCosto && selectedAltoCosto !== "0") {
                           const cobertura = dynamicAltoCostoOptions?.find(
-                            (ac: any) =>
+                            (ac: CoberturasOpcionaleColectivo) =>
                               ac.opt_id === parseInt(selectedAltoCosto)
                           );
                           if (cobertura) {
@@ -213,7 +213,7 @@ const PlanTable = ({
                             dynamicCopagoSelection?.altoCosto;
                           if (selectedCopago && selectedCopago !== "0") {
                             const copago = dynamicCopagosAltoCostoOptions?.find(
-                              (c: any) => c.id === parseInt(selectedCopago)
+                              (c: Copago) => c.id === parseInt(selectedCopago)
                             );
                             if (copago) {
                               return formatCurrency(copago.price || 0);
@@ -274,7 +274,7 @@ const PlanTable = ({
                           selectedMedicamentos !== "0"
                         ) {
                           const cobertura = dynamicMedicamentosOptions?.find(
-                            (m: any) =>
+                            (m: CoberturasOpcionaleColectivo) =>
                               m.opt_id === parseInt(selectedMedicamentos)
                           );
                           if (cobertura) {
@@ -321,7 +321,7 @@ const PlanTable = ({
                             dynamicCopagoSelection?.medicamentos;
                           if (selectedCopago && selectedCopago !== "0") {
                             const copago = dynamicCopagosOptions?.find(
-                              (c: any) => c.id === parseInt(selectedCopago)
+                              (c: Copago) => c.id === parseInt(selectedCopago)
                             );
                             if (copago) {
                               return formatCurrency(copago.price || 0);
@@ -380,7 +380,7 @@ const PlanTable = ({
                           dynamicCoberturaSelections?.habitacion;
                         if (selectedHabitacion && selectedHabitacion !== "0") {
                           const cobertura = dynamicHabitacionOptions?.find(
-                            (h: any) =>
+                            (h: CoberturasOpcionaleColectivo) =>
                               h.opt_id === parseInt(selectedHabitacion)
                           );
                           if (cobertura) {
@@ -424,7 +424,7 @@ const PlanTable = ({
                           if (selectedCopago && selectedCopago !== "0") {
                             const copago =
                               dynamicCopagosHabitacionOptions?.find(
-                                (c: any) => c.id === parseInt(selectedCopago)
+                                (c: Copago) => c.id === parseInt(selectedCopago)
                               );
                             if (copago) {
                               return formatCurrency(copago.price || 0);
@@ -502,7 +502,7 @@ const PlanTable = ({
                       dynamicCoberturaSelections?.altoCosto;
                     if (selectedAltoCosto && selectedAltoCosto !== "0") {
                       const cobertura = dynamicAltoCostoOptions?.find(
-                        (ac: any) => ac.opt_id === parseInt(selectedAltoCosto)
+                        (ac: CoberturasOpcionaleColectivo) => ac.opt_id === parseInt(selectedAltoCosto)
                       );
                       if (cobertura) {
                         subtotalUnitario += parseFloat(
@@ -519,7 +519,7 @@ const PlanTable = ({
                       selectedCopagoAltoCosto !== "0"
                     ) {
                       const copago = dynamicCopagosAltoCostoOptions?.find(
-                        (c: any) => c.id === parseInt(selectedCopagoAltoCosto)
+                        (c: Copago) => c.id === parseInt(selectedCopagoAltoCosto)
                       );
                       if (copago) {
                         subtotalUnitario += copago.price || 0;
@@ -531,7 +531,7 @@ const PlanTable = ({
                       dynamicCoberturaSelections?.medicamentos;
                     if (selectedMedicamentos && selectedMedicamentos !== "0") {
                       const cobertura = dynamicMedicamentosOptions?.find(
-                        (m: any) => m.opt_id === parseInt(selectedMedicamentos)
+                        (m: CoberturasOpcionaleColectivo) => m.opt_id === parseInt(selectedMedicamentos)
                       );
                       if (cobertura) {
                         subtotalUnitario += parseFloat(
@@ -548,7 +548,7 @@ const PlanTable = ({
                       selectedCopagoMedicamentos !== "0"
                     ) {
                       const copago = dynamicCopagosOptions?.find(
-                        (c: any) =>
+                        (c: Copago) =>
                           c.id === parseInt(selectedCopagoMedicamentos)
                       );
                       if (copago) {
@@ -561,7 +561,7 @@ const PlanTable = ({
                       dynamicCoberturaSelections?.habitacion;
                     if (selectedHabitacion && selectedHabitacion !== "0") {
                       const cobertura = dynamicHabitacionOptions?.find(
-                        (h: any) => h.opt_id === parseInt(selectedHabitacion)
+                        (h: CoberturasOpcionaleColectivo) => h.opt_id === parseInt(selectedHabitacion)
                       );
                       if (cobertura) {
                         subtotalUnitario += parseFloat(
@@ -578,7 +578,7 @@ const PlanTable = ({
                       selectedCopagoHabitacion !== "0"
                     ) {
                       const copago = dynamicCopagosHabitacionOptions?.find(
-                        (c: any) => c.id === parseInt(selectedCopagoHabitacion)
+                        (c: Copago) => c.id === parseInt(selectedCopagoHabitacion)
                       );
                       if (copago) {
                         subtotalUnitario += copago.price || 0;

@@ -11,9 +11,23 @@ interface DynamicCoberturaSelectProps {
 }
 
 const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Seleccionar" }: DynamicCoberturaSelectProps) => {
+  // Asegurar que value siempre sea string para evitar controlled/uncontrolled switching
+  const safeValue = value || "";
+  
+  // 🔍 DEBUG: Log para verificar props recibidos
+  if (process.env.NODE_ENV === 'development' && placeholder.includes('Habitación')) {
+    console.log('🏠 DynamicCoberturaSelect HABITACIÓN:', {
+      originalValue: value,
+      safeValue,
+      optionsCount: options.length,
+      placeholder,
+      firstOption: options[0]
+    });
+  }
+
   return (
     <Select
-      value={value}
+      value={safeValue}
       onValueChange={(newValue) => onChange(newValue)}
     >
       <SelectTrigger className="w-full mt-2">

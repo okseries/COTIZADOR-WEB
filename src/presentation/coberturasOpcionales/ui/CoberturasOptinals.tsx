@@ -40,6 +40,16 @@ const CoberturasOpcionales = () => {
     handleDynamicCopagoChange
   } = useCoberturasOpcionales();
 
+  // 🔍 DEBUG: Verificar las opciones dinámicas que recibe el componente
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 CoberturasOptionals recibe:', {
+      dynamicHabitacionOptions: dynamicHabitacionOptions?.length || 0,
+      dynamicAltoCostoOptions: dynamicAltoCostoOptions?.length || 0,
+      dynamicMedicamentosOptions: dynamicMedicamentosOptions?.length || 0,
+      habitacionData: dynamicHabitacionOptions?.slice(0, 2)
+    });
+  }
+
   // Mostrar estados de carga/error/vacío
   if (isEmpty || isLoading || hasError) {
     return (
@@ -68,8 +78,13 @@ const CoberturasOpcionales = () => {
         const copagoSelection = copagoSelections[plan.plan] || "";
         const copagoHabitacionSelection = copagoHabitacionSelections[plan.plan] || "";
         
-        // Selecciones dinámicas
-        const dynamicCoberturaSelection = dynamicCoberturaSelections[plan.plan];
+        // Selecciones dinámicas - FIX: Asegurar que siempre haya un objeto válido
+        const dynamicCoberturaSelection = dynamicCoberturaSelections[plan.plan] || {
+          altoCosto: '',
+          medicamentos: '',
+          habitacion: '',
+          odontologia: ''
+        };
         const dynamicCopagoSelection = dynamicCopagoSelections[plan.plan] || { altoCosto: '', medicamentos: '', habitacion: '' };
         
         return (

@@ -78,7 +78,7 @@ const CategoryPlan = () => {
     });
     
     setSelectedPlans(newSelectedPlans);
-  }, [orderedPlans?.length, planes?.length]); // Solo depender de las longitudes para evitar referencias cambiantes
+  }, [orderedPlans, planes]); // Incluir las referencias completas para sincronización correcta
 
   const handlePlanChange = (plan: PlanInterface, checked: boolean) => {
     const newSelectedPlans = new Map(selectedPlans);
@@ -190,6 +190,8 @@ const CategoryPlan = () => {
               }
             });
           } catch (error) {
+            console.log("Error al obtener prima del plan:", error);
+            
             // Usar valor por defecto si hay error, multiplicar por cantidad si es colectivo
             const defaultPrima = 1186.57;
             const cantidad = clientChoosen === 2 ? afiliado.cantidadAfiliados : 1;

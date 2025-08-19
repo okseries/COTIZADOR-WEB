@@ -157,6 +157,7 @@ const useStepperStore = create<StepperState>()(
           
           return quotationObject;
         } catch (error) {
+          console.error("Error generating quotation object:", error);
           return null;
         }
       },
