@@ -33,10 +33,10 @@ export const PaymentOptions: React.FC = () => {
     const payload = getFinalObject();
     
     // Asegurarse de que el usuario esté incluido desde el store de auth
-    const finalPayload = {
-      ...payload,
-      user: authUser?.data?.user || null
-    };
+    // const finalPayload = {
+    //   ...payload,
+    //   user: authUser?.data?.user || null
+    // };
 
 // debugger
     
