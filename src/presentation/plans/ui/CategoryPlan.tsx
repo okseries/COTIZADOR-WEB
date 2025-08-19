@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useGetAllPlans } from '../hooks/usePlans';
 import { GetPrimaPlan } from '../service/prima.service';
 import CheckBoxPlans from './CheckBoxPlans';
@@ -25,7 +25,7 @@ const CategoryPlan = () => {
   const getOrderedPlans = (plansList: PlanInterface[]) => {
     if (!plansList) return [];
     
-    const desiredOrder = ['FLEX', 'SMART', 'UP', 'CARE', 'LIFE'];
+    const desiredOrder = ['FLEX', 'SMART', 'UP', 'CARE', 'LIFE']; // Orden deseado de los planes
     
     return plansList.sort((a, b) => {
       // Extraer el nombre del plan sin "FLEX " al inicio
@@ -62,7 +62,7 @@ const CategoryPlan = () => {
     });
   };
 
-  const orderedPlans = getOrderedPlans(plans || []);
+  const orderedPlans = useMemo(() => getOrderedPlans(plans || []), [plans]);
 
   // Sincronizar con el store
   useEffect(() => {
