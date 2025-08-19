@@ -11,31 +11,33 @@ interface Props {
 
 const QuotationTableHeader = ({ quantity, onCreateNew }: Props) => {
   return (
-    <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 ">
-      <div className="flex flex-row items-center gap-4">
+    <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-2 sm:px-0">
+      <div className="flex flex-row items-start sm:items-center gap-3 w-full">
         <div className="flex-shrink-0">
-          <div className="p-3 bg-[#009590]/10 rounded-xl">
-            <TextQuote size={28} className="text-[#008080]" />
+          <div className="p-2 sm:p-3 bg-[#009590]/10 rounded-xl">
+            <TextQuote size={24} className="text-[#008080]" />
           </div>
         </div>
-        <div className="flex-1">
-          <CardTitle className="flex items-center gap-3 text-xl font-bold text-[#003E7E]">
-            Cotizaciones Recientes
+        <div className="flex-1 min-w-0">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl font-bold text-[#003E7E] truncate">
+            <span className="truncate">Cotizaciones Recientes</span>
             <Badge
               variant="secondary"
-              className="bg-[#009590]/10 text-[#009590] border-[#009590]/20 font-semibold"
+              className="bg-[#009590]/10 text-[#009590] border-[#009590]/20 font-semibold text-xs px-2 py-0.5 ml-2"
             >
               {quantity ?? 0}
             </Badge>
           </CardTitle>
-          <CardDescription className="text-[#009590] mt-1">
+          <CardDescription className="text-[#009590] mt-1 text-sm truncate">
             Aquí puedes ver y gestionar todas tus cotizaciones guardadas.
           </CardDescription>
         </div>
       </div>
 
-      <div>
-        <NewQuotation onCreateNew={onCreateNew} />
+      <div className="w-full sm:w-auto sm:flex-shrink-0">
+        <div className="w-full sm:w-auto flex justify-center sm:justify-end">
+          <NewQuotation onCreateNew={onCreateNew} />
+        </div>
       </div>
     </CardHeader>
   );
