@@ -42,7 +42,11 @@ export const usePaymentOptions = () => {
     if (planes.length > 0) {
       const initializedPlans = planes.map((plan) => ({
         ...plan,
-        selectedPeriod: undefined, // Siempre comenzar sin período seleccionado
+        // En modo crear: siempre comenzar sin período seleccionado
+        // En modo editar: usar el período que ya tiene la cotización
+        selectedPeriod: mode === "create" 
+          ? undefined 
+          : (plan.resumenPago?.periodoPago as PeriodoPago) || undefined,
       }));
 
       // Solo actualizar si los planes han cambiado
@@ -58,7 +62,7 @@ export const usePaymentOptions = () => {
     } else {
       setPaymentPlans([]);
     }
-  }, [planes]);
+  }, [planes, mode]); // Agregar mode como dependencia
 
   // Calcular resumen de pago para un plan
   const calculatePaymentSummary = (
