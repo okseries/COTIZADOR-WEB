@@ -6,6 +6,7 @@ import { Plan } from "../../quotations/interface/createQuotation.interface";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { saveAs } from "file-saver";
 
 export type PeriodoPago = "Mensual" | "Trimestral" | "Semestral" | "Anual" | "seleccionar";
 
@@ -157,40 +158,31 @@ export const usePaymentOptions = () => {
   };
 
   // Función para descargar PDF
-  const downloadPDF = useCallback((base64: string, filename: string) => {
-    try {
-      // Convertir base64 a blob
-      const byteCharacters = atob(base64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: "application/pdf" });
-
-      // Crear URL del blob
-      const blobUrl = URL.createObjectURL(blob);
-
-      // Abrir en nueva ventana
-      window.open(blobUrl, "_blank");
-
-      const fechaHora = format(new Date(), "dd-MMMM-yyyy_hh-mm-a", { locale: es });
-
-      // Descargar automáticamente
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = filename || `cotizacion-${fechaHora}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Limpiar URL
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);  //1000
-    } catch (err) {
-      console.error("Error al descargar PDF:", err);
-      setError("Error al descargar el PDF");
+  //! Modificado
+  const downloadPDF = useCallback((base64: string, filename?: string) => {
+  try {
+    // Convertir base64 a Uint8Array
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
-  }, []);
+    const byteArray = new Uint8Array(byteNumbers);
+
+    // Crear blob de PDF
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+
+    // Generar nombre por defecto si no se pasa filename
+    const fechaHora = format(new Date(), "dd-MMMM-yyyy_hh-mm-a", { locale: es });
+    const finalName = filename || `cotizacion-${fechaHora}.pdf`;
+
+    // Descargar automáticamente
+    saveAs(blob, finalName);
+  } catch (err) {
+    console.error("Error al descargar PDF:", err);
+    setError("Error al descargar el PDF");
+  }
+}, []);
 
   // Enviar cotización finalñ
   //! Esto envia la cotizacion final al backend
