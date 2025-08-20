@@ -118,7 +118,6 @@ const FilterClient = () => {
       // Guardar la información del cliente encontrado
       if (response) {
         setClientData(response);
-        console.log("✅ Cliente encontrado:", response);
       } else {
         setAlertDialogTitle("Sin Resultados");
         setAlertDialogMessage(
