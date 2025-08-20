@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Cotizador Web",
   description: "Sistema de cotizaciones",
+   manifest: "/manifest.json"
 };
 
 export default function RootLayout({
