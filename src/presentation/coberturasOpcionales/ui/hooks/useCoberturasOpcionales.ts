@@ -50,7 +50,10 @@ export const useCoberturasOpcionales = () => {
     if (previousModeRef.current !== mode && previousModeRef.current !== undefined) {
       initializedRef.current = false;
       editModeInitializedRef.current = false;
-     
+      console.log('🔄 MODO CAMBIÓ - Reseteando refs:', {
+        previousMode: previousModeRef.current,
+        newMode: mode
+      });
     }
     previousModeRef.current = mode;
   }, [mode]); // Solo depender del modo, NO de planes.length
@@ -153,28 +156,43 @@ export const useCoberturasOpcionales = () => {
   const altoCostoOptionsQuery = useCoberturasOpcionalesByType(
     'altoCosto', 
     cliente?.tipoPlan || 1, 
-    isColectivo && (globalFilters.altoCosto || isEditMode) // 🚨 FIX: Forzar query en modo edición
+    isColectivo // 🚨 CAMBIO CRÍTICO: En modo edición siempre habilitado para colectivos
   );
+  
+  // 🔍 DEBUG CRÍTICO: Log del estado de las queries
+  console.log('🔍 QUERIES STATUS DETALLADO:', {
+    altoCosto: {
+      enabled: isColectivo,
+      isColectivo,
+      globalFilterAltoCosto: globalFilters.altoCosto,
+      isEditMode,
+      tipoPlan: cliente?.tipoPlan,
+      isLoading: altoCostoOptionsQuery.isLoading,
+      isError: altoCostoOptionsQuery.isError,
+      dataLength: altoCostoOptionsQuery.data?.length || 0,
+      error: altoCostoOptionsQuery.error
+    }
+  });
   
   // Medicamentos
   const medicamentosOptionsQuery = useCoberturasOpcionalesByType(
     'medicamentos', 
     cliente?.tipoPlan || 1, 
-    isColectivo && (globalFilters.medicamentos || isEditMode) // 🚨 FIX: Forzar query en modo edición
+    isColectivo // 🚨 CAMBIO CRÍTICO: En modo edición siempre habilitado para colectivos
   );
   
   // Habitación
   const habitacionOptionsQuery = useCoberturasOpcionalesByType(
     'habitacion', 
     cliente?.tipoPlan || 1, 
-    isColectivo && (globalFilters.habitacion || isEditMode) // 🚨 FIX: Forzar query en modo edición
+    isColectivo // 🚨 CAMBIO CRÍTICO: En modo edición siempre habilitado para colectivos
   );
   
   // Odontología
   const odontologiaOptionsQuery = useCoberturasOpcionalesByType(
     'odontologia', 
     cliente?.tipoPlan || 1, 
-    isColectivo && (globalFilters.odontologia || isEditMode) // 🚨 FIX: Forzar query en modo edición
+    isColectivo // 🚨 CAMBIO CRÍTICO: En modo edición siempre habilitado para colectivos
   );
 
   // Copagos para medicamentos (solo si medicamentos está seleccionado)
@@ -194,6 +212,46 @@ export const useCoberturasOpcionales = () => {
     2, // ID para habitación
     cliente?.clientChoosen || 1
   );
+  
+  // 🔍 DEBUG COPAGOS STATUS
+  console.log('🔍 COPAGOS STATUS:', {
+    medicamentos: {
+      isLoading: copagosQuery.isLoading,
+      dataLength: copagosQuery.data?.length || 0,
+      error: copagosQuery.error
+    },
+    altoCosto: {
+      isLoading: copagosAltoCostoQuery.isLoading,
+      dataLength: copagosAltoCostoQuery.data?.length || 0,
+      error: copagosAltoCostoQuery.error
+    },
+    habitacion: {
+      isLoading: copagosHabitacionQuery.isLoading,
+      dataLength: copagosHabitacionQuery.data?.length || 0,
+      error: copagosHabitacionQuery.error
+    }
+  });
+
+  // 🚨 NUEVO: Resetear editModeInitializedRef cuando cambien las opciones disponibles
+  useEffect(() => {
+    if (isEditMode && cliente?.clientChoosen === 2) {
+      const dataChanged = 
+        (altoCostoOptionsQuery.data?.length || 0) > 0 ||
+        (medicamentosOptionsQuery.data?.length || 0) > 0 ||
+        (habitacionOptionsQuery.data?.length || 0) > 0;
+      
+      if (dataChanged && editModeInitializedRef.current) {
+        console.log('🔄 DATOS DE API CAMBIARON - Permitiendo re-mapeo');
+        editModeInitializedRef.current = false;
+      }
+    }
+  }, [
+    isEditMode,
+    cliente?.clientChoosen,
+    altoCostoOptionsQuery.data?.length,
+    medicamentosOptionsQuery.data?.length,
+    habitacionOptionsQuery.data?.length
+  ]);
 
   // Combinar resultados en un array
   const planQueriesData: Array<{
@@ -258,22 +316,30 @@ export const useCoberturasOpcionales = () => {
         let odontologiaValue = "0";
         
         if (isEditMode && odontologiaOpcional) {
-         
+          console.log(`🦷 ODONTOLOGÍA - Procesando para ${plan.plan}:`, {
+            prima: odontologiaOpcional.prima,
+            cantidadAfiliados: plan.cantidadAfiliados || 1
+          });
           
           // 🚨 FIX: Mapear por prima dividida entre cantidad de afiliados
           const cantidadAfiliados = plan.cantidadAfiliados || 1;
           const primaUnitaria = odontologiaOpcional.prima / cantidadAfiliados;
           
+          console.log(`🦷 ODONTOLOGÍA - Prima unitaria: ${primaUnitaria}, Opciones estáticas:`, 
+            odontologiaOptions.map(opt => ({ value: opt.value, label: opt.label, prima: opt.prima }))
+          );
           
           // Buscar la opción de odontología que coincida con la prima unitaria
           const staticOdontologiaMatch = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
           
           if (staticOdontologiaMatch) {
             odontologiaValue = staticOdontologiaMatch.value;
+            console.log(`🦷 ODONTOLOGÍA MAPEADO EXITOSAMENTE: Prima ${primaUnitaria} -> value: ${staticOdontologiaMatch.value} (${staticOdontologiaMatch.label})`);
           } else {
-           
+            console.log(`🦷 ODONTOLOGÍA - No se encontró coincidencia exacta para prima ${primaUnitaria}`);
             // Fallback: usar el valor más alto si no encuentra exacto
             odontologiaValue = "3";
+            console.log(`🦷 ODONTOLOGÍA FALLBACK: Usando Nivel III (value: 3)`);
           }
         } else if (isEditMode) {
           console.log(`🦷 Plan ${plan.plan}: No hay odontología en el store`);
@@ -313,8 +379,14 @@ export const useCoberturasOpcionales = () => {
 
   // Inicializar filtros globales desde el store - CON CONTROL DE REFS
   useEffect(() => {
-    if (planes.length === 0 || userHasModifiedFilters || initializedRef.current) return;
+    if (planes.length === 0 || userHasModifiedFilters) return;
     
+    console.log('🎯 INICIALIZANDO FILTROS GLOBALES:', {
+      clientChoosen: cliente?.clientChoosen,
+      isEditMode,
+      planesLength: planes.length,
+      userHasModified: userHasModifiedFilters
+    });
     
     if (cliente?.clientChoosen === 2) {
       // Para colectivos, leer las opcionales existentes para determinar qué filtros deben estar activos
@@ -325,6 +397,12 @@ export const useCoberturasOpcionales = () => {
         const hasHabitacion = firstPlan.opcionales.some(opt => opt.nombre === "HABITACION");
         const hasOdontologia = firstPlan.opcionales.some(opt => opt.nombre === "ODONTOLOGIA" || opt.nombre === "ODONTOLOGÍA");
 
+        console.log('🔍 FILTROS DETECTADOS EN STORE:', {
+          hasAltoCosto,
+          hasMedicamentos,
+          hasHabitacion,
+          hasOdontologia
+        });
 
         setGlobalFilters({
           altoCosto: hasAltoCosto,
@@ -332,17 +410,26 @@ export const useCoberturasOpcionales = () => {
           habitacion: hasHabitacion,
           odontologia: hasOdontologia
         });
+        
+        console.log('✅ FILTROS GLOBALES ACTUALIZADOS DESDE STORE');
       } else {
-        // 🚨 FIX CRÍTICO: En modo edición, NO resetear filtros si no hay opcionales aún
-        // Esto permite que se mantengan las opcionales cuando se navega entre steps
-        if (!isEditMode) {
+        // 🚨 FIX CRÍTICO: En modo edición, FORZAR filtros activos para que los queries se ejecuten
+        if (isEditMode) {
+          console.log('🔧 MODO EDICIÓN: Forzando filtros activos para cargar opciones');
+          setGlobalFilters({
+            altoCosto: true,
+            medicamentos: true,
+            habitacion: true,
+            odontologia: true
+          });
+        } else {
           setGlobalFilters({
             altoCosto: false,
             medicamentos: false,
             habitacion: false,
             odontologia: false
           });
-        } 
+        }
       }
     } else if (cliente?.clientChoosen === 1) {
       // Para individuales, todas las coberturas se incluyen automáticamente
@@ -353,12 +440,35 @@ export const useCoberturasOpcionales = () => {
         odontologia: true
       });
     }
-  }, [cliente?.clientChoosen, planes.length]); // Solo las dependencias esenciales
+  }, [cliente?.clientChoosen, planes.length, isEditMode]); // ✅ Agregar isEditMode como dependencia
   // Inicializar selecciones dinámicas cuando hay datos disponibles - CON CONTROL DE REFS
   useEffect(() => {
-    // Solo ejecutar una vez para modo edición
-    if (cliente?.clientChoosen !== 2 || planes.length === 0 || !isEditMode || editModeInitializedRef.current) return;
+    // Solo ejecutar para modo edición con colectivos
+    if (cliente?.clientChoosen !== 2 || planes.length === 0 || !isEditMode) return;
     
+    // 🚨 CAMBIO CRÍTICO: Solo ejecutar una vez cuando todas las opciones estén cargadas
+    const allOptionsLoaded = 
+      !altoCostoOptionsQuery.isLoading && 
+      !medicamentosOptionsQuery.isLoading && 
+      !habitacionOptionsQuery.isLoading &&
+      !copagosQuery.isLoading &&
+      !copagosAltoCostoQuery.isLoading &&
+      !copagosHabitacionQuery.isLoading;
+    
+    // Solo proceder si ya tenemos datos del store Y las opciones de API están cargadas
+    if (!allOptionsLoaded || editModeInitializedRef.current) {
+      console.log('⏳ ESPERANDO DATOS:', {
+        allOptionsLoaded,
+        editModeInitialized: editModeInitializedRef.current,
+        altoCostoLoading: altoCostoOptionsQuery.isLoading,
+        medicamentosLoading: medicamentosOptionsQuery.isLoading,
+        habitacionLoading: habitacionOptionsQuery.isLoading,
+        copagosLoading: copagosQuery.isLoading
+      });
+      return;
+    }
+    
+    console.log('🚀 INICIANDO MAPEO INTELIGENTE - Todas las opciones cargadas');
     
     const newDynamicSelections: typeof dynamicCoberturaSelections = {};
     const newDynamicCopagoSelections: typeof dynamicCopagoSelections = {};
@@ -375,8 +485,9 @@ export const useCoberturasOpcionales = () => {
           odontologia: ''
         };
         
-        // 🚨 NUEVO MAPEO INTELIGENTE: Mapear por prima en lugar de usar primer elemento
+        // 🚨 MAPEO INTELIGENTE MEJORADO: Mapear por prima con logs detallados
         opcionales.forEach(opcional => {
+          console.log(`🔍 Procesando opcional: ${opcional.nombre}, ID: ${opcional.id}, Prima: ${opcional.prima}`);
           
           if (opcional.nombre === "ALTO COSTO" && opcional.id) {
             // Mapear alto costo por prima
@@ -384,13 +495,25 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitaria = opcional.prima / cantidadAfiliados;
               
-              // Buscar la opción que más se acerque a la prima unitaria
-              const matchingOption = altoCostoOptionsQuery.data.find(opt => 
-                Math.abs(parseFloat(opt.opt_prima) - primaUnitaria) < 5
-              ) || altoCostoOptionsQuery.data[0]; // Fallback al primero si no encuentra
+              console.log(`💰 ALTO COSTO - Prima unitaria calculada: ${primaUnitaria}, Opciones disponibles:`, 
+                altoCostoOptionsQuery.data.map(opt => ({ opt_id: opt.opt_id, opt_prima: opt.opt_prima, descripcion: opt.descripcion }))
+              );
               
-              selections.altoCosto = matchingOption.opt_id.toString();
+              // Buscar la opción que más se acerque a la prima unitaria (tolerancia ampliada)
+              const matchingOption = altoCostoOptionsQuery.data.find(opt => 
+                Math.abs(parseFloat(opt.opt_prima) - primaUnitaria) < 50 // Tolerancia ampliada a ±50
+              );
+              
+              if (matchingOption) {
+                selections.altoCosto = matchingOption.opt_id.toString();
+                console.log(`💰 ALTO COSTO MAPEADO EXITOSAMENTE: Prima ${primaUnitaria} -> opt_id: ${matchingOption.opt_id} (${matchingOption.descripcion})`);
+              } else {
+                // Fallback: usar primera opción disponible
+                selections.altoCosto = altoCostoOptionsQuery.data[0].opt_id.toString();
+                console.log(`💰 ALTO COSTO FALLBACK: Usando primera opción disponible opt_id: ${altoCostoOptionsQuery.data[0].opt_id}`);
+              }
             } else {
+              console.log(`💰 ALTO COSTO - No hay opciones de API disponibles, usando ID del store: ${opcional.id}`);
               selections.altoCosto = opcional.id.toString();
             }
           } else if (opcional.nombre === "COPAGO ALTO COSTO" && opcional.id) {
@@ -399,9 +522,13 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitariaCopago = opcional.prima / cantidadAfiliados;
               
-              // Buscar el copago que coincida con la prima
+              console.log(`💰 COPAGO ALTO COSTO - Prima unitaria: ${primaUnitariaCopago}, Opciones:`, 
+                copagosAltoCostoQuery.data.map(c => ({ id: c.id, price: c.price, descripcion: c.descripcion }))
+              );
+              
+              // Buscar el copago que coincida con la prima (tolerancia ampliada)
               const matchingCopago = copagosAltoCostoQuery.data.find(copago => 
-                Math.abs(copago.price - primaUnitariaCopago) < 1
+                Math.abs(copago.price - primaUnitariaCopago) < 10 // Tolerancia ampliada a ±10
               );
               
               if (matchingCopago) {
@@ -409,6 +536,9 @@ export const useCoberturasOpcionales = () => {
                   newDynamicCopagoSelections[plan.plan] = { altoCosto: '', medicamentos: '', habitacion: '' };
                 }
                 newDynamicCopagoSelections[plan.plan].altoCosto = matchingCopago.id.toString();
+                console.log(`💰 COPAGO ALTO COSTO MAPEADO: Prima ${primaUnitariaCopago} -> ID: ${matchingCopago.id} (${matchingCopago.descripcion})`);
+              } else {
+                console.log(`💰 COPAGO ALTO COSTO - No se encontró coincidencia por prima`);
               }
             }
           } else if (opcional.nombre === "MEDICAMENTOS" && opcional.id) {
@@ -417,14 +547,25 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitaria = opcional.prima / cantidadAfiliados;
               
-              // Buscar la opción que más se acerque a la prima unitaria
-              const matchingOption = medicamentosOptionsQuery.data.find(opt => 
-                Math.abs(parseFloat(opt.opt_prima) - primaUnitaria) < 5
-              ) || medicamentosOptionsQuery.data[0]; // Fallback al primero si no encuentra
+              console.log(`💊 MEDICAMENTOS - Prima unitaria calculada: ${primaUnitaria}, Opciones disponibles:`, 
+                medicamentosOptionsQuery.data.map(opt => ({ opt_id: opt.opt_id, opt_prima: opt.opt_prima, descripcion: opt.descripcion }))
+              );
               
-              selections.medicamentos = matchingOption.opt_id.toString();
-              console.log(`💊 MEDICAMENTOS mapeado por prima: ${primaUnitaria} -> opt_id: ${matchingOption.opt_id} (${matchingOption.descripcion})`);
+              // Buscar la opción que más se acerque a la prima unitaria (tolerancia ampliada)
+              const matchingOption = medicamentosOptionsQuery.data.find(opt => 
+                Math.abs(parseFloat(opt.opt_prima) - primaUnitaria) < 100 // Tolerancia ampliada a ±100
+              );
+              
+              if (matchingOption) {
+                selections.medicamentos = matchingOption.opt_id.toString();
+                console.log(`💊 MEDICAMENTOS MAPEADO EXITOSAMENTE: Prima ${primaUnitaria} -> opt_id: ${matchingOption.opt_id} (${matchingOption.descripcion})`);
+              } else {
+                // Fallback: usar primera opción disponible
+                selections.medicamentos = medicamentosOptionsQuery.data[0].opt_id.toString();
+                console.log(`💊 MEDICAMENTOS FALLBACK: Usando primera opción disponible opt_id: ${medicamentosOptionsQuery.data[0].opt_id}`);
+              }
             } else {
+              console.log(`💊 MEDICAMENTOS - No hay opciones de API disponibles, usando ID del store: ${opcional.id}`);
               selections.medicamentos = opcional.id.toString();
             }
           } else if (opcional.nombre === "COPAGO MEDICAMENTOS" && opcional.id) {
@@ -433,9 +574,13 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitariaCopago = opcional.prima / cantidadAfiliados;
               
-              // Buscar el copago que coincida con la prima
+              console.log(`💊 COPAGO MEDICAMENTOS - Prima unitaria: ${primaUnitariaCopago}, Opciones:`, 
+                copagosQuery.data.map(c => ({ id: c.id, price: c.price, descripcion: c.descripcion }))
+              );
+              
+              // Buscar el copago que coincida con la prima (tolerancia ampliada)
               const matchingCopago = copagosQuery.data.find(copago => 
-                Math.abs(copago.price - primaUnitariaCopago) < 1
+                Math.abs(copago.price - primaUnitariaCopago) < 10 // Tolerancia ampliada a ±10
               );
               
               if (matchingCopago) {
@@ -443,7 +588,9 @@ export const useCoberturasOpcionales = () => {
                   newDynamicCopagoSelections[plan.plan] = { altoCosto: '', medicamentos: '', habitacion: '' };
                 }
                 newDynamicCopagoSelections[plan.plan].medicamentos = matchingCopago.id.toString();
-                console.log(`💊 COPAGO MEDICAMENTOS mapeado por prima: ${primaUnitariaCopago} -> ID: ${matchingCopago.id} (${matchingCopago.descripcion})`);
+                console.log(`💊 COPAGO MEDICAMENTOS MAPEADO: Prima ${primaUnitariaCopago} -> ID: ${matchingCopago.id} (${matchingCopago.descripcion})`);
+              } else {
+                console.log(`💊 COPAGO MEDICAMENTOS - No se encontró coincidencia por prima`);
               }
             }
           } else if (opcional.nombre === "HABITACION" && opcional.id) {
@@ -452,14 +599,25 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitaria = opcional.prima / cantidadAfiliados;
               
-              // Buscar la opción que más se acerque a la prima unitaria
-              const matchingOption = habitacionOptionsQuery.data.find(opt => 
-                Math.abs(parseFloat(opt.opt_prima) - primaUnitaria) < 5
-              ) || habitacionOptionsQuery.data[0]; // Fallback al primero si no encuentra
+              console.log(`🏠 HABITACIÓN - Prima unitaria calculada: ${primaUnitaria}, Opciones disponibles:`, 
+                habitacionOptionsQuery.data.map(opt => ({ opt_id: opt.opt_id, opt_prima: opt.opt_prima, descripcion: opt.descripcion }))
+              );
               
-              selections.habitacion = matchingOption.opt_id.toString();
-              console.log(`🏠 HABITACIÓN mapeado por prima: ${primaUnitaria} -> opt_id: ${matchingOption.opt_id} (${matchingOption.descripcion})`);
+              // Buscar la opción que más se acerque a la prima unitaria (tolerancia ampliada)
+              const matchingOption = habitacionOptionsQuery.data.find(opt => 
+                Math.abs(parseFloat(opt.opt_prima) - primaUnitaria) < 100 // Tolerancia ampliada a ±100
+              );
+              
+              if (matchingOption) {
+                selections.habitacion = matchingOption.opt_id.toString();
+                console.log(`🏠 HABITACIÓN MAPEADO EXITOSAMENTE: Prima ${primaUnitaria} -> opt_id: ${matchingOption.opt_id} (${matchingOption.descripcion})`);
+              } else {
+                // Fallback: usar primera opción disponible
+                selections.habitacion = habitacionOptionsQuery.data[0].opt_id.toString();
+                console.log(`🏠 HABITACIÓN FALLBACK: Usando primera opción disponible opt_id: ${habitacionOptionsQuery.data[0].opt_id}`);
+              }
             } else {
+              console.log(`🏠 HABITACIÓN - No hay opciones de API disponibles, usando ID del store: ${opcional.id}`);
               selections.habitacion = opcional.id.toString();
             }
           } else if (opcional.nombre === "COPAGO HABITACIÓN" && opcional.id) {
@@ -468,9 +626,13 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitariaCopago = opcional.prima / cantidadAfiliados;
               
-              // Buscar el copago que coincida con la prima
+              console.log(`🏠 COPAGO HABITACIÓN - Prima unitaria: ${primaUnitariaCopago}, Opciones:`, 
+                copagosHabitacionQuery.data.map(c => ({ id: c.id, price: c.price, descripcion: c.descripcion }))
+              );
+              
+              // Buscar el copago que coincida con la prima (tolerancia ampliada)
               const matchingCopago = copagosHabitacionQuery.data.find(copago => 
-                Math.abs(copago.price - primaUnitariaCopago) < 1
+                Math.abs(copago.price - primaUnitariaCopago) < 10 // Tolerancia ampliada a ±10
               );
               
               if (matchingCopago) {
@@ -478,7 +640,9 @@ export const useCoberturasOpcionales = () => {
                   newDynamicCopagoSelections[plan.plan] = { altoCosto: '', medicamentos: '', habitacion: '' };
                 }
                 newDynamicCopagoSelections[plan.plan].habitacion = matchingCopago.id.toString();
-                console.log(`🏠 COPAGO HABITACIÓN mapeado por prima: ${primaUnitariaCopago} -> ID: ${matchingCopago.id} (${matchingCopago.descripcion})`);
+                console.log(`🏠 COPAGO HABITACIÓN MAPEADO: Prima ${primaUnitariaCopago} -> ID: ${matchingCopago.id} (${matchingCopago.descripcion})`);
+              } else {
+                console.log(`🏠 COPAGO HABITACIÓN - No se encontró coincidencia por prima`);
               }
             }
           }
@@ -523,6 +687,20 @@ export const useCoberturasOpcionales = () => {
         ...prev, 
         ...newDynamicSelections 
       }));
+
+      // 🔍 DEBUG CRÍTICO: Verificar estado inmediatamente después de la actualización
+      console.log('🚨 ESTADO DESPUÉS DE ACTUALIZAR dynamicCoberturaSelections:', {
+        timestamp: new Date().toISOString(),
+        estadoAnterior: 'prev',
+        nuevasSelecciones: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
+          plan,
+          habitacion: sel.habitacion,
+          altoCosto: sel.altoCosto,
+          medicamentos: sel.medicamentos,
+          odontologia: sel.odontologia
+        })),
+        totalPlanes: Object.keys(newDynamicSelections).length
+      });
 
       // 🔍 DEBUG: Confirmar que el estado se actualizó correctamente
       setTimeout(() => {
@@ -599,123 +777,6 @@ export const useCoberturasOpcionales = () => {
           }
         });
 
-        // 🔍 DEBUG ADICIONAL: Verificar si las selecciones del store coinciden con las opciones de la API
-        if (habitacionOptionsQuery.data && habitacionOptionsQuery.data.length > 0) {
-          console.log('🔍 HABITACIÓN API OPTIONS:', habitacionOptionsQuery.data.map(opt => ({
-            opt_id: opt.opt_id,
-            descripcion: opt.descripcion,
-            opt_prima: opt.opt_prima
-          })));
-          
-          Object.entries(newDynamicSelections).forEach(([planName, selections]) => {
-            if (selections.habitacion) {
-              // 🚨 NUEVO FIX: Los IDs del store NO son opt_id de la API
-              // Necesitamos mapear los IDs del store a los opt_id reales
-              console.log(`🏠 INVESTIGACIÓN ${planName}:`, {
-                storeValue: selections.habitacion,
-                storeValueInt: parseInt(selections.habitacion),
-                note: 'Store IDs NO son opt_id de la API - necesitan mapeo'
-              });
-              
-              // � TEMPORAL: Buscar el primer ID disponible como fallback
-              const firstOption = habitacionOptionsQuery.data?.[0];
-              if (firstOption) {
-                console.log(`🏠 MAPEO TEMPORAL ${planName}:`, {
-                  storeID: selections.habitacion,
-                  suggestedOptId: firstOption.opt_id,
-                  descripcion: firstOption.descripcion
-                });
-                
-                // 🚨 APLICAR MAPEO TEMPORAL - usar el primer opt_id disponible
-                console.log(`🏠 ANTES DEL MAPEO ${planName}:`, {
-                  storeValue: selections.habitacion,
-                  primerOptId: firstOption.opt_id
-                });
-                newDynamicSelections[planName].habitacion = firstOption.opt_id.toString();
-                console.log(`🏠 DESPUÉS DEL MAPEO ${planName}:`, {
-                  nuevoValue: newDynamicSelections[planName].habitacion,
-                  confirmacion: 'Mapeo aplicado correctamente'
-                });
-              }
-            }
-          });
-          
-          // 🚨 REALIZAR LA MISMA VERIFICACIÓN PARA ALTO COSTO Y MEDICAMENTOS
-          if (altoCostoOptionsQuery.data && altoCostoOptionsQuery.data.length > 0) {
-            console.log('🔍 ALTO COSTO API OPTIONS:', altoCostoOptionsQuery.data.map(opt => ({
-              opt_id: opt.opt_id,
-              descripcion: opt.descripcion,
-              opt_prima: opt.opt_prima
-            })));
-            
-            Object.entries(newDynamicSelections).forEach(([planName, selections]) => {
-              if (selections.altoCosto) {
-                console.log(`💰 ALTO COSTO INVESTIGACIÓN ${planName}:`, {
-                  storeValue: selections.altoCosto,
-                  storeValueInt: parseInt(selections.altoCosto),
-                  note: 'Store IDs NO son opt_id de la API - necesitan mapeo'
-                });
-                
-                // 🔍 MAPEO TEMPORAL: usar el primer opt_id disponible
-                const firstOption = altoCostoOptionsQuery.data?.[0];
-                if (firstOption) {
-                  console.log(`� MAPEO TEMPORAL ${planName}:`, {
-                    storeID: selections.altoCosto,
-                    suggestedOptId: firstOption.opt_id,
-                    descripcion: firstOption.descripcion
-                  });
-                  
-                  // 🚨 APLICAR MAPEO TEMPORAL
-                  console.log(`💰 ANTES DEL MAPEO ${planName}:`, {
-                    storeValue: selections.altoCosto,
-                    primerOptId: firstOption.opt_id
-                  });
-                  newDynamicSelections[planName].altoCosto = firstOption.opt_id.toString();
-                  console.log(`💰 DESPUÉS DEL MAPEO ${planName}:`, {
-                    nuevoValue: newDynamicSelections[planName].altoCosto,
-                    confirmacion: 'Mapeo aplicado correctamente'
-                  });
-                }
-              }
-            });
-          }
-          
-          if (medicamentosOptionsQuery.data && medicamentosOptionsQuery.data.length > 0) {
-            console.log('🔍 MEDICAMENTOS API OPTIONS:', medicamentosOptionsQuery.data.map(opt => ({
-              opt_id: opt.opt_id,
-              descripcion: opt.descripcion,
-              opt_prima: opt.opt_prima
-            })));
-            
-            Object.entries(newDynamicSelections).forEach(([planName, selections]) => {
-              if (selections.medicamentos) {
-                console.log(`💊 MEDICAMENTOS INVESTIGACIÓN ${planName}:`, {
-                  storeValue: selections.medicamentos,
-                  storeValueInt: parseInt(selections.medicamentos),
-                  note: 'Store IDs NO son opt_id de la API - necesitan mapeo'
-                });
-                
-                // 🔍 MAPEO TEMPORAL: usar el primer opt_id disponible  
-                const firstOption = medicamentosOptionsQuery.data?.[0];
-                if (firstOption) {
-                  console.log(`� MAPEO TEMPORAL ${planName}:`, {
-                    storeID: selections.medicamentos,
-                    suggestedOptId: firstOption.opt_id,
-                    descripcion: firstOption.descripcion
-                  });
-                  
-                  // 🚨 APLICAR MAPEO TEMPORAL
-                  console.log(`💊 ANTES DEL MAPEO ${planName}:`, {
-                    storeValue: selections.medicamentos,
-                    primerOptId: firstOption.opt_id
-                  });
-                  newDynamicSelections[planName].medicamentos = firstOption.opt_id.toString();
-                 
-                }
-              }
-            });
-          }
-        }
       }, 500);
     }
     
@@ -727,7 +788,22 @@ export const useCoberturasOpcionales = () => {
     }
     
     editModeInitializedRef.current = true; // Marcar como inicializado
-  }, [isEditMode, planes.length]); // Solo depender de estas dos propiedades
+  }, [
+    isEditMode, 
+    planes.length,
+    altoCostoOptionsQuery.isLoading,
+    medicamentosOptionsQuery.isLoading,
+    habitacionOptionsQuery.isLoading,
+    copagosQuery.isLoading,
+    copagosAltoCostoQuery.isLoading,
+    copagosHabitacionQuery.isLoading,
+    altoCostoOptionsQuery.data?.length,
+    medicamentosOptionsQuery.data?.length,
+    habitacionOptionsQuery.data?.length,
+    copagosQuery.data?.length,
+    copagosAltoCostoQuery.data?.length,
+    copagosHabitacionQuery.data?.length
+  ]); // 🚨 DEPENDENCIAS CRÍTICAS: Re-ejecutar cuando cambien los datos de las queries
 
   const updatePlanOpcionales = useCallback((planName: string, odontologiaValue: string) => {
     if (isUpdating) return;
@@ -1287,18 +1363,6 @@ export const useCoberturasOpcionales = () => {
     handleDynamicCopagoChange
   };
 
-  // 🔍 DEBUG: Log final para verificar valores devueltos
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 HOOK RETURN - Valores finales de dynamicCoberturaSelections:', {
-      timestamp: new Date().toISOString(),
-      dynamicCoberturaSelections: Object.entries(dynamicCoberturaSelections).map(([plan, sel]) => ({
-        plan,
-        habitacion: sel.habitacion,
-        altoCosto: sel.altoCosto,
-        medicamentos: sel.medicamentos,
-        odontologia: sel.odontologia
-      }))
-    });
-  }
+  
 };
   
