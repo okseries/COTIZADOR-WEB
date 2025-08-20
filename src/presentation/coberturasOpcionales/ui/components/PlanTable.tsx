@@ -188,6 +188,7 @@ const PlanTable = ({
                   {(() => {
                     const shouldShowCopago =
                       dynamicCoberturaSelections?.altoCosto &&
+                      dynamicCoberturaSelections?.altoCosto !== "0" &&
                       cliente?.tipoPlan === 2 &&
                       clientChoosen === 2;
 
@@ -292,6 +293,7 @@ const PlanTable = ({
                   {(() => {
                     const shouldShowCopago =
                       dynamicCoberturaSelections?.medicamentos &&
+                      dynamicCoberturaSelections?.medicamentos !== "0" &&
                       cliente?.tipoPlan === 2 &&
                       clientChoosen === 2;
 
@@ -398,6 +400,7 @@ const PlanTable = ({
                   {(() => {
                     const shouldShowCopago =
                       dynamicCoberturaSelections?.habitacion &&
+                      dynamicCoberturaSelections?.habitacion !== "0" &&
                       cliente?.tipoPlan === 2 &&
                       clientChoosen === 2;
 

@@ -25,7 +25,7 @@ const defaultCoberturaSelections: CoberturaSelections = {
 
 // Datos estáticos para odontología
 const odontologiaOptions: OdontologiaOption[] = [
-  { value: "0", label: "Seleccionar", prima: 0 },
+  { value: "0", label: "Ninguna (No seleccionar)", prima: 0 },
   { value: "1", label: "Nivel I", prima: 150 },
   { value: "2", label: "Nivel II", prima: 350 },
   { value: "3", label: "Nivel III", prima: 700 }
@@ -847,7 +847,7 @@ export const useCoberturasOpcionales = () => {
       // Para clientChoosen === 1 (individuales): incluir automáticamente todas las opcionales básicas
       // Para clientChoosen === 2 (colectivos): solo incluir las que están marcadas en los filtros
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.altoCosto)) {
-        if (cliente?.clientChoosen === 2 && currentDynamicSelections.altoCosto) {
+        if (cliente?.clientChoosen === 2 && currentDynamicSelections.altoCosto && currentDynamicSelections.altoCosto !== "0") {
           // Para colectivos, usar la selección específica del dropdown dinámico
           const selectedOption = altoCostoOptionsQuery.data?.find(opt => opt.opt_id.toString() === currentDynamicSelections.altoCosto);
           if (selectedOption) {
@@ -864,7 +864,7 @@ export const useCoberturasOpcionales = () => {
             subTotalOpcional += primaBase;
             
             // Si hay copago seleccionado, agregarlo como costo adicional
-            if (currentDynamicCopagos.altoCosto) {
+            if (currentDynamicCopagos.altoCosto && currentDynamicCopagos.altoCosto !== "0") {
               const copagoOpt = copagosAltoCostoQuery.data?.find(opt => opt.id.toString() === currentDynamicCopagos.altoCosto);
               if (copagoOpt) {
                 const primaCopago = copagoOpt.price * multiplicadorPrima;
@@ -896,7 +896,7 @@ export const useCoberturasOpcionales = () => {
       }
 
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.medicamentos)) {
-        if (cliente?.clientChoosen === 2 && currentDynamicSelections.medicamentos) {
+        if (cliente?.clientChoosen === 2 && currentDynamicSelections.medicamentos && currentDynamicSelections.medicamentos !== "0") {
           // Para colectivos, usar la selección específica del dropdown dinámico
           const selectedOption = medicamentosOptionsQuery.data?.find(opt => opt.opt_id.toString() === currentDynamicSelections.medicamentos);
           if (selectedOption) {
@@ -913,7 +913,7 @@ export const useCoberturasOpcionales = () => {
             subTotalOpcional += primaBase;
 
             // Si hay copago seleccionado, agregarlo como costo adicional
-            if (currentDynamicCopagos.medicamentos) {
+            if (currentDynamicCopagos.medicamentos && currentDynamicCopagos.medicamentos !== "0") {
               const copagoOpt = copagosQuery.data?.find(opt => opt.id.toString() === currentDynamicCopagos.medicamentos);
               if (copagoOpt) {
                 const primaCopago = copagoOpt.price * multiplicadorPrima;
@@ -946,7 +946,7 @@ export const useCoberturasOpcionales = () => {
       }
 
       if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.habitacion)) {
-        if (cliente?.clientChoosen === 2 && currentDynamicSelections.habitacion) {
+        if (cliente?.clientChoosen === 2 && currentDynamicSelections.habitacion && currentDynamicSelections.habitacion !== "0") {
           // Para colectivos, usar la selección específica del dropdown dinámico
           const selectedOption = habitacionOptionsQuery.data?.find(opt => opt.opt_id.toString() === currentDynamicSelections.habitacion);
           if (selectedOption) {
@@ -963,7 +963,7 @@ export const useCoberturasOpcionales = () => {
             subTotalOpcional += primaBase;
             
             // Si hay copago seleccionado, agregarlo como costo adicional
-            if (currentDynamicCopagos.habitacion) {
+            if (currentDynamicCopagos.habitacion && currentDynamicCopagos.habitacion !== "0") {
               const copagoOpt = copagosHabitacionQuery.data?.find(opt => opt.id.toString() === currentDynamicCopagos.habitacion);
               if (copagoOpt) {
                 const primaCopago = copagoOpt.price * multiplicadorPrima;
@@ -1266,6 +1266,17 @@ export const useCoberturasOpcionales = () => {
         }
       };
     });
+    
+    // Si se selecciona "Ninguna" (valor "0"), también limpiar el copago asociado
+    if (value === "0") {
+      setDynamicCopagoSelections(prev => ({
+        ...prev,
+        [planName]: {
+          ...prev[planName],
+          [coberturaType]: "0"
+        }
+      }));
+    }
     
     // Usar un timeout más largo para evitar conflictos de estado
     setTimeout(() => {
