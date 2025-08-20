@@ -1,10 +1,10 @@
 "use client";
 import { useCallback } from "react";
-import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { useUnifiedQuotationStore } from "@/core";
 import { useClientSearch } from "@/presentation/client/hooks/useClientSearch";
 
 export const useClearActions = () => {
-  const { clearQuotation } = useQuotationStore();
+  const { clearQuotation } = useUnifiedQuotationStore();
   const { setClientData, setSearchData } = useClientSearch();
 
   // Limpiar todo el store y datos relacionados

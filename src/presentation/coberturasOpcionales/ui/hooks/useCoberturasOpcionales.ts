@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
+import { useUnifiedQuotationStore } from '@/core';
 import { usePlanesOpcionales, useCoberturasOpcionalesByType, useCopagos } from '../../hooks/usePlanesOpcionales';
 import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
@@ -33,10 +33,9 @@ const odontologiaOptions: OdontologiaOption[] = [
 
 export const useCoberturasOpcionales = () => {
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render
-  const { cliente, planes, updatePlanByName } = useQuotationStore();
+  const { cliente, planes, updatePlanByName, mode } = useUnifiedQuotationStore();
   
   // Obtener el mode para detectar si estamos editando
-  const mode = useQuotationStore(state => state.mode);
   const isEditMode = mode !== "create";
   
   // Refs para controlar inicializaciones y evitar bucles
@@ -1236,6 +1235,20 @@ export const useCoberturasOpcionales = () => {
     });
   }
 
+  // 🔍 DEBUG: Log final para verificar valores devueltos
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 HOOK RETURN - Valores finales de dynamicCoberturaSelections:', {
+      timestamp: new Date().toISOString(),
+      dynamicCoberturaSelections: Object.entries(dynamicCoberturaSelections).map(([plan, sel]) => ({
+        plan,
+        habitacion: sel.habitacion,
+        altoCosto: sel.altoCosto,
+        medicamentos: sel.medicamentos,
+        odontologia: sel.odontologia
+      }))
+    });
+  }
+
   return {
     // Estados
     globalFilters,
@@ -1273,5 +1286,19 @@ export const useCoberturasOpcionales = () => {
     handleDynamicCoberturaChange,
     handleDynamicCopagoChange
   };
+
+  // 🔍 DEBUG: Log final para verificar valores devueltos
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 HOOK RETURN - Valores finales de dynamicCoberturaSelections:', {
+      timestamp: new Date().toISOString(),
+      dynamicCoberturaSelections: Object.entries(dynamicCoberturaSelections).map(([plan, sel]) => ({
+        plan,
+        habitacion: sel.habitacion,
+        altoCosto: sel.altoCosto,
+        medicamentos: sel.medicamentos,
+        odontologia: sel.odontologia
+      }))
+    });
+  }
 };
   

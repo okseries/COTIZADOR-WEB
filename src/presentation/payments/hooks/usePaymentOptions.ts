@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useQuotationStore } from "../../quotations/store/useQuotationStore";
+import { useUnifiedQuotationStore } from "@/core";
 import { useAuth } from "../../auth/store/useAuth.store";
 import { paymentService } from "../services/payment.service";
 import { Plan } from "../../quotations/interface/createQuotation.interface";
@@ -31,7 +31,7 @@ export const MULTIPLICADORES: Record<PeriodoPago, number> = {
 export const usePaymentOptions = () => {
   const { user: authUser } = useAuth();
   const { cliente, planes, updatePlanByName, clearQuotation, mode } =
-    useQuotationStore();
+    useUnifiedQuotationStore();
   const queryClient = useQueryClient();
   const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);

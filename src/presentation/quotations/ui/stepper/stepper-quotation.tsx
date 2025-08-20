@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion";
-import useStepperStore from "../../store/useStepperStore";
+import { useStepNavigation } from "@/core";
 import StepContent from "./estep-content";
 
 const steps = [
@@ -12,7 +12,7 @@ const steps = [
 ];
 
 export function Stepper() {
-  const { currentStep, setCurrentStep } = useStepperStore();
+  const { currentStep, setCurrentStep } = useStepNavigation();
   const currentStepIdx = steps.findIndex((s) => s.key === currentStep);
 
   return (

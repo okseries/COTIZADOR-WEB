@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import FilterClient from "./FilterClient";
 import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
 import { useDynamicSelectOptions } from "@/presentation/client/hooks/useDynamicSelectOptions";
-import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { useUnifiedQuotationStore } from "@/core";
 import { ClienteFormValues, clienteSchema } from "../schema/ClientInfo.schema";
 import { useClientSearch } from "../hooks/useClientSearch";
 import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
@@ -60,7 +60,7 @@ const ClientInformation = forwardRef<
     setFilterData,
     agentOptions,
     setAgentOptions,
-  } = useQuotationStore();
+  } = useUnifiedQuotationStore();
   // Obtener datos de búsqueda del filtro (solo para tipo documento e identificación)
   const { searchData, clientData } = useClientSearch();
 

@@ -32,7 +32,7 @@ import QuotationTableHeader from "./table-header";
 import Link from "next/link";
 import EmptyState from "./empty-table";
 import { useRouter } from "next/navigation";
-import { useQuotationStore } from "../../store/useQuotationStore";
+import { useQuotations } from "@/core";
 import QuotationTableSkeleton from "./quotation-skeleton";
 import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
 
@@ -47,7 +47,7 @@ export default function QuotationTable({
   isLoading = false,
 }: QuotationTableProps) {
   const router = useRouter();
-  const { loadExistingQuotation } = useQuotationStore();
+  const { editQuotation } = useQuotations();
 
   // Estados para búsqueda y paginación
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,7 +73,6 @@ export default function QuotationTable({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
-  const setMode = useQuotationStore((state) => state.setMode);
 
   // Reset página cuando cambia la búsqueda
   useEffect(() => {
@@ -99,7 +98,6 @@ export default function QuotationTable({
   };
 
   const handleEditQuotation = (quotation: Quotations) => {
-    setMode(Number(quotation.id));
     // Convert the quotation data to the expected format
     const quotationRequest = {
       user: quotation.cotizacion.user,
@@ -119,8 +117,9 @@ export default function QuotationTable({
       })),
     };
 
-    // Load the existing quotation data into the store
-    loadExistingQuotation(quotationRequest);
+    // Use the correct editQuotation method that sets mode and loads data
+    editQuotation(Number(quotation.id), quotationRequest);
+    
     // Navigate to the quotation form (Step 1) to edit
     router.push("/dashboard/cotizacion");
   };

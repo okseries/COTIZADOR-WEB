@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
+import { useUnifiedQuotationStore } from '@/core';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export const StoreDebugger: React.FC = () => {
-  const { cliente, planes } = useQuotationStore();
+  const { cliente, planes } = useUnifiedQuotationStore();
   const [isVisible, setIsVisible] = useState(false);
   
   // Solo mostrar en desarrollo

@@ -5,14 +5,14 @@ import CheckBoxPlans from './CheckBoxPlans';
 import AddAfiliadoForm from './AddAfiliadoForm';
 import AfiliadosList from './AfiliadosList';
 import PlanesResumen from './PlanesResumen';
-import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
+import { useQuotationData } from '@/core';
 import { Spinner } from '@/components/shared/Spinner';
 import { Plan as PlanInterface } from '../interface/plan.interface';
 import { Plan as QuotationPlan, Afiliado } from '@/presentation/quotations/interface/createQuotation.interface';
 
 const CategoryPlan = () => {
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render
-  const { cliente, planes, addPlan, updatePlanByName, removePlan } = useQuotationStore();
+  const { cliente, planes, addPlan, updatePlanByName, removePlan } = useQuotationData();
   
   const tipoPoliza = cliente?.tipoPlan;
   const subTipoPoliza = cliente?.clientChoosen;
