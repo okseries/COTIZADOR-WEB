@@ -242,7 +242,7 @@ const ClientInformation = forwardRef<
 
   // Efecto para guardar automáticamente cuando cambien los campos importantes
   React.useEffect(() => {
-    const subscription = watch((value, { name }) => {
+    const subscription = watch((_value, { name }) => {
       if (
         name === "tipoPlan" ||
         name === "clientChoosen" ||
@@ -251,7 +251,7 @@ const ClientInformation = forwardRef<
         saveToStore();
       }
     });
-    return () => subscription.unsubscribe();
+    return () => subscription.unsubscribe(); /// esto lo que hace es limpiar el efecto cuando se desmonta el componente
   }, [watch, saveToStore]);
 
   // Función para validar y guardar
@@ -265,6 +265,8 @@ const ClientInformation = forwardRef<
   }, [trigger, saveToStore]);
 
   // Exponer las funciones al padre
+  // ejemplo de uso: <ClientInformation ref={clientInfoRef} /> , lo cual sirve para que el componente padre pueda llamar a estas funciones
+  // es decir el padre puede llamar a clientInfoRef.current.saveToStore() o clientInfoRef.current.validateAndSave() para validar y guardar
   useImperativeHandle(ref, () => ({
     saveToStore,
     validateAndSave,
@@ -574,6 +576,9 @@ const ClientInformation = forwardRef<
             </div>
 
             {/* Campos ocultos */}
+            {/*Estos campos son usados */}
+            {/* por ejemplo para guardar el agente y la identificación en el store, aunque no se muestren en el formulario */}
+            {/* son importantes para el store */}
             <div className="hidden">
               <Controller
                 name="agent"

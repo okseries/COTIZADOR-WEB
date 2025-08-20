@@ -334,6 +334,7 @@ export default function QuotationTable({
                             </Tooltip>
                             <Link
                               href={q.pdf}
+                              download="cotizacion-123.pdf"
                               target="_blank"
                               rel="noopener noreferrer"
                             >

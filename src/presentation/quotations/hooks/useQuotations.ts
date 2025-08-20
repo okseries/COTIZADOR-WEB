@@ -44,22 +44,4 @@ export const useQuotations = () => {
   };
 };
 
-// Hook para obtener una cotización específica
-export const useQuotationById = (id: string) => {
-  const {
-    data: quotation,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: [QUOTATIONS_QUERY_KEY, 'detail', id],
-    queryFn: () => quotationService.getQuotationById(id),
-    enabled: !!id,
-    staleTime: 10 * 60 * 1000, // 10 minutos
-  });
 
-  return {
-    quotation,
-    isLoading,
-    error: error ? (error as Error).message : null
-  };
-};

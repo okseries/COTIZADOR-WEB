@@ -59,40 +59,7 @@ class QuotationService {
     }
   }
 
-  /**
-   * Obtener una cotización específica por ID
-   */
-  async getQuotationById(id: string): Promise<Quotations> {
-    try {
-      const response = await apiClient.get<Quotations>(
-        `/cotizaciones/detalle/${id}`
-      );
-      return response.data;
-    } catch (error: unknown) {
-      console.error("Error al obtener cotización:", error);
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "response" in error &&
-        typeof (error as { response?: { status?: number } }).response
-          ?.status === "number" &&
-        (error as { response: { status: number } }).response.status === 401
-      ) {
-        throw new Error("No autorizado. Por favor, inicia sesión nuevamente.");
-      }
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "response" in error &&
-        typeof (error as { response?: { status?: number } }).response
-          ?.status === "number" &&
-        (error as { response: { status: number } }).response.status === 404
-      ) {
-        throw new Error("Cotización no encontrada.");
-      }
-      throw new Error("Error al cargar la cotización.");
-    }
-  }
+ 
 }
 
 export const quotationService = new QuotationService();

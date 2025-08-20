@@ -302,13 +302,16 @@ export const useQuotationStore = create<QuotationStore>()(
         agentOptions: state.agentOptions ? [...state.agentOptions] : [],
       }),
       // Función merge personalizada para asegurar estados limpios
-      merge: (persistedState: unknown, currentState) => ({
-        ...currentState,
-        ...(persistedState as Record<string, unknown>),
-        // Asegurar que los arrays siempre existan
-        planes: Array.isArray((persistedState as any)?.planes) ? (persistedState as any).planes : [],
-        agentOptions: Array.isArray((persistedState as any)?.agentOptions) ? (persistedState as any).agentOptions : [],
-      }),
+      merge: (persistedState: unknown, currentState) => {
+        const typedPersistedState = persistedState as Partial<UnifiedQuotationState>;
+        return {
+          ...currentState,
+          ...typedPersistedState,
+          // Asegurar que los arrays siempre existan
+          planes: Array.isArray(typedPersistedState?.planes) ? typedPersistedState.planes : [],
+          agentOptions: Array.isArray(typedPersistedState?.agentOptions) ? typedPersistedState.agentOptions : [],
+        };
+      },
     }
   )
 );

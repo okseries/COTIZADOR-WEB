@@ -241,7 +241,7 @@ export const usePaymentOptions = () => {
           : await paymentService.updateQuotation(mode, finalPayload);
 
       // Log para depuración de la respuesta
-      console.log("Respuesta de cotización:", response);
+      // console.log("Respuesta de cotización:", response);
 
       // Descargar PDF
       downloadPDF(response.pdfBase64, response.filename);
