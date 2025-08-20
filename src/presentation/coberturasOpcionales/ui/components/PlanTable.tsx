@@ -13,7 +13,7 @@ import { CopagoOption } from "./CopagoSelect";
 import DynamicCoberturaSelect from "./DynamicCoberturaSelect";
 import DynamicCopagoSelect from "./DynamicCopagoSelect";
 import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
-import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { useUnifiedQuotationStore } from "@/core";
 import { Cliente } from "@/presentation/quotations/interface/quotation.interface";
 import { Badge } from "@/components/ui/badge";
 
@@ -115,7 +115,7 @@ const PlanTable = ({
 }: PlanTableProps) => {
   // Leer el plan actualizado directamente del store para asegurar que se muestren los valores más recientes
   const currentPlan =
-    useQuotationStore((state) =>
+    useUnifiedQuotationStore((state) =>
       state.planes.find((p) => p.plan === planName)
     ) || plan;
 
@@ -188,6 +188,7 @@ const PlanTable = ({
                   {(() => {
                     const shouldShowCopago =
                       dynamicCoberturaSelections?.altoCosto &&
+                      dynamicCoberturaSelections?.altoCosto !== "0" &&
                       cliente?.tipoPlan === 2 &&
                       clientChoosen === 2;
 
@@ -292,6 +293,7 @@ const PlanTable = ({
                   {(() => {
                     const shouldShowCopago =
                       dynamicCoberturaSelections?.medicamentos &&
+                      dynamicCoberturaSelections?.medicamentos !== "0" &&
                       cliente?.tipoPlan === 2 &&
                       clientChoosen === 2;
 
@@ -398,6 +400,7 @@ const PlanTable = ({
                   {(() => {
                     const shouldShowCopago =
                       dynamicCoberturaSelections?.habitacion &&
+                      dynamicCoberturaSelections?.habitacion !== "0" &&
                       cliente?.tipoPlan === 2 &&
                       clientChoosen === 2;
 

@@ -38,7 +38,7 @@ export const getCopagos = async (
   idPlantype: number // clienteChousen 2 para colectivo
 ) => {
   const { data } = await apiClient.get<Copago[]>(
-    `opcionales-planes/copagos/${idOptionalType}/${idPlantype}`
+    `/opcionales-planes/copagos/${idOptionalType}/${idPlantype}`
   );  
   return data;
 };

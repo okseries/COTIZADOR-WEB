@@ -10,7 +10,7 @@ interface DynamicCopagoSelectProps {
   placeholder?: string;
 }
 
-const DynamicCopagoSelect = ({ value, onChange, options, placeholder = "Seleccionar copago" }: DynamicCopagoSelectProps) => {
+const DynamicCopagoSelect = ({ value, onChange, options, placeholder = "Seleccionar copago (opcional)" }: DynamicCopagoSelectProps) => {
   return (
     <Select
       value={value}
@@ -20,6 +20,10 @@ const DynamicCopagoSelect = ({ value, onChange, options, placeholder = "Seleccio
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
+        {/* Opción para deseleccionar */}
+        <SelectItem value="0">
+          Ninguna (No seleccionar)
+        </SelectItem>
         {options.map((option) => (
           <SelectItem key={option.id} value={option.id.toString()}>
             {option.descripcion}

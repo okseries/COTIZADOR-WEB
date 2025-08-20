@@ -13,14 +13,14 @@ import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
 import { useClientSearch } from "../hooks/useClientSearch";
 import { ClientByIdentification } from "../services/client.services";
 import { Spinner } from "@/components/shared/Spinner";
-import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { useUnifiedQuotationStore } from "@/core";
 import { IdentificationInput } from "./IdentificationInput";
 import { getCleanIdentification } from "../helpers/indentification-format";
 import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 
 const FilterClient = () => {
   const { setSearchData, setClientData } = useClientSearch();
-  const { filterData, clearQuotation } = useQuotationStore();
+  const { filterData, clearQuotation } = useUnifiedQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [openAlertDialog, setOpenAlertDialog] = useState(false);
   const [alertDialogMessage, setAlertDialogMessage] = useState("");

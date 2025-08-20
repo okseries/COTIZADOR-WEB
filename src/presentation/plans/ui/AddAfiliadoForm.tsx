@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useParentesco } from "@/presentation/parentesco/hooks/useParentesco";
 import { usePrimaPlan } from "../hooks/usePrimaPlan";
-import { useQuotationStore } from "@/presentation/quotations/store/useQuotationStore";
+import { useCliente } from "@/core";
 import { Spinner } from "@/components/shared/Spinner";
 import React, { useState, useEffect } from "react";
 import { Afiliado } from "@/presentation/quotations/interface/createQuotation.interface";
@@ -38,7 +38,7 @@ const AddAfiliadoForm = ({
   }>({});
 
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render  
-  const { cliente } = useQuotationStore();
+  const cliente = useCliente();
   const {
     data: parentescos,
     isLoading: loadingParentescos,

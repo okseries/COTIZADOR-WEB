@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/button';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { AlertCircle, Download } from 'lucide-react';
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency';
-import { useQuotationStore } from '@/presentation/quotations/store/useQuotationStore';
+import { useMode } from '@/core/store';
 
 interface PaymentSummaryProps {
   totalGeneral: number;
@@ -23,7 +23,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
 }) => {
 
 
-  const mode = useQuotationStore((state) => state.mode);
+  const mode = useMode();
   
 
   return (

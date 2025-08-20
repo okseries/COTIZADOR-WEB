@@ -21,7 +21,7 @@ const OdontologiaSelect = ({ value, onChange, options }: OdontologiaSelectProps)
       onValueChange={(newValue) => onChange(newValue)}
     >
       <SelectTrigger className="w-full mt-2">
-        <SelectValue placeholder="Seleccionar" />
+        <SelectValue placeholder="Seleccionar opción de odontología" />
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (

@@ -10,7 +10,7 @@ interface DynamicCoberturaSelectProps {
   placeholder?: string;
 }
 
-const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Seleccionar" }: DynamicCoberturaSelectProps) => {
+const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Seleccionar opción" }: DynamicCoberturaSelectProps) => {
   // Asegurar que value siempre sea string para evitar controlled/uncontrolled switching
   const safeValue = value || "";
   
@@ -34,6 +34,10 @@ const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Selec
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
+        {/* Opción para deseleccionar */}
+        <SelectItem value="0">
+          Ninguna (No seleccionar)
+        </SelectItem>
         {options.map((option) => (
           <SelectItem key={option.opt_id} value={option.opt_id.toString()}>
             {option.descripcion}
