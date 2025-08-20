@@ -165,45 +165,30 @@ export const usePaymentOptions = () => {
   //! Modificado para funcionar mejor en móviles
   const downloadPDF = useCallback((base64: string, filename?: string) => {
     try {
-      // Convertir base64 a Uint8Array
+      // Convertir base64 → bytes
       const byteCharacters = atob(base64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
+      const byteArray = Uint8Array.from(byteCharacters, c => c.charCodeAt(0));
 
       // Crear blob de PDF
       const blob = new Blob([byteArray], { type: "application/pdf" });
 
-      // Generar nombre por defecto si no se pasa filename
+      // Nombre por defecto
       const fechaHora = format(new Date(), "dd-MMMM-yyyy_hh-mm-a", { locale: es });
       const finalName = filename || `cotizacion-${fechaHora}.pdf`;
 
-      // Detectar si es dispositivo móvil
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      // Intentar abrir en nueva ventana (móviles suelen preferir esto)
+      const url = URL.createObjectURL(blob);
+      // const newWindow = window.open(url, "_blank");
 
-      if (isMobile) {
-        // Para móviles: abrir en nueva ventana
-        const url = URL.createObjectURL(blob);
-        const newWindow = window.open(url, '_blank');
-        
-        // Si no se pudo abrir ventana (bloqueadores), forzar descarga
-        if (!newWindow) {
-          saveAs(blob, finalName);
-        }
-        
-        // Limpiar URL después de 10 segundos
-        setTimeout(() => {
-          URL.revokeObjectURL(url);
-        }, 10000);
-      } else {
-        // Para desktop: usar saveAs normal
+      
         saveAs(blob, finalName);
-      }
+
+      // Revocar URL después de un tiempo
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+
     } catch (err) {
       console.error("Error al descargar PDF:", err);
-      setError("Error al descargar el PDF");
+      // si usas un state para errores, setError("Error al descargar el PDF")
     }
   }, []);
 
@@ -254,10 +239,10 @@ export const usePaymentOptions = () => {
         queryKey: ["quotations", userName],
       });
 
-      // Redirigir al dashboard después de un breve delay
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1000);
+      // // Redirigir al dashboard después de un breve delay
+      // setTimeout(() => {
+      //   window.location.href = "/dashboard";
+      // }, 1000);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error al procesar la cotización"
