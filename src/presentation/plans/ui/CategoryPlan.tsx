@@ -93,7 +93,7 @@ const CategoryPlan = () => {
         resumenPago: {
           subTotalAfiliado: 0,
           subTotalOpcional: 0,
-          periodoPago: "Mensual",
+          periodoPago: "",
           totalPagar: 0
         },
         cantidadAfiliados: 0,
@@ -125,7 +125,7 @@ const CategoryPlan = () => {
             resumenPago: {
               subTotalAfiliado: 0,
               subTotalOpcional: 0,
-              periodoPago: "Mensual",
+              periodoPago: "",
               totalPagar: 0
             },
             cantidadAfiliados: 0,

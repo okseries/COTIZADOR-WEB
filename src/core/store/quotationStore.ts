@@ -96,7 +96,7 @@ const initialState: UnifiedQuotationState = {
   },
   selectedPlans: [],
   selectedOptionalCoverages: {},
-  paymentPeriod: 'Mensual',
+  paymentPeriod: '',
 };
 
 // Función helper para validar pasos (fuera del store)
@@ -121,7 +121,7 @@ export const isStepValid = (step: string, state: UnifiedQuotationState): boolean
       return true; // Los opcionales son opcionales
     
     case 'step4':
-      return !!state.paymentPeriod;
+      return !!(state.paymentPeriod && state.paymentPeriod !== '');
     
     default:
       return false;
@@ -287,7 +287,7 @@ export const useQuotationStore = create<QuotationStore>()(
         clientData: { ...initialState.clientData },
         selectedPlans: [],
         selectedOptionalCoverages: {},
-        paymentPeriod: 'Mensual'
+        paymentPeriod: ''
       })
     }),
     {
