@@ -94,51 +94,50 @@ export const usePaymentOptions = () => {
     (planName: string, periodo: PeriodoPago | undefined) => {
       setPaymentPlans((prev) =>
         prev.map((plan) => {
-          if (plan.plan === planName) {
-            if (!periodo) {
-              // Si no hay período seleccionado, limpiar el resumen de pago
-              const updatedPlan = {
-                ...plan,
-                selectedPeriod: undefined,
-                resumenPago: {
-                  ...plan.resumenPago,
-                  periodoPago: "",
-                  subTotalAfiliado: 0,
-                  subTotalOpcional: 0,
-                  totalPagar: 0,
-                },
-              };
-
-              setTimeout(() => {
-                updatePlanByName(planName, {
-                  resumenPago: updatedPlan.resumenPago,
-                });
-              }, 0);
-
-              return updatedPlan;
-            }
-
-            const summary = calculatePaymentSummary(plan, periodo);
+          // 🆕 SINCRONIZACIÓN: Aplicar el cambio a TODOS los planes, no solo al seleccionado
+          if (!periodo) {
+            // Si no hay período seleccionado, limpiar el resumen de pago para todos
             const updatedPlan = {
               ...plan,
-              selectedPeriod: periodo,
+              selectedPeriod: undefined,
               resumenPago: {
                 ...plan.resumenPago,
-                periodoPago: periodo,
-                ...summary,
+                periodoPago: "",
+                subTotalAfiliado: 0,
+                subTotalOpcional: 0,
+                totalPagar: 0,
               },
             };
 
-            // Actualizar en el store de forma asíncrona para evitar el error de renderizado
             setTimeout(() => {
-              updatePlanByName(planName, {
+              updatePlanByName(plan.plan, {
                 resumenPago: updatedPlan.resumenPago,
               });
             }, 0);
 
             return updatedPlan;
           }
-          return plan;
+
+          // Aplicar el período seleccionado a todos los planes
+          const summary = calculatePaymentSummary(plan, periodo);
+          const updatedPlan = {
+            ...plan,
+            selectedPeriod: periodo,
+            resumenPago: {
+              ...plan.resumenPago,
+              periodoPago: periodo,
+              ...summary,
+            },
+          };
+
+          // Actualizar en el store de forma asíncrona para evitar el error de renderizado
+          setTimeout(() => {
+            updatePlanByName(plan.plan, {
+              resumenPago: updatedPlan.resumenPago,
+            });
+          }, 0);
+
+          return updatedPlan;
         })
       );
     },

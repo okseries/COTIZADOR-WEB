@@ -93,13 +93,24 @@ export const useCoberturasOpcionales = () => {
     // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    setCopagoHabitacionSelections(prev => ({
-      ...prev,
-      [planName]: value
-    }));
+    // 🆕 SINCRONIZACIÓN: Actualizar TODOS los planes con el mismo valor de copago habitación
+    setCopagoHabitacionSelections(prev => {
+      const newSelections = { ...prev };
+      
+      // Aplicar el cambio a todos los planes existentes
+      planes.forEach(plan => {
+        newSelections[plan.plan] = value;
+      });
+      
+      return newSelections;
+    });
+    
     setTimeout(() => {
-      const odontologiaValue = planSelections[planName]?.odontologia || "0";
-      updatePlanOpcionales(planName, odontologiaValue);
+      // Actualizar todos los planes
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
     }, 100);
   };
   const [isUpdating, setIsUpdating] = useState(false);
@@ -107,13 +118,24 @@ export const useCoberturasOpcionales = () => {
     // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    setCopagoSelections(prev => ({
-      ...prev,
-      [planName]: value
-    }));
+    // 🆕 SINCRONIZACIÓN: Actualizar TODOS los planes con el mismo valor de copago
+    setCopagoSelections(prev => {
+      const newSelections = { ...prev };
+      
+      // Aplicar el cambio a todos los planes existentes
+      planes.forEach(plan => {
+        newSelections[plan.plan] = value;
+      });
+      
+      return newSelections;
+    });
+    
     setTimeout(() => {
-      const odontologiaValue = planSelections[planName]?.odontologia || "0";
-      updatePlanOpcionales(planName, odontologiaValue);
+      // Actualizar todos los planes
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
     }, 100);
   };
 
@@ -1212,21 +1234,27 @@ export const useCoberturasOpcionales = () => {
     // ⭐ MEJORA: Marcar como actualizando inmediatamente para prevenir clicks múltiples
     setIsUpdating(true);
     
-    // Actualizar inmediatamente el estado local para feedback visual instantáneo
+    // 🆕 SINCRONIZACIÓN: Actualizar TODOS los planes con el mismo valor de odontología
     setPlanSelections(prev => {
-      const newSelections = {
-        ...prev,
-        [planName]: {
-          ...prev[planName],
+      const newSelections = { ...prev };
+      
+      // Aplicar el cambio a todos los planes existentes
+      planes.forEach(plan => {
+        newSelections[plan.plan] = {
+          ...newSelections[plan.plan],
           odontologia: value
-        }
-      };
+        };
+      });
+      
       return newSelections;
     });
     
     // Debounce para procesar la actualización del store
     const timeoutId = setTimeout(() => {
-      updatePlanOpcionales(planName, value);
+      // Actualizar TODOS los planes en el store
+      planes.forEach(plan => {
+        updatePlanOpcionales(plan.plan, value);
+      });
       
       // Liberar el flag después de procesar
       setTimeout(() => {
@@ -1245,18 +1273,27 @@ export const useCoberturasOpcionales = () => {
     // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    setCoberturaSelections(prev => ({
-      ...prev,
-      [planName]: {
-        ...prev[planName],
-        [coberturaType]: value
-      }
-    }));
+    // 🆕 SINCRONIZACIÓN: Actualizar TODOS los planes con el mismo valor de cobertura
+    setCoberturaSelections(prev => {
+      const newSelections = { ...prev };
+      
+      // Aplicar el cambio a todos los planes existentes
+      planes.forEach(plan => {
+        newSelections[plan.plan] = {
+          ...newSelections[plan.plan],
+          [coberturaType]: value
+        };
+      });
+      
+      return newSelections;
+    });
     
-    // Actualizar inmediatamente
+    // Actualizar inmediatamente todos los planes
     setTimeout(() => {
-      const odontologiaValue = planSelections[planName]?.odontologia || "0";
-      updatePlanOpcionales(planName, odontologiaValue);
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
     }, 100);
   };
 
@@ -1265,33 +1302,45 @@ export const useCoberturasOpcionales = () => {
     // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    // Actualizar estado local primero
+    // 🆕 SINCRONIZACIÓN: Actualizar TODOS los planes con el mismo valor de cobertura dinámica
     setDynamicCoberturaSelections(prev => {
-      const currentPlanSelections = prev[planName] || {};
-      return {
-        ...prev,
-        [planName]: {
+      const newSelections = { ...prev };
+      
+      // Aplicar el cambio a todos los planes existentes
+      planes.forEach(plan => {
+        const currentPlanSelections = newSelections[plan.plan] || {};
+        newSelections[plan.plan] = {
           ...currentPlanSelections,
           [coberturaType]: value
-        }
-      };
+        };
+      });
+      
+      return newSelections;
     });
     
-    // Si se selecciona "Ninguna" (valor "0"), también limpiar el copago asociado
+    // Si se selecciona "Ninguna" (valor "0"), también limpiar el copago asociado en todos los planes
     if (value === "0") {
-      setDynamicCopagoSelections(prev => ({
-        ...prev,
-        [planName]: {
-          ...prev[planName],
-          [coberturaType]: "0"
-        }
-      }));
+      setDynamicCopagoSelections(prev => {
+        const newSelections = { ...prev };
+        
+        planes.forEach(plan => {
+          newSelections[plan.plan] = {
+            ...newSelections[plan.plan],
+            [coberturaType]: "0"
+          };
+        });
+        
+        return newSelections;
+      });
     }
     
     // Usar un timeout más largo para evitar conflictos de estado
     setTimeout(() => {
-      const odontologiaValue = planSelections[planName]?.odontologia || "0";
-      updatePlanOpcionales(planName, odontologiaValue);
+      // Actualizar todos los planes
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
     }, 100);
   };
 
@@ -1299,18 +1348,27 @@ export const useCoberturasOpcionales = () => {
     // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    setDynamicCopagoSelections(prev => ({
-      ...prev,
-      [planName]: {
-        ...prev[planName],
-        [coberturaType]: value
-      }
-    }));
+    // 🆕 SINCRONIZACIÓN: Actualizar TODOS los planes con el mismo valor de copago dinámico
+    setDynamicCopagoSelections(prev => {
+      const newSelections = { ...prev };
+      
+      // Aplicar el cambio a todos los planes existentes
+      planes.forEach(plan => {
+        newSelections[plan.plan] = {
+          ...newSelections[plan.plan],
+          [coberturaType]: value
+        };
+      });
+      
+      return newSelections;
+    });
     
-    // Actualizar inmediatamente
+    // Actualizar inmediatamente todos los planes
     setTimeout(() => {
-      const odontologiaValue = planSelections[planName]?.odontologia || "0";
-      updatePlanOpcionales(planName, odontologiaValue);
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
     }, 100);
   };
 
