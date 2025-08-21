@@ -160,19 +160,19 @@ export const useCoberturasOpcionales = () => {
   );
   
   // 🔍 DEBUG CRÍTICO: Log del estado de las queries
-  console.log('🔍 QUERIES STATUS DETALLADO:', {
-    altoCosto: {
-      enabled: isColectivo,
-      isColectivo,
-      globalFilterAltoCosto: globalFilters.altoCosto,
-      isEditMode,
-      tipoPlan: cliente?.tipoPlan,
-      isLoading: altoCostoOptionsQuery.isLoading,
-      isError: altoCostoOptionsQuery.isError,
-      dataLength: altoCostoOptionsQuery.data?.length || 0,
-      error: altoCostoOptionsQuery.error
-    }
-  });
+  // console.log('🔍 QUERIES STATUS DETALLADO:', {
+  //   altoCosto: {
+  //     enabled: isColectivo,
+  //     isColectivo,
+  //     globalFilterAltoCosto: globalFilters.altoCosto,
+  //     isEditMode,
+  //     tipoPlan: cliente?.tipoPlan,
+  //     isLoading: altoCostoOptionsQuery.isLoading,
+  //     isError: altoCostoOptionsQuery.isError,
+  //     dataLength: altoCostoOptionsQuery.data?.length || 0,
+  //     error: altoCostoOptionsQuery.error
+  //   }
+  // });
   
   // Medicamentos
   const medicamentosOptionsQuery = useCoberturasOpcionalesByType(
@@ -214,23 +214,23 @@ export const useCoberturasOpcionales = () => {
   );
   
   // 🔍 DEBUG COPAGOS STATUS
-  console.log('🔍 COPAGOS STATUS:', {
-    medicamentos: {
-      isLoading: copagosQuery.isLoading,
-      dataLength: copagosQuery.data?.length || 0,
-      error: copagosQuery.error
-    },
-    altoCosto: {
-      isLoading: copagosAltoCostoQuery.isLoading,
-      dataLength: copagosAltoCostoQuery.data?.length || 0,
-      error: copagosAltoCostoQuery.error
-    },
-    habitacion: {
-      isLoading: copagosHabitacionQuery.isLoading,
-      dataLength: copagosHabitacionQuery.data?.length || 0,
-      error: copagosHabitacionQuery.error
-    }
-  });
+  // console.log('🔍 COPAGOS STATUS:', {
+  //   medicamentos: {
+  //     isLoading: copagosQuery.isLoading,
+  //     dataLength: copagosQuery.data?.length || 0,
+  //     error: copagosQuery.error
+  //   },
+  //   altoCosto: {
+  //     isLoading: copagosAltoCostoQuery.isLoading,
+  //     dataLength: copagosAltoCostoQuery.data?.length || 0,
+  //     error: copagosAltoCostoQuery.error
+  //   },
+  //   habitacion: {
+  //     isLoading: copagosHabitacionQuery.isLoading,
+  //     dataLength: copagosHabitacionQuery.data?.length || 0,
+  //     error: copagosHabitacionQuery.error
+  //   }
+  // });
 
   // 🚨 NUEVO: Resetear editModeInitializedRef cuando cambien las opciones disponibles
   useEffect(() => {
@@ -316,10 +316,10 @@ export const useCoberturasOpcionales = () => {
         let odontologiaValue = "0";
         
         if (isEditMode && odontologiaOpcional) {
-          console.log(`🦷 ODONTOLOGÍA - Procesando para ${plan.plan}:`, {
-            prima: odontologiaOpcional.prima,
-            cantidadAfiliados: plan.cantidadAfiliados || 1
-          });
+          // console.log(`🦷 ODONTOLOGÍA - Procesando para ${plan.plan}:`, {
+          //   prima: odontologiaOpcional.prima,
+          //   cantidadAfiliados: plan.cantidadAfiliados || 1
+          // });
           
           // 🚨 FIX: Mapear por prima dividida entre cantidad de afiliados
           const cantidadAfiliados = plan.cantidadAfiliados || 1;
@@ -334,12 +334,12 @@ export const useCoberturasOpcionales = () => {
           
           if (staticOdontologiaMatch) {
             odontologiaValue = staticOdontologiaMatch.value;
-            console.log(`🦷 ODONTOLOGÍA MAPEADO EXITOSAMENTE: Prima ${primaUnitaria} -> value: ${staticOdontologiaMatch.value} (${staticOdontologiaMatch.label})`);
+            // console.log(`🦷 ODONTOLOGÍA MAPEADO EXITOSAMENTE: Prima ${primaUnitaria} -> value: ${staticOdontologiaMatch.value} (${staticOdontologiaMatch.label})`);
           } else {
-            console.log(`🦷 ODONTOLOGÍA - No se encontró coincidencia exacta para prima ${primaUnitaria}`);
+            // console.log(`🦷 ODONTOLOGÍA - No se encontró coincidencia exacta para prima ${primaUnitaria}`);
             // Fallback: usar el valor más alto si no encuentra exacto
             odontologiaValue = "3";
-            console.log(`🦷 ODONTOLOGÍA FALLBACK: Usando Nivel III (value: 3)`);
+            // console.log(`🦷 ODONTOLOGÍA FALLBACK: Usando Nivel III (value: 3)`);
           }
         } else if (isEditMode) {
           console.log(`🦷 Plan ${plan.plan}: No hay odontología en el store`);
@@ -381,12 +381,12 @@ export const useCoberturasOpcionales = () => {
   useEffect(() => {
     if (planes.length === 0 || userHasModifiedFilters) return;
     
-    console.log('🎯 INICIALIZANDO FILTROS GLOBALES:', {
-      clientChoosen: cliente?.clientChoosen,
-      isEditMode,
-      planesLength: planes.length,
-      userHasModified: userHasModifiedFilters
-    });
+    // console.log('🎯 INICIALIZANDO FILTROS GLOBALES:', {
+    //   clientChoosen: cliente?.clientChoosen,
+    //   isEditMode,
+    //   planesLength: planes.length,
+    //   userHasModified: userHasModifiedFilters
+    // });
     
     if (cliente?.clientChoosen === 2) {
       // Para colectivos, leer las opcionales existentes para determinar qué filtros deben estar activos
@@ -397,12 +397,12 @@ export const useCoberturasOpcionales = () => {
         const hasHabitacion = firstPlan.opcionales.some(opt => opt.nombre === "HABITACION");
         const hasOdontologia = firstPlan.opcionales.some(opt => opt.nombre === "ODONTOLOGIA" || opt.nombre === "ODONTOLOGÍA");
 
-        console.log('🔍 FILTROS DETECTADOS EN STORE:', {
-          hasAltoCosto,
-          hasMedicamentos,
-          hasHabitacion,
-          hasOdontologia
-        });
+        // console.log('🔍 FILTROS DETECTADOS EN STORE:', {
+        //   hasAltoCosto,
+        //   hasMedicamentos,
+        //   hasHabitacion,
+        //   hasOdontologia
+        // });
 
         setGlobalFilters({
           altoCosto: hasAltoCosto,
@@ -457,14 +457,14 @@ export const useCoberturasOpcionales = () => {
     
     // Solo proceder si ya tenemos datos del store Y las opciones de API están cargadas
     if (!allOptionsLoaded || editModeInitializedRef.current) {
-      console.log('⏳ ESPERANDO DATOS:', {
-        allOptionsLoaded,
-        editModeInitialized: editModeInitializedRef.current,
-        altoCostoLoading: altoCostoOptionsQuery.isLoading,
-        medicamentosLoading: medicamentosOptionsQuery.isLoading,
-        habitacionLoading: habitacionOptionsQuery.isLoading,
-        copagosLoading: copagosQuery.isLoading
-      });
+      // console.log('⏳ ESPERANDO DATOS:', {
+      //   allOptionsLoaded,
+      //   editModeInitialized: editModeInitializedRef.current,
+      //   altoCostoLoading: altoCostoOptionsQuery.isLoading,
+      //   medicamentosLoading: medicamentosOptionsQuery.isLoading,
+      //   habitacionLoading: habitacionOptionsQuery.isLoading,
+      //   copagosLoading: copagosQuery.isLoading
+      // });
       return;
     }
     
@@ -487,7 +487,7 @@ export const useCoberturasOpcionales = () => {
         
         // 🚨 MAPEO INTELIGENTE MEJORADO: Mapear por prima con logs detallados
         opcionales.forEach(opcional => {
-          console.log(`🔍 Procesando opcional: ${opcional.nombre}, ID: ${opcional.id}, Prima: ${opcional.prima}`);
+          // console.log(`🔍 Procesando opcional: ${opcional.nombre}, ID: ${opcional.id}, Prima: ${opcional.prima}`);
           
           if (opcional.nombre === "ALTO COSTO" && opcional.id) {
             // Mapear alto costo por prima
@@ -522,9 +522,9 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitariaCopago = opcional.prima / cantidadAfiliados;
               
-              console.log(`💰 COPAGO ALTO COSTO - Prima unitaria: ${primaUnitariaCopago}, Opciones:`, 
-                copagosAltoCostoQuery.data.map(c => ({ id: c.id, price: c.price, descripcion: c.descripcion }))
-              );
+              // console.log(`💰 COPAGO ALTO COSTO - Prima unitaria: ${primaUnitariaCopago}, Opciones:`, 
+              //   copagosAltoCostoQuery.data.map(c => ({ id: c.id, price: c.price, descripcion: c.descripcion }))
+              // );
               
               // Buscar el copago que coincida con la prima (tolerancia ampliada)
               const matchingCopago = copagosAltoCostoQuery.data.find(copago => 
@@ -547,9 +547,9 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitaria = opcional.prima / cantidadAfiliados;
               
-              console.log(`💊 MEDICAMENTOS - Prima unitaria calculada: ${primaUnitaria}, Opciones disponibles:`, 
-                medicamentosOptionsQuery.data.map(opt => ({ opt_id: opt.opt_id, opt_prima: opt.opt_prima, descripcion: opt.descripcion }))
-              );
+              // console.log(`💊 MEDICAMENTOS - Prima unitaria calculada: ${primaUnitaria}, Opciones disponibles:`, 
+              //   medicamentosOptionsQuery.data.map(opt => ({ opt_id: opt.opt_id, opt_prima: opt.opt_prima, descripcion: opt.descripcion }))
+              // );
               
               // Buscar la opción que más se acerque a la prima unitaria (tolerancia ampliada)
               const matchingOption = medicamentosOptionsQuery.data.find(opt => 
@@ -626,13 +626,13 @@ export const useCoberturasOpcionales = () => {
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitariaCopago = opcional.prima / cantidadAfiliados;
               
-              console.log(`🏠 COPAGO HABITACIÓN - Prima unitaria: ${primaUnitariaCopago}, Opciones:`, 
-                copagosHabitacionQuery.data.map(c => ({ id: c.id, price: c.price, descripcion: c.descripcion }))
-              );
+              // console.log(`🏠 COPAGO HABITACIÓN - Prima unitaria: ${primaUnitariaCopago}, Opciones:`, 
+              //   copagosHabitacionQuery.data.map(c => ({ id: c.id, price: c.price, descripcion: c.descripcion }))
+              // );
               
-              // Buscar el copago que coincida con la prima (tolerancia ampliada)
+              // Buscar el copago que coincida con la prima (tolerancia aumentada para habitación)
               const matchingCopago = copagosHabitacionQuery.data.find(copago => 
-                Math.abs(copago.price - primaUnitariaCopago) < 10 // Tolerancia ampliada a ±10
+                Math.abs(copago.price - primaUnitariaCopago) < 50 // Tolerancia aumentada a ±50 para habitación
               );
               
               if (matchingCopago) {
@@ -640,21 +640,31 @@ export const useCoberturasOpcionales = () => {
                   newDynamicCopagoSelections[plan.plan] = { altoCosto: '', medicamentos: '', habitacion: '' };
                 }
                 newDynamicCopagoSelections[plan.plan].habitacion = matchingCopago.id.toString();
-                console.log(`🏠 COPAGO HABITACIÓN MAPEADO: Prima ${primaUnitariaCopago} -> ID: ${matchingCopago.id} (${matchingCopago.descripcion})`);
+                // console.log(`🏠 COPAGO HABITACIÓN MAPEADO: Prima ${primaUnitariaCopago} -> ID: ${matchingCopago.id} (${matchingCopago.descripcion})`);
               } else {
-                console.log(`🏠 COPAGO HABITACIÓN - No se encontró coincidencia por prima`);
+                // Fallback: si no encuentra match por prima, usar el primer copago disponible
+                const fallbackCopago = copagosHabitacionQuery.data[0];
+                if (fallbackCopago) {
+                  if (!newDynamicCopagoSelections[plan.plan]) {
+                    newDynamicCopagoSelections[plan.plan] = { altoCosto: '', medicamentos: '', habitacion: '' };
+                  }
+                  newDynamicCopagoSelections[plan.plan].habitacion = fallbackCopago.id.toString();
+                  console.log(`🏠 COPAGO HABITACIÓN FALLBACK: Prima ${primaUnitariaCopago} -> ID: ${fallbackCopago.id} (${fallbackCopago.descripcion})`);
+                } else {
+                  console.log(`🏠 COPAGO HABITACIÓN - No se encontró coincidencia por prima ni fallback disponible`);
+                }
               }
             }
           }
         });
         
-        console.log(`✅ Selecciones detectadas para ${plan.plan}:`, {
-          altoCosto: selections.altoCosto,
-          medicamentos: selections.medicamentos,
-          habitacion: selections.habitacion,
-          odontologia: selections.odontologia
-        });
-        console.log(`💰 Copagos detectados para ${plan.plan}:`, newDynamicCopagoSelections[plan.plan]);
+        // console.log(`✅ Selecciones detectadas para ${plan.plan}:`, {
+        //   altoCosto: selections.altoCosto,
+        //   medicamentos: selections.medicamentos,
+        //   habitacion: selections.habitacion,
+        //   odontologia: selections.odontologia
+        // });
+        // console.log(`💰 Copagos detectados para ${plan.plan}:`, newDynamicCopagoSelections[plan.plan]);
         
         newDynamicSelections[plan.plan] = selections;
         hasChanges = true;
@@ -663,25 +673,25 @@ export const useCoberturasOpcionales = () => {
     
     // Actualizar estado solo si hay cambios reales
     if (hasChanges) {
-      console.log('🔄 Actualizando selecciones dinámicas desde store:', {
-        totalPlanes: Object.keys(newDynamicSelections).length,
-        selecciones: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
-          plan,
-          habitacion: sel.habitacion,
-          altoCosto: sel.altoCosto,
-          medicamentos: sel.medicamentos,
-          odontologia: sel.odontologia
-        }))
-      });
+      // console.log('🔄 Actualizando selecciones dinámicas desde store:', {
+      //   totalPlanes: Object.keys(newDynamicSelections).length,
+      //   selecciones: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
+      //     plan,
+      //     habitacion: sel.habitacion,
+      //     altoCosto: sel.altoCosto,
+      //     medicamentos: sel.medicamentos,
+      //     odontologia: sel.odontologia
+      //   }))
+      // });
       
-      console.log('🔧 APLICANDO MAPEO CORREGIDO - Selecciones después del mapeo temporal:', {
-        newDynamicSelections: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
-          plan,
-          habitacion: `${sel.habitacion} (era ${plan})`,
-          altoCosto: `${sel.altoCosto} (era ${plan})`, 
-          medicamentos: `${sel.medicamentos} (era ${plan})`
-        }))
-      });
+      // console.log('🔧 APLICANDO MAPEO CORREGIDO - Selecciones después del mapeo temporal:', {
+      //   newDynamicSelections: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
+      //     plan,
+      //     habitacion: `${sel.habitacion} (era ${plan})`,
+      //     altoCosto: `${sel.altoCosto} (era ${plan})`, 
+      //     medicamentos: `${sel.medicamentos} (era ${plan})`
+      //   }))
+      // });
       
       setDynamicCoberturaSelections(prev => ({ 
         ...prev, 
@@ -689,31 +699,31 @@ export const useCoberturasOpcionales = () => {
       }));
 
       // 🔍 DEBUG CRÍTICO: Verificar estado inmediatamente después de la actualización
-      console.log('🚨 ESTADO DESPUÉS DE ACTUALIZAR dynamicCoberturaSelections:', {
-        timestamp: new Date().toISOString(),
-        estadoAnterior: 'prev',
-        nuevasSelecciones: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
-          plan,
-          habitacion: sel.habitacion,
-          altoCosto: sel.altoCosto,
-          medicamentos: sel.medicamentos,
-          odontologia: sel.odontologia
-        })),
-        totalPlanes: Object.keys(newDynamicSelections).length
-      });
+      // console.log('🚨 ESTADO DESPUÉS DE ACTUALIZAR dynamicCoberturaSelections:', {
+      //   timestamp: new Date().toISOString(),
+      //   estadoAnterior: 'prev',
+      //   nuevasSelecciones: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
+      //     plan,
+      //     habitacion: sel.habitacion,
+      //     altoCosto: sel.altoCosto,
+      //     medicamentos: sel.medicamentos,
+      //     odontologia: sel.odontologia
+      //   })),
+      //   totalPlanes: Object.keys(newDynamicSelections).length
+      // });
 
       // 🔍 DEBUG: Confirmar que el estado se actualizó correctamente
-      setTimeout(() => {
-        console.log('🔍 VERIFICACIÓN FINAL - Estado actualizado:', {
-          timestamp: new Date().toISOString(),
-          newDynamicSelections: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
-            plan,
-            habitacion: sel.habitacion,
-            altoCosto: sel.altoCosto,
-            medicamentos: sel.medicamentos
-          }))
-        });
-      }, 100);
+      // setTimeout(() => {
+      //   console.log('🔍 VERIFICACIÓN FINAL - Estado actualizado:', {
+      //     timestamp: new Date().toISOString(),
+      //     newDynamicSelections: Object.entries(newDynamicSelections).map(([plan, sel]) => ({
+      //       plan,
+      //       habitacion: sel.habitacion,
+      //       altoCosto: sel.altoCosto,
+      //       medicamentos: sel.medicamentos
+      //     }))
+      //   });
+      // }, 100);
 
       // 🚨 FIX QUIRÚRGICO: Forzar actualización de filtros globales basado en las selecciones detectadas
       const hasAnyAltoCosto = Object.values(newDynamicSelections).some(sel => sel.altoCosto !== '');
@@ -725,13 +735,13 @@ export const useCoberturasOpcionales = () => {
         plan.opcionales.some(opt => opt.nombre === "ODONTOLOGIA" || opt.nombre === "ODONTOLOGÍA")
       );
 
-      console.log('🎯 FIX QUIRÚRGICO: Actualizando filtros globales desde selecciones dinámicas:', {
-        hasAnyAltoCosto,
-        hasAnyMedicamentos, 
-        hasAnyHabitacion,
-        hasAnyOdontologia,
-        odontologiaDetectadaEnStore: hasAnyOdontologia
-      });
+      // console.log('🎯 FIX QUIRÚRGICO: Actualizando filtros globales desde selecciones dinámicas:', {
+      //   hasAnyAltoCosto,
+      //   hasAnyMedicamentos, 
+      //   hasAnyHabitacion,
+      //   hasAnyOdontologia,
+      //   odontologiaDetectadaEnStore: hasAnyOdontologia
+      // });
 
       setGlobalFilters(prev => ({
         ...prev,
@@ -742,42 +752,42 @@ export const useCoberturasOpcionales = () => {
       }));
 
       // 🔍 DEBUG: Verificar que las opciones dinámicas se están cargando
-      setTimeout(() => {
-        console.log('🔍 DEBUG: Verificando opciones dinámicas cargadas:', {
-          habitacionOptions: habitacionOptionsQuery.data?.length || 0,
-          altoCostoOptions: altoCostoOptionsQuery.data?.length || 0,
-          medicamentosOptions: medicamentosOptionsQuery.data?.length || 0,
-          habitacionEnabled: isColectivo && (globalFilters.habitacion || isEditMode),
-          isEditMode,
-          isColectivo
-        });
+      // setTimeout(() => {
+      //   // console.log('🔍 DEBUG: Verificando opciones dinámicas cargadas:', {
+      //   //   habitacionOptions: habitacionOptionsQuery.data?.length || 0,
+      //   //   altoCostoOptions: altoCostoOptionsQuery.data?.length || 0,
+      //   //   medicamentosOptions: medicamentosOptionsQuery.data?.length || 0,
+      //   //   habitacionEnabled: isColectivo && (globalFilters.habitacion || isEditMode),
+      //   //   isEditMode,
+      //   //   isColectivo
+      //   // });
 
-        // 🚨 DEBUG ADICIONAL: Verificar el estado de los queries
-        console.log('🔍 DEBUG QUERIES STATUS:', {
-          habitacion: {
-            isLoading: habitacionOptionsQuery.isLoading,
-            isError: habitacionOptionsQuery.isError,
-            error: habitacionOptionsQuery.error,
-            enabled: isColectivo && (globalFilters.habitacion || isEditMode),
-            dataLength: habitacionOptionsQuery.data?.length || 0
-          },
-          altoCosto: {
-            isLoading: altoCostoOptionsQuery.isLoading,
-            isError: altoCostoOptionsQuery.isError,
-            error: altoCostoOptionsQuery.error,
-            enabled: isColectivo && (globalFilters.altoCosto || isEditMode),
-            dataLength: altoCostoOptionsQuery.data?.length || 0
-          },
-          medicamentos: {
-            isLoading: medicamentosOptionsQuery.isLoading,
-            isError: medicamentosOptionsQuery.isError,
-            error: medicamentosOptionsQuery.error,
-            enabled: isColectivo && (globalFilters.medicamentos || isEditMode),
-            dataLength: medicamentosOptionsQuery.data?.length || 0
-          }
-        });
+      //   // 🚨 DEBUG ADICIONAL: Verificar el estado de los queries
+      //   // console.log('🔍 DEBUG QUERIES STATUS:', {
+      //   //   habitacion: {
+      //   //     isLoading: habitacionOptionsQuery.isLoading,
+      //   //     isError: habitacionOptionsQuery.isError,
+      //   //     error: habitacionOptionsQuery.error,
+      //   //     enabled: isColectivo && (globalFilters.habitacion || isEditMode),
+      //   //     dataLength: habitacionOptionsQuery.data?.length || 0
+      //   //   },
+      //   //   altoCosto: {
+      //   //     isLoading: altoCostoOptionsQuery.isLoading,
+      //   //     isError: altoCostoOptionsQuery.isError,
+      //   //     error: altoCostoOptionsQuery.error,
+      //   //     enabled: isColectivo && (globalFilters.altoCosto || isEditMode),
+      //   //     dataLength: altoCostoOptionsQuery.data?.length || 0
+      //   //   },
+      //   //   medicamentos: {
+      //   //     isLoading: medicamentosOptionsQuery.isLoading,
+      //   //     isError: medicamentosOptionsQuery.isError,
+      //   //     error: medicamentosOptionsQuery.error,
+      //   //     enabled: isColectivo && (globalFilters.medicamentos || isEditMode),
+      //   //     dataLength: medicamentosOptionsQuery.data?.length || 0
+      //   //   }
+      //   // });
 
-      }, 500);
+      // }, 500);
     }
     
     if (Object.keys(newDynamicCopagoSelections).length > 0) {
