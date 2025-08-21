@@ -12,12 +12,11 @@ interface Props {
 const PlanesResumen = ({ planes, clienteChousen = 1 }: Props) => {
   if (planes.length === 0) return null;
 
-  // Calcular totales por plan
+  // Calcular totales por plan - SOLO AFILIADOS (sin opcionales para Step 2)
   const getPlanTotal = (plan: Plan) => {
-    // Para colectivos, la prima ya está calculada correctamente en subtotal
+    // En el Step 2, solo mostrar el total de afiliados (sin opcionales)
     const afiliadosTotal = plan.afiliados.reduce((acc, afiliado) => acc + parseFloat(afiliado.subtotal || '0'), 0);
-    const opcionalesTotal = plan.opcionales.reduce((acc, opcional) => acc + opcional.prima, 0);
-    return afiliadosTotal + opcionalesTotal;
+    return afiliadosTotal;
   };
 
   // Calcular cantidad total de afiliados
