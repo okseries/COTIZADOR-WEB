@@ -158,8 +158,8 @@ const CategoryPlan = () => {
         if (existingPlan) {
           try {
             // Calcular prima específica para este plan
-            // Para colectivos, usar edad estándar (ej: 30) ya que la cantidad no es edad
-            const edadParaCalculo = clientChoosen === 2 ? 30 : afiliado.edad;
+            // Para complementarios y colectivos, usar la cantidad como edad para el cálculo de prima
+            const edadParaCalculo = (tipoPlan === 2 && clientChoosen === 2) ? afiliado.cantidadAfiliados : afiliado.edad;
             const primaValue = await GetPrimaPlan(
               plan.plan_name, 
               edadParaCalculo, 

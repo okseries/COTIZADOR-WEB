@@ -18,6 +18,16 @@ export const GetPrimaPlan = async (
   clientChoosen: number
 ): Promise<number> => {
   try {
+    // console.log({
+    //   message: "Obteniendo prima del plan",
+    //   planName,
+    //   edad,
+    //   tipoPlan,
+    //   clientChoosen
+    // });
+
+    // alert(`Obteniendo prima del plan: ${planName}, Edad: ${edad}, Tipo de Plan: ${tipoPlan}, Cliente Elegido: ${clientChoosen}`);
+    
     // Endpoint: /planes/{plan_name}/{edad}/{tipoPlan}/{clientChoosen}
     const { data } = await apiClient.get<PrimaPlanResponse[]>(
       `/planes/${encodeURIComponent(planName)}/${edad}/${tipoPlan}/${clientChoosen}`

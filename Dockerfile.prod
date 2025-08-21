@@ -1,50 +1,47 @@
+# ==========================
 # Etapa 1: Builder
+# ==========================
 FROM node:20 AS builder
-
-# Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
+# Copiar package.json y package-lock.json
 COPY package*.json ./
-RUN npm install --frozen-lockfile
 
-# Copiar todo el código fuente y dependencias
+# Limpiar cualquier módulo de Windows y cache
+RUN rm -rf node_modules package-lock.json \
+ && npm cache clean --force
+
+# Instalar lightningcss para Linux directamente
+RUN npm install lightningcss --platform=linux --arch=x64 --force
+
+# Instalar todas las demás dependencias
+RUN npm ci
+
+# Copiar el código fuente
 COPY . .
 
-
-
-# Instalar dependencias (incluye binarios nativos correctos)
-RUN npm install --force lightningcss
-
-# Limpiar cache de npm y reinstalar lightningcss para asegurar binarios nativos
-RUN npm rebuild lightningcss --verbose
-
-# Compilar Next.js
+# Build de Next.js
 RUN npm run build
 
-# Etapa 2: Runner (solo runtime, más ligera)
+# ==========================
+# Etapa 2: Runner
+# ==========================
 FROM node:20 AS runner
-
 WORKDIR /app
 
-# Instalar solo dependencias necesarias para producción
+# Copiar package.json y package-lock.json
 COPY package*.json ./
-RUN npm install --omit=dev --frozen-lockfile
 
-# Copiar solo lo necesario desde el builder
+# Instalar solo deps de producción
+RUN npm ci --omit=dev
 
-# Copiar artefactos de build y archivos necesarios
+# Copiar build y archivos
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./
-# Si usas TypeScript para la config, descomenta la siguiente línea:
-# COPY --from=builder /app/next.config.ts ./
+COPY --from=builder /app/next.config.* ./
 
-# Configuración para Next.js (obligatoria en contenedor)
 ENV NODE_ENV=production
-ENV PORT=4200
+ENV PORT=3000
+EXPOSE 3000
 
-# Exponer puerto
-EXPOSE 4200
-
-# Comando de arranque
 CMD ["npm", "start"]
