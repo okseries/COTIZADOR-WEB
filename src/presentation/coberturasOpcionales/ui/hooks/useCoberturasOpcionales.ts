@@ -988,15 +988,14 @@ export const useCoberturasOpcionales = () => {
 
       let subTotalOpcional = 0;
       // Para colectivos: usar plan.cantidadAfiliados
-      // Para individuales: usar plan.afiliados.length (solo para mostrar, no para cálculos)
+      // Para individuales: usar plan.afiliados.length (cantidad real de afiliados en la familia)
       const cantidadAfiliados = cliente?.clientChoosen === 2 
         ? (plan.cantidadAfiliados || 1)
         : plan.afiliados.length;
 
-      // Multiplicador para cálculos: 1 para individuales, cantidadAfiliados para colectivos
-      const multiplicadorPrima = cliente?.clientChoosen === 2 
-        ? cantidadAfiliados 
-        : 1;
+      // 🚨 FIX CRÍTICO: Multiplicador para cálculos debe ser cantidadAfiliados para AMBOS tipos
+      // Para individuales también debe multiplicar por la cantidad de afiliados
+      const multiplicadorPrima = cantidadAfiliados;
 
       // Obtener las selecciones dinámicas actuales para este plan específico
       const currentDynamicSelections = dynamicCoberturaSelections[planName] || {};
@@ -1042,7 +1041,7 @@ export const useCoberturasOpcionales = () => {
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.altoCosto) {
           // Ya no hay fallback estático - solo datos dinámicos
         } else {
-          // Para individuales, usar el valor estático original SIN multiplicar
+          // Para individuales, usar el valor estático original MULTIPLICANDO por cantidad de afiliados
           const prima = parseFloat(data.primaCosto) || 0;
           const primaCalculada = prima * multiplicadorPrima;
           opcionales.push({
@@ -1092,7 +1091,7 @@ export const useCoberturasOpcionales = () => {
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.medicamentos) {
           // Ya no hay fallback estático - solo datos dinámicos
         } else {
-          // Para individuales, usar el valor estático original SIN multiplicar por cantidad de afiliados
+          // Para individuales, usar el valor estático original MULTIPLICANDO por cantidad de afiliados
           const prima = parseFloat(data.medicamentoCosto) || 0;
           const primaCalculada = prima * multiplicadorPrima;
           opcionales.push({
@@ -1143,7 +1142,7 @@ export const useCoberturasOpcionales = () => {
         } else if (cliente?.clientChoosen === 2 && coberturaSelections[planName]?.habitacion) {
           // Ya no hay fallback estático - solo datos dinámicos
         } else {
-          // Para individuales, usar el valor estático original SIN multiplicar por cantidad de afiliados
+          // Para individuales, usar el valor estático original MULTIPLICANDO por cantidad de afiliados
           const prima = parseFloat(data.habitacionCosto) || 0;
           const primaCalculada = prima * multiplicadorPrima;
           opcionales.push({
@@ -1153,7 +1152,6 @@ export const useCoberturasOpcionales = () => {
             prima: primaCalculada
           });
           subTotalOpcional += primaCalculada;
-         
         }
       }
 

@@ -445,7 +445,7 @@ const PlanTable = ({
                   <div className="text-base font-medium text-blue-600">
                     {(() => {
                       const habitacionOpcional = currentPlan?.opcionales?.find(
-                        (opt) => opt.nombre === "HABITACIÓN"
+                        (opt) => opt.nombre === "HABITACION" || opt.nombre === "HABITACIÓN"
                       );
                       return formatCurrency(habitacionOpcional?.prima || 0);
                     })()}
