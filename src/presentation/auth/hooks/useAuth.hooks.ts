@@ -23,8 +23,6 @@ export const useLogin = () => {
     },
     
     onSuccess: (data: AuthResponse) => {
-      console.log("=== LOGIN SUCCESS ===");
-      console.log("Respuesta del servidor:", data);
       
       // Verificar que tenemos un token válido antes de proceder
       if (!data.token || typeof data.token !== 'string') {
@@ -36,7 +34,6 @@ export const useLogin = () => {
       try {
         // Decodificar el token para obtener información del usuario
         const decodedUser = jwtDecode<User>(data.token);
-        console.log("Usuario decodificado:", decodedUser);
         
         // Guardar en localStorage
         if (typeof window !== "undefined") {
@@ -49,7 +46,6 @@ export const useLogin = () => {
         setAuthenticated(true)
         setChecking(false)
         
-        console.log("Autenticación exitosa, redirigiendo...");
         // Redirigir al dashboard
         router.push('/dashboard')
         

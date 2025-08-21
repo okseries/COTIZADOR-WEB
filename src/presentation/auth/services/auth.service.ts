@@ -13,13 +13,8 @@ export const authService = {
    */
   async login(payload: loginPayload): Promise<AuthResponse> {
     try {
-      console.log("=== AUTH SERVICE LOGIN ===");
-      console.log("Enviando credenciales:", payload);
       
       const response = await apiClient.post<AuthResponse>("/login", payload);
-      console.log("Respuesta completa:", response);
-      console.log("Status:", response.status);
-      console.log("Data:", response.data);
 
       const { data } = response;
 
@@ -36,7 +31,6 @@ export const authService = {
         throw new Error('No se recibió token de autenticación');
       }
 
-      console.log("Login exitoso, token recibido");
       return data; // Retorna todo el objeto { token: "..." }
     } catch (error: unknown) {
       console.log("=== ERROR EN AUTH SERVICE ===");

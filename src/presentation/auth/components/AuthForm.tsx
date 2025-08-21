@@ -32,15 +32,10 @@ const AuthForm = () => {
     // Limpiar errores previos
     clearErrors("root");
     
-    console.log("=== FORM SUBMIT ===");
-    console.log("Datos del formulario:", data);
     
     try {
       await login(data);
-      console.log("Login exitoso desde el formulario");
     } catch (error: unknown) {
-      console.log("=== ERROR EN FORM ===");
-      console.log("Error capturado en el formulario:", error);
       
       // Extraer el mensaje del error para mostrarlo en el Alert
       let errorMessage = "Error desconocido al iniciar sesión";
