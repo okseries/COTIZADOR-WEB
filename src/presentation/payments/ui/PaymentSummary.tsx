@@ -79,7 +79,7 @@ export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                {mode !== "create" ? "Actualizar Cotización" : "Crear Cotización"}
+                {mode !== "create" ? "Actualizar Cotización" : "Finalizar Cotización"}
               </>
             )}
           </Button>
