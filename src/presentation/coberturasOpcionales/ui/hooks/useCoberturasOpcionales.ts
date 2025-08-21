@@ -325,25 +325,28 @@ export const useCoberturasOpcionales = () => {
 
   // Inicializar selecciones de odontología para cada plan - CON CONTROL DE REFS
   useEffect(() => {
-    // Evitar re-inicializaciones innecesarias
-    if (planes.length === 0 || initializedRef.current) return;
-    
+    // 🆕 NUEVA LÓGICA: Si hay planes con opcionales, SIEMPRE cargar desde el store
+    // Esto soluciona el problema de navegación entre steps
+    if (planes.length === 0) return;
     
     const initialSelections: {[planName: string]: {[key: string]: string}} = {};
     let needsUpdate = false;
     
     planes.forEach(plan => {
-      if (!planSelections[plan.plan]) {
+      // 🔧 FIX: Cargar SIEMPRE si no existe la selección O si hay datos en el store
+      const hasOdontologiaInStore = plan.opcionales.find(opt => opt.nombre === "ODONTOLOGÍA" || opt.nombre === "ODONTOLOGIA");
+      
+      // 🆕 FIX MODO CREAR: En modo crear, siempre resetear a valor por defecto "0"
+      // En modo editar, cargar desde el store si existe
+      const shouldReset = !isEditMode || !planSelections[plan.plan] || (hasOdontologiaInStore && !initializedRef.current);
+      
+      if (shouldReset) {
         const odontologiaOpcional = plan.opcionales.find(opt => opt.nombre === "ODONTOLOGÍA" || opt.nombre === "ODONTOLOGIA");
-        let odontologiaValue = "0";
+        let odontologiaValue = "0"; // Valor por defecto
         
+        // 🆕 FIX MODO CREAR: En modo crear, usar "0" EXCEPTO si hay datos del store (navegación)
         if (isEditMode && odontologiaOpcional) {
-          // console.log(`🦷 ODONTOLOGÍA - Procesando para ${plan.plan}:`, {
-          //   prima: odontologiaOpcional.prima,
-          //   cantidadAfiliados: plan.cantidadAfiliados || 1
-          // });
-          
-          // 🚨 FIX: Mapear por prima dividida entre cantidad de afiliados
+          // Solo en modo editar: mapear desde el store
           const cantidadAfiliados = plan.cantidadAfiliados || 1;
           const primaUnitaria = odontologiaOpcional.prima / cantidadAfiliados;
           
@@ -351,20 +354,30 @@ export const useCoberturasOpcionales = () => {
             odontologiaOptions.map(opt => ({ value: opt.value, label: opt.label, prima: opt.prima }))
           );
           
-          // Buscar la opción de odontología que coincida con la prima unitaria
           const staticOdontologiaMatch = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
           
           if (staticOdontologiaMatch) {
             odontologiaValue = staticOdontologiaMatch.value;
-            // console.log(`🦷 ODONTOLOGÍA MAPEADO EXITOSAMENTE: Prima ${primaUnitaria} -> value: ${staticOdontologiaMatch.value} (${staticOdontologiaMatch.label})`);
           } else {
-            // console.log(`🦷 ODONTOLOGÍA - No se encontró coincidencia exacta para prima ${primaUnitaria}`);
-            // Fallback: usar el valor más alto si no encuentra exacto
-            odontologiaValue = "3";
-            // console.log(`🦷 ODONTOLOGÍA FALLBACK: Usando Nivel III (value: 3)`);
+            odontologiaValue = "3"; // Fallback
           }
-        } else if (isEditMode) {
-          console.log(`🦷 Plan ${plan.plan}: No hay odontología en el store`);
+        } else if (!isEditMode && odontologiaOpcional) {
+          // En modo crear CON datos en el store (navegación): cargar desde el store
+          const cantidadAfiliados = plan.cantidadAfiliados || 1;
+          const primaUnitaria = odontologiaOpcional.prima / cantidadAfiliados;
+          
+          const staticOdontologiaMatch = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
+          
+          if (staticOdontologiaMatch) {
+            odontologiaValue = staticOdontologiaMatch.value;
+            console.log(`🔄 MODO CREAR - NAVEGACIÓN: Plan ${plan.plan} - Restaurando odontología: ${odontologiaValue}`);
+          } else {
+            odontologiaValue = "0";
+          }
+        } else {
+          // En modo crear SIN datos en el store: usar valor por defecto "0"
+          console.log(`🦷 MODO CREAR: Plan ${plan.plan} - Usando valor por defecto "0"`);
+          odontologiaValue = "0";
         }
         
         initialSelections[plan.plan] = {
@@ -378,7 +391,7 @@ export const useCoberturasOpcionales = () => {
       setPlanSelections(prev => ({ ...prev, ...initialSelections }));
       initializedRef.current = true; // Marcar como inicializado
     }
-  }, [planes.length]); // Solo depender de la cantidad de planes
+  }, [planes.length, isEditMode]); // 🆕 Agregar isEditMode como dependencia
 
   // Inicializar selecciones de cobertura con valores por defecto
   useEffect(() => {
@@ -463,6 +476,118 @@ export const useCoberturasOpcionales = () => {
       });
     }
   }, [cliente?.clientChoosen, planes.length, isEditMode]); // ✅ Agregar isEditMode como dependencia
+  
+  // 🆕 EFECTO PARA NAVEGACIÓN ENTRE STEPS: Detectar y persistir/cargar TODAS las selecciones
+  useEffect(() => {
+    // 🔧 FIX MODO CREAR: Detectar navegación de vuelta al Step 3
+    const isReturningToStep3 = planes.length > 0 && 
+                               Object.keys(planSelections).length === 0 && 
+                               Object.keys(dynamicCoberturaSelections).length === 0 &&
+                               Object.keys(copagoSelections).length === 0;
+    
+    if (isReturningToStep3) {
+      const hasOpcionalesInStore = planes.some(plan => plan.opcionales.length > 0);
+      
+      if (hasOpcionalesInStore) {
+        console.log('🔄 NAVEGACIÓN DETECTADA: Cargando TODAS las selecciones desde store');
+        
+        // Forzar reinicialización resetando los refs
+        initializedRef.current = false;
+        editModeInitializedRef.current = false;
+        
+        // 🆕 CARGAR TODOS LOS ESTADOS desde el store
+        const initialCopagoSelections: {[planName: string]: string} = {};
+        const initialCopagoHabitacionSelections: {[planName: string]: string} = {};
+        const initialDynamicCoberturaSelections: {[planName: string]: {altoCosto: string; medicamentos: string; habitacion: string; odontologia: string}} = {};
+        const initialDynamicCopagoSelections: {[planName: string]: {altoCosto: string; medicamentos: string; habitacion: string}} = {};
+        const detectedFilters = {
+          altoCosto: false,
+          medicamentos: false,
+          habitacion: false,
+          odontologia: false
+        };
+        
+        planes.forEach(plan => {
+          // Inicializar estructura para este plan
+          initialDynamicCoberturaSelections[plan.plan] = {
+            altoCosto: "0",
+            medicamentos: "0", 
+            habitacion: "0",
+            odontologia: "0"
+          };
+          
+          initialDynamicCopagoSelections[plan.plan] = {
+            altoCosto: "0",
+            medicamentos: "0",
+            habitacion: "0"
+          };
+          
+          // Mapear desde las opcionales del store
+          plan.opcionales.forEach(opcional => {
+            switch (opcional.nombre) {
+              case "ALTO COSTO":
+                if (opcional.id) {
+                  initialDynamicCoberturaSelections[plan.plan].altoCosto = opcional.id.toString();
+                  detectedFilters.altoCosto = true;
+                }
+                break;
+                
+              case "COPAGO ALTO COSTO":
+                if (opcional.idCopago) {
+                  initialDynamicCopagoSelections[plan.plan].altoCosto = opcional.idCopago.toString();
+                }
+                break;
+                
+              case "MEDICAMENTOS":
+                if (opcional.id) {
+                  initialDynamicCoberturaSelections[plan.plan].medicamentos = opcional.id.toString();
+                  detectedFilters.medicamentos = true;
+                }
+                break;
+                
+              case "COPAGO MEDICAMENTOS":
+                if (opcional.idCopago) {
+                  initialDynamicCopagoSelections[plan.plan].medicamentos = opcional.idCopago.toString();
+                }
+                break;
+                
+              case "HABITACION":
+                if (opcional.id) {
+                  initialDynamicCoberturaSelections[plan.plan].habitacion = opcional.id.toString();
+                  detectedFilters.habitacion = true;
+                }
+                break;
+                
+              case "COPAGO HABITACIÓN":
+                if (opcional.idCopago) {
+                  initialDynamicCopagoSelections[plan.plan].habitacion = opcional.idCopago.toString();
+                }
+                break;
+                
+              case "ODONTOLOGIA":
+              case "ODONTOLOGÍA":
+                detectedFilters.odontologia = true;
+                break;
+            }
+          });
+        });
+        
+        // Aplicar todos los estados cargados
+        setDynamicCoberturaSelections(initialDynamicCoberturaSelections);
+        setDynamicCopagoSelections(initialDynamicCopagoSelections);
+        
+        // Activar filtros globales basados en lo encontrado
+        setGlobalFilters(detectedFilters);
+        
+        console.log('✅ NAVEGACIÓN: Estados restaurados', {
+          filtrosActivados: detectedFilters,
+          coberturasDetectadas: Object.keys(initialDynamicCoberturaSelections).length,
+          copagosDetectados: Object.keys(initialDynamicCopagoSelections).length
+        });
+      }
+    }
+  }, [planes.length, planSelections, dynamicCoberturaSelections, copagoSelections]);
+  
   // Inicializar selecciones dinámicas cuando hay datos disponibles - CON CONTROL DE REFS
   useEffect(() => {
     // Solo ejecutar para modo edición con colectivos
@@ -478,7 +603,10 @@ export const useCoberturasOpcionales = () => {
       !copagosHabitacionQuery.isLoading;
     
     // Solo proceder si ya tenemos datos del store Y las opciones de API están cargadas
-    if (!allOptionsLoaded || editModeInitializedRef.current) {
+    // 🆕 TAMBIÉN permitir reinicialización si no hay selecciones dinámicas (navegación entre steps)
+    const hasAnyDynamicSelections = Object.keys(dynamicCoberturaSelections).length > 0;
+    
+    if (!allOptionsLoaded || (editModeInitializedRef.current && hasAnyDynamicSelections)) {
       // console.log('⏳ ESPERANDO DATOS:', {
       //   allOptionsLoaded,
       //   editModeInitialized: editModeInitializedRef.current,

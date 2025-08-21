@@ -64,6 +64,50 @@ export const usePaymentOptions = () => {
     }
   }, [planes, mode]); // Agregar mode como dependencia
 
+  // 🆕 EFECTO PARA NAVEGACIÓN ENTRE STEPS: Detectar y restaurar períodos de pago seleccionados
+  useEffect(() => {
+    // 🔧 FIX MODO CREAR: Detectar navegación de vuelta al Step 4
+    const isReturningToStep4 = planes.length > 0 && 
+                               paymentPlans.length > 0 && 
+                               mode === "create" &&
+                               paymentPlans.every(plan => !plan.selectedPeriod);
+    
+    if (isReturningToStep4) {
+      // Verificar si hay períodos guardados en el store
+      const hasPeriodInStore = planes.some(plan => {
+        const period = plan.resumenPago?.periodoPago;
+        return period && 
+               period !== "" && 
+               period !== "seleccionar" && 
+               Object.keys(MULTIPLICADORES).includes(period);
+      });
+      
+      if (hasPeriodInStore) {
+        console.log('🔄 NAVEGACIÓN STEP 4 DETECTADA: Restaurando períodos desde store');
+        
+        // Restaurar períodos desde el store
+        setPaymentPlans(prev => prev.map(plan => {
+          const storePlan = planes.find(p => p.plan === plan.plan);
+          const storedPeriod = storePlan?.resumenPago?.periodoPago;
+          
+          if (storedPeriod && storedPeriod !== "" && storedPeriod !== "seleccionar") {
+            const typedPeriod = storedPeriod as PeriodoPago;
+            console.log(`✅ Restaurando período "${typedPeriod}" para plan ${plan.plan}`);
+            return {
+              ...plan,
+              selectedPeriod: typedPeriod,
+              resumenPago: storePlan?.resumenPago || plan.resumenPago
+            };
+          }
+          
+          return plan;
+        }));
+        
+        console.log('✅ NAVEGACIÓN STEP 4: Períodos restaurados exitosamente');
+      }
+    }
+  }, [planes.length, paymentPlans.length, mode]);
+
   // Calcular resumen de pago para un plan
   const calculatePaymentSummary = (
     plan: Plan,
