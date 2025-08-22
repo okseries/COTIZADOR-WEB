@@ -234,7 +234,10 @@ const PlanTable = ({
                       const altoCostoOpcional = currentPlan?.opcionales?.find(
                         (opt) => opt.nombre === "ALTO COSTO"
                       );
-                      return formatCurrency(altoCostoOpcional?.prima || 0);
+                      const primaUnitaria = cantidadAfiliados > 0 
+                        ? (altoCostoOpcional?.prima || 0) / cantidadAfiliados 
+                        : 0;
+                      return formatCurrency(primaUnitaria);
                     })()}
                   </div>
                 </div>
@@ -344,7 +347,10 @@ const PlanTable = ({
                         currentPlan?.opcionales?.find(
                           (opt) => opt.nombre === "MEDICAMENTOS"
                         );
-                      return formatCurrency(medicamentosOpcional?.prima || 0);
+                      const primaUnitaria = cantidadAfiliados > 0 
+                        ? (medicamentosOpcional?.prima || 0) / cantidadAfiliados 
+                        : 0;
+                      return formatCurrency(primaUnitaria);
                     })()}
                   </div>
                 </div>
@@ -447,7 +453,10 @@ const PlanTable = ({
                       const habitacionOpcional = currentPlan?.opcionales?.find(
                         (opt) => opt.nombre === "HABITACION" || opt.nombre === "HABITACIÓN"
                       );
-                      return formatCurrency(habitacionOpcional?.prima || 0);
+                      const primaUnitaria = cantidadAfiliados > 0 
+                        ? (habitacionOpcional?.prima || 0) / cantidadAfiliados 
+                        : 0;
+                      return formatCurrency(primaUnitaria);
                     })()}
                   </div>
                 </div>

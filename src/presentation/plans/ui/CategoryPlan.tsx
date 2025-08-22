@@ -195,11 +195,12 @@ const CategoryPlan = () => {
                 totalPagar: subTotalAfiliado + existingPlan.resumenPago.subTotalOpcional
               }
             });
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.log("Error al obtener prima del plan:", error);
             
             // Si es un error de edad inválida, mostrar el mensaje al usuario
-            if (error.message && error.message.includes('No se encontraron planes para la edad')) {
+            if (error && typeof error === 'object' && 'message' in error && 
+                typeof error.message === 'string' && error.message.includes('No se encontraron planes para la edad')) {
               setAgeError(error.message);
               return; // No agregar el afiliado si hay error de edad
             }

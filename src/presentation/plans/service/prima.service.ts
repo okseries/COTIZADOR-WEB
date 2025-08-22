@@ -40,12 +40,15 @@ export const GetPrimaPlan = async (
     
     // Si no hay datos, devolver valor por defecto
     return 0;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error al obtener la prima del plan:", error);
     
     // Si es un error 404 y contiene el mensaje sobre edad no encontrada, lanzar error específico
-    if (error.response?.status === 404 && error.response?.data?.message?.includes('No se encontraron planes para la edad')) {
-      throw new Error(`No se encontraron planes para la edad ${edad}. Por favor, ingrese una edad válida.`);
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosError.response?.status === 404 && axiosError.response?.data?.message?.includes('No se encontraron planes para la edad')) {
+        throw new Error(`No se encontraron planes para la edad ${edad}. Por favor, ingrese una edad válida.`);
+      }
     }
     
     // Para otros errores, usar valor por defecto
