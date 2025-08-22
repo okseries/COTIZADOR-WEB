@@ -39,10 +39,16 @@ export const GetPrimaPlan = async (
     }
     
     // Si no hay datos, devolver valor por defecto
-    return 1186.57;
-  } catch (error) {
+    return 0;
+  } catch (error: any) {
     console.error("Error al obtener la prima del plan:", error);
-    // Valor por defecto si no se puede obtener la prima
+    
+    // Si es un error 404 y contiene el mensaje sobre edad no encontrada, lanzar error específico
+    if (error.response?.status === 404 && error.response?.data?.message?.includes('No se encontraron planes para la edad')) {
+      throw new Error(`No se encontraron planes para la edad ${edad}. Por favor, ingrese una edad válida.`);
+    }
+    
+    // Para otros errores, usar valor por defecto
     return 1186.57;
   }
 };

@@ -9,6 +9,8 @@ import { useQuotationData } from '@/core';
 import { Spinner } from '@/components/shared/Spinner';
 import { Plan as PlanInterface } from '../interface/plan.interface';
 import { Plan as QuotationPlan, Afiliado } from '@/presentation/quotations/interface/createQuotation.interface';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const CategoryPlan = () => {
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render
@@ -18,6 +20,7 @@ const CategoryPlan = () => {
   const subTipoPoliza = cliente?.clientChoosen;
 
   const [selectedPlans, setSelectedPlans] = useState<Map<number, PlanInterface>>(new Map());
+  const [ageError, setAgeError] = useState<string | null>(null);
   
   const { data: plans, isLoading, error } = useGetAllPlans(tipoPoliza ?? 0, subTipoPoliza ?? 0);
 
@@ -146,6 +149,9 @@ const CategoryPlan = () => {
   };
 
   const handleAddAfiliado = async (planName: string, afiliado: Afiliado) => {
+    // Limpiar errores anteriores
+    setAgeError(null);
+    
     const tipoPlan = cliente?.tipoPlan ?? 0;
     const clientChoosen = cliente?.clientChoosen ?? 0;
 
@@ -189,8 +195,14 @@ const CategoryPlan = () => {
                 totalPagar: subTotalAfiliado + existingPlan.resumenPago.subTotalOpcional
               }
             });
-          } catch (error) {
+          } catch (error: any) {
             console.log("Error al obtener prima del plan:", error);
+            
+            // Si es un error de edad inválida, mostrar el mensaje al usuario
+            if (error.message && error.message.includes('No se encontraron planes para la edad')) {
+              setAgeError(error.message);
+              return; // No agregar el afiliado si hay error de edad
+            }
             
             // Usar valor por defecto si hay error, multiplicar por cantidad si es colectivo
             const defaultPrima = 1186.57;
@@ -340,6 +352,14 @@ const CategoryPlan = () => {
           ))}
         </div>
       </div>
+
+      {/* Mostrar error de edad si existe */}
+      {ageError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{ageError}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Formulario único para agregar afiliados - Solo mostrar si hay planes seleccionados */}
       {selectedPlans.size > 0 && (

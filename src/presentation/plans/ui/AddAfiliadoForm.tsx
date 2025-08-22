@@ -59,7 +59,7 @@ const AddAfiliadoForm = ({
   // Para complementarios y colectivos, usar la cantidad como edad para el cálculo de prima
   const edadParaCalculo = (tipoPlan === 2 && clientChoosen === 2) ? Number(edad) : Number(edad);
   
-  const { data: prima, isLoading: loadingPrima } = usePrimaPlan(
+  const { data: prima, isLoading: loadingPrima, error: primaError } = usePrimaPlan(
     selectedPlanName,
     edadParaCalculo,
     tipoPlan,
@@ -103,6 +103,11 @@ const AddAfiliadoForm = ({
 
   const handleAddAfiliado = () => {
     if (!validateForm()) return;
+
+    // Si hay error en la prima y no es "Todos", no permitir agregar
+    if (selectedPlanName !== "Todos" && primaError) {
+      return;
+    }
 
     const selectedParentesco = parentescos?.find(
       (p) => p.id.toString() === parentescoId
@@ -242,6 +247,8 @@ const AddAfiliadoForm = ({
                 "Variable por plan"
               ) : loadingPrima ? (
                 <span className="inline-flex items-center"><Spinner size="sm" color="primary" className="mr-2" /></span>
+              ) : primaError ? (
+                <span className="text-red-500 text-xs">Error</span>
               ) : (
                 `RD$ ${
                   prima
@@ -251,6 +258,14 @@ const AddAfiliadoForm = ({
               )}
             </span>
           </div>
+          {/* Mostrar error de prima si existe */}
+          {primaError && (
+            <p className="text-red-500 text-xs">
+              {primaError instanceof Error && primaError.message.includes('No se encontraron planes para la edad') 
+                ? primaError.message 
+                : 'Error al obtener la prima del plan'}
+            </p>
+          )}
         </div>
 
         {/* Botón agregar */}

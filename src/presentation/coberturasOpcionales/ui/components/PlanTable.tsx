@@ -476,7 +476,7 @@ const PlanTable = ({
                       const selectedOption = odontologiaOptions?.find(
                         (opt) => opt.value === odontologiaSelection
                       );
-                      return formatCurrency(selectedOption?.prima || 0);
+                      return formatCurrency(selectedOption?.prima  || 0 );
                     })()}
                   </div>
                 </div>
