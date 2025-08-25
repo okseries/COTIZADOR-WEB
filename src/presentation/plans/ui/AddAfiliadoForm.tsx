@@ -56,8 +56,8 @@ const AddAfiliadoForm = ({
     !isNaN(Number(edad)) &&
     Number(edad) > 0;
   
-  // Para complementarios y colectivos, usar la cantidad como edad para el cálculo de prima
-  const edadParaCalculo = (tipoPlan === 2 && clientChoosen === 2) ? Number(edad) : Number(edad);
+  // Para colectivos (tanto voluntario como complementario), usar la cantidad como edad para el cálculo de prima
+  const edadParaCalculo = clientChoosen === 2 ? Number(edad) : Number(edad);
   
   const { data: prima, isLoading: loadingPrima, error: primaError } = usePrimaPlan(
     selectedPlanName,
