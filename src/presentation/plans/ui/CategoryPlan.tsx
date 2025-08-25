@@ -261,18 +261,36 @@ const CategoryPlan = () => {
     
     if (existingPlan) {
       const removedAfiliado = existingPlan.afiliados[afiliadoIndex];
-      const updatedAfiliados = existingPlan.afiliados.filter((_: Afiliado, index: number) => index !== afiliadoIndex);
-      const subTotalAfiliado = updatedAfiliados.reduce((acc: number, af: Afiliado) => acc + parseFloat(af.subtotal), 0);
       
-      updatePlanByName(plan.plan_name, {
-        afiliados: updatedAfiliados,
-        cantidadAfiliados: cliente?.clientChoosen === 2 && removedAfiliado?.cantidadAfiliados 
-          ? (updatedAfiliados.length > 0 ? updatedAfiliados[0].cantidadAfiliados : 0)
-          : updatedAfiliados.length,
-        resumenPago: {
-          ...existingPlan.resumenPago,
-          subTotalAfiliado,
-          totalPagar: subTotalAfiliado + existingPlan.resumenPago.subTotalOpcional
+      // 🆕 SINCRONIZACIÓN: Eliminar el mismo afiliado de TODOS los planes
+      currentPlanes.forEach((quotationPlan: QuotationPlan) => {
+        // Buscar el afiliado en cada plan por parentesco (que es único por plan)
+        const afiliadoToRemoveIndex = quotationPlan.afiliados.findIndex(
+          (af: Afiliado) => af.parentesco === removedAfiliado.parentesco
+        );
+        
+        if (afiliadoToRemoveIndex !== -1) {
+          // Eliminar el afiliado de este plan
+          const updatedAfiliados = quotationPlan.afiliados.filter(
+            (_: Afiliado, index: number) => index !== afiliadoToRemoveIndex
+          );
+          const subTotalAfiliado = updatedAfiliados.reduce(
+            (acc: number, af: Afiliado) => acc + parseFloat(af.subtotal), 
+            0
+          );
+          
+          // Actualizar el plan con los afiliados restantes
+          updatePlanByName(quotationPlan.plan, {
+            afiliados: updatedAfiliados,
+            cantidadAfiliados: cliente?.clientChoosen === 2 && removedAfiliado?.cantidadAfiliados 
+              ? (updatedAfiliados.length > 0 ? updatedAfiliados[0].cantidadAfiliados : 0)
+              : updatedAfiliados.length,
+            resumenPago: {
+              ...quotationPlan.resumenPago,
+              subTotalAfiliado,
+              totalPagar: subTotalAfiliado + quotationPlan.resumenPago.subTotalOpcional
+            }
+          });
         }
       });
     }
