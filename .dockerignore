@@ -1,1 +1,8 @@
-
+# Evitar copiar basura innecesaria
+node_modules
+npm-debug.log
+Dockerfile*
+.dockerignore
+.git
+.gitignore
+.next/cache
