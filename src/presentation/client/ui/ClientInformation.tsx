@@ -414,12 +414,12 @@ const ClientInformation = forwardRef<
                 )}
               </div>
 
-              <FormField
-                control={control}
-                name="agentId"
-                render={({ field }) => (
-                  <FormItem className="space-y-0">
-                    <Label htmlFor="agentId">Agente *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="agentId">Agente *</Label>
+                <Controller
+                  name="agentId"
+                  control={control}
+                  render={({ field }) => (
                     <ImprovedAgentSelector
                       value={field.value || 0}
                       onValueChange={(agentId, agentName) => {
@@ -437,9 +437,14 @@ const ClientInformation = forwardRef<
                       placeholder="Seleccionar agente..."
                       required={true}
                     />
-                  </FormItem>
+                  )}
+                />
+                {errors.agentId && (
+                  <p className="text-sm text-red-500">
+                    {errors.agentId.message}
+                  </p>
                 )}
-              />
+              </div>
             </div>
 
             {/* Campos ocultos */}
