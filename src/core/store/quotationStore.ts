@@ -52,6 +52,11 @@ interface QuotationActions {
   setFilterData: (filterData: FilterData) => void;
   setAgentOptions: (agents: unknown[]) => void;
   
+  // 🆕 Búsqueda de clientes (consolidación)
+  setSearchData: (data: { tipoDocumento: string; identificacion: string }) => void;
+  setClientSearchResult: (data: { NOMBRE_COMPLETO: string } | null) => void;
+  clearClientSearch: () => void;
+  
   // Gestión de planes (compatibilidad con store anterior)
   addPlan: (plan: Plan) => void;
   updateLastPlan: (plan: Partial<Plan>) => void;
@@ -83,6 +88,8 @@ const initialState: UnifiedQuotationState = {
   planes: [],
   filterData: null,
   agentOptions: [],
+  searchData: null,
+  clientSearchResult: null,
   clientData: {
     clientChoosen: 0,
     identification: '',
@@ -153,6 +160,11 @@ export const useQuotationStore = create<QuotationStore>()(
       setCliente: (cliente) => set({ cliente }),
       setFilterData: (filterData) => set({ filterData }),
       setAgentOptions: (agentOptions) => set({ agentOptions }),
+      
+      // 🆕 Búsqueda de clientes (consolidación)
+      setSearchData: (data) => set({ searchData: data }),
+      setClientSearchResult: (data) => set({ clientSearchResult: data }),
+      clearClientSearch: () => set({ searchData: null, clientSearchResult: null }),
       
       // Gestión de planes (compatibilidad con store anterior)
       addPlan: (plan) => set((state) => ({ 

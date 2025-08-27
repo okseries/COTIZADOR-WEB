@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, Search, Trash2 } from "lucide-react";
 import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
-import { useClientSearch } from "../hooks/useClientSearch";
+import { useClientSearchAdapter } from "../hooks/useClientSearchAdapter";
 import { ClientByIdentification } from "../services/client.services";
 import { Spinner } from "@/components/shared/Spinner";
 import { useUnifiedQuotationStore } from "@/core";
@@ -19,7 +19,7 @@ import { getCleanIdentification } from "../helpers/indentification-format";
 import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 
 const FilterClient = () => {
-  const { setSearchData, setClientData, clientData } = useClientSearch();
+  const { setSearchData, setClientData, clientData } = useClientSearchAdapter();
   const { filterData, clearQuotation, cliente } = useUnifiedQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [openAlertDialog, setOpenAlertDialog] = useState(false);
@@ -155,12 +155,12 @@ const FilterClient = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="w-full">
           {/* Mensaje informativo cuando hay identificación pero no se ha buscado */}
-          {hasIdentificationButNotSearched && (
+          {hasIdentificationButNotSearched &&  (
             <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
                 <span className="text-sm text-yellow-700">
-                  Para continuar, presione "Buscar Cliente" o complete manualmente los datos del cliente.
+                  Para continuar, presione "Buscar Cliente".
                 </span>
               </div>
             </div>

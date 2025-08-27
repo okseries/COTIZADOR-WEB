@@ -36,6 +36,10 @@ export interface UnifiedQuotationState {
   filterData: FilterData | null;
   agentOptions: unknown[];
   
+  // 🆕 Consolidación de búsqueda de clientes
+  searchData: { tipoDocumento: string; identificacion: string } | null;
+  clientSearchResult: { NOMBRE_COMPLETO: string } | null;
+  
   // Datos del stepper
   clientData: Partial<ClienteFormValues>;
   selectedPlans: PlanFormValues[];

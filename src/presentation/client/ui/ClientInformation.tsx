@@ -35,7 +35,7 @@ import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
 import { useDynamicSelectOptions } from "@/presentation/client/hooks/useDynamicSelectOptions";
 import { useUnifiedQuotationStore } from "@/core";
 import { ClienteFormValues, clienteSchema } from "../schema/ClientInfo.schema";
-import { useClientSearch } from "../hooks/useClientSearch";
+import { useClientSearchAdapter } from "../hooks/useClientSearchAdapter";
 import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
 import { formatPhone } from "../helpers/formatPhone";
 
@@ -62,7 +62,7 @@ const ClientInformation = forwardRef<
     setAgentOptions,
   } = useUnifiedQuotationStore();
   // Obtener datos de búsqueda del filtro (solo para tipo documento e identificación)
-  const { searchData, clientData } = useClientSearch();
+  const { searchData, clientData } = useClientSearchAdapter();
 
   // Estados para los popovers
   const [openAgent, setOpenAgent] = useState(false);
