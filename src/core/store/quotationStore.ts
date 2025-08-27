@@ -103,19 +103,25 @@ const initialState: UnifiedQuotationState = {
 export const isStepValid = (step: string, state: UnifiedQuotationState): boolean => {
   switch (step) {
     case 'step1':
+      // Usar los datos del cliente (que se actualizan en tiempo real)
       return !!(
-        state.clientData.clientChoosen &&
-        state.clientData.identification &&
-        state.clientData.name &&
-        state.clientData.contact &&
-        state.clientData.email &&
-        state.clientData.office &&
-        state.clientData.agent &&
-        state.clientData.tipoPlan
+        state.cliente?.clientChoosen &&
+        state.cliente?.identification &&
+        state.cliente?.name &&
+        state.cliente?.contact &&
+        state.cliente?.email &&
+        state.cliente?.office &&
+        state.cliente?.agent &&
+        state.cliente?.tipoPlan
       );
     
     case 'step2':
-      return state.selectedPlans.length > 0;
+      // Validar que hay planes seleccionados Y que al menos uno tiene afiliados
+      if (!state.planes || state.planes.length === 0) {
+        return false;
+      }
+      // Verificar que al menos un plan tiene afiliados
+      return state.planes.some(plan => plan.afiliados && plan.afiliados.length > 0);
     
     case 'step3':
       return true; // Los opcionales son opcionales

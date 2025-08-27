@@ -312,8 +312,9 @@ const CategoryPlan = () => {
     return <div>No se encontraron planes.</div>;
   }
 
-  const currentQuotationPlans = planes || [];
+  const currentQuotationPlanes = planes || [];
   const isAllPlansSelected = orderedPlans?.length > 0 && selectedPlans.size === orderedPlans.length;
+  const planesConAfiliados = currentQuotationPlanes.filter(plan => plan.afiliados && plan.afiliados.length > 0);
 
   return (
     <div className="space-y-6">
@@ -372,6 +373,16 @@ const CategoryPlan = () => {
         </div>
       </div>
 
+      {/* Mensaje cuando no hay planes seleccionados */}
+      {selectedPlans.size === 0 && (
+        <Alert className="border-blue-200 bg-blue-50">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-700">
+            <strong>Paso 1:</strong> Seleccione al menos un plan para continuar con la cotización.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Mostrar error de edad si existe */}
       {ageError && (
         <Alert variant="destructive" className="mb-4">
@@ -391,11 +402,21 @@ const CategoryPlan = () => {
         </div>
       )}
 
+      {/* Mensaje cuando hay planes seleccionados pero no hay afiliados */}
+      {selectedPlans.size > 0 && planesConAfiliados.length === 0 && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-700">
+            <strong>Paso 2:</strong> Agregue al menos un afiliado a los planes seleccionados para continuar.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Lista de afiliados por plan - Solo mostrar si hay afiliados */}
-      {currentQuotationPlans.length > 0 && (
+      {currentQuotationPlanes.length > 0 && (
         <div className="space-y-4">
-          {currentQuotationPlans.map((quotationPlan: QuotationPlan) => {
-            const originalPlan = plans?.find((p: PlanInterface) => p.plan_name === quotationPlan.plan);
+          {currentQuotationPlanes.map((quotationPlan: QuotationPlan) => {
+            const originalPlan = orderedPlans?.find((p: PlanInterface) => p.plan_name === quotationPlan.plan);
             if (!originalPlan || quotationPlan.afiliados.length === 0) return null;
             
             return (
@@ -413,8 +434,8 @@ const CategoryPlan = () => {
       )}
 
       {/* Resumen - Solo mostrar si hay planes con afiliados */}
-      {currentQuotationPlans.length > 0 && (
-        <PlanesResumen planes={currentQuotationPlans} clienteChousen={subTipoPoliza} />
+      {planesConAfiliados.length > 0 && (
+        <PlanesResumen planes={currentQuotationPlanes} clienteChousen={subTipoPoliza} />
       )}
     </div>
   )

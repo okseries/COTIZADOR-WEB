@@ -246,9 +246,18 @@ const ClientInformation = forwardRef<
       if (
         name === "tipoPlan" ||
         name === "clientChoosen" ||
-        name === "identification"
+        name === "identification" ||
+        name === "name" ||
+        name === "contact" ||
+        name === "email" ||
+        name === "address" ||
+        name === "office" ||
+        name === "agent"
       ) {
-        saveToStore();
+        // Guardar inmediatamente cuando cambien estos campos
+        setTimeout(() => {
+          saveToStore();
+        }, 100);
       }
     });
     return () => subscription.unsubscribe(); /// esto lo que hace es limpiar el efecto cuando se desmonta el componente

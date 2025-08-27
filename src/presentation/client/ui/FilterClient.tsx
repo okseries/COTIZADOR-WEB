@@ -19,8 +19,8 @@ import { getCleanIdentification } from "../helpers/indentification-format";
 import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 
 const FilterClient = () => {
-  const { setSearchData, setClientData } = useClientSearch();
-  const { filterData, clearQuotation } = useUnifiedQuotationStore();
+  const { setSearchData, setClientData, clientData } = useClientSearch();
+  const { filterData, clearQuotation, cliente } = useUnifiedQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [openAlertDialog, setOpenAlertDialog] = useState(false);
   const [alertDialogMessage, setAlertDialogMessage] = useState("");
@@ -43,6 +43,10 @@ const FilterClient = () => {
 
   // Observar el tipo de documento para pasarlo al input de identificación
   const tipoDocumento = watch("tipoDocumento");
+  const identificacion = watch("identificacion");
+
+  // Verificar si hay identificación pero no se ha buscado cliente
+  const hasIdentificationButNotSearched = identificacion && identificacion.length > 0 && !clientData && !isLoading;
 
   // Función mejorada para limpiar todo
   const handleClearAll = () => {
@@ -150,6 +154,18 @@ const FilterClient = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+          {/* Mensaje informativo cuando hay identificación pero no se ha buscado */}
+          {hasIdentificationButNotSearched && (
+            <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                <span className="text-sm text-yellow-700">
+                  Para continuar, presione "Buscar Cliente" o complete manualmente los datos del cliente.
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full">
             {/* Tipo de Documento */}
             <div className="w-full sm:w-36">
@@ -190,14 +206,18 @@ const FilterClient = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-10 px-4 bg-[#005BBB] hover:bg-[#003E7E] text-white font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005BBB] focus:ring-offset-2 w-full sm:w-auto"
+                className={`h-10 px-4 font-medium shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 w-full sm:w-auto ${
+                  hasIdentificationButNotSearched 
+                    ? "bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-600 animate-pulse" 
+                    : "bg-[#005BBB] hover:bg-[#003E7E] text-white focus:ring-[#005BBB]"
+                }`}
               >
                 {isLoading ? (
                   <Spinner className="text-white w-4 h-4 mr-2" />
                 ) : (
                   <Search className="w-4 h-4 mr-2" />
                 )}
-                Buscar Cliente
+                {hasIdentificationButNotSearched ? "¡Buscar Cliente!" : "Buscar Cliente"}
               </Button>
             </div>
           </div>

@@ -283,9 +283,9 @@ export const usePaymentOptions = () => {
       });
 
       // Redirigir al dashboard después de un breve delay
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1000);
+      // setTimeout(() => {
+      //   window.location.href = "/dashboard";
+      // }, 1000);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error al procesar la cotización"

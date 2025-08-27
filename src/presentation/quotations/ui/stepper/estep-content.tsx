@@ -1,10 +1,13 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import ClientInformation, { ClientInformationRef } from '../../../client/ui/ClientInformation';
 import StepButton from './stepButtom';
 import CategoryPlan from '@/presentation/plans/ui/CategoryPlan';
 import { ClientSearchProvider } from '@/presentation/client/hooks/useClientSearch';
 import CoberturasOpcionales from '@/presentation/coberturasOpcionales/ui/CoberturasOptinals';
 import PaymentOptions from '@/presentation/payments/PaymentOptions';
+import { useQuotationData } from '@/core';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface Props {
     step: string;
@@ -12,16 +15,35 @@ interface Props {
 }
 
 const StepContent = ({ step, setStep }: Props) => {
-  // No necesitamos destructurar nada del store ya que no se usa
   const clientInfoRef = useRef<ClientInformationRef>(null);
+  const { planes } = useQuotationData();
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleNext = async (nextStep: string) => {
+    setValidationError(null);
+
     if (step === "step1") {
       const isValid = await clientInfoRef.current?.validateAndSave();
       if (isValid) {
         setStep(nextStep);
+      } else {
+        setValidationError("Por favor complete todos los campos requeridos. Si ingresó una identificación, presione 'Buscar Cliente' para continuar.");
       }
-      return; // evita continuar si no es válido
+      return;
+    }
+
+    if (step === "step2") {
+      // Validar que hay planes seleccionados y que al menos uno tiene afiliados
+      if (!planes || planes.length === 0) {
+        setValidationError("Debe seleccionar al menos un plan para continuar.");
+        return;
+      }
+
+      const planesConAfiliados = planes.filter(plan => plan.afiliados && plan.afiliados.length > 0);
+      if (planesConAfiliados.length === 0) {
+        setValidationError("Debe agregar al menos un afiliado a los planes seleccionados para continuar.");
+        return;
+      }
     }
 
     setStep(nextStep);
@@ -32,6 +54,16 @@ const StepContent = ({ step, setStep }: Props) => {
       <div className="bg-white rounded-2xl shadow-lg border border-border">
         <div className="h-[600px] flex flex-col">
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+            {/* Mostrar error de validación */}
+            {validationError && (
+              <Alert className="mb-4 border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">
+                  {validationError}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {step === "step1" && (
               <div className="space-y-6">
                 <ClientInformation ref={clientInfoRef} />
