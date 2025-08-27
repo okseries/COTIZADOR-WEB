@@ -20,7 +20,7 @@ import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 
 const FilterClient = () => {
   const { setSearchData, setClientData, clientData } = useClientSearchAdapter();
-  const { filterData, clearQuotation } = useUnifiedQuotationStore();
+  const { filterData, clearQuotation, cliente, setFilterData } = useUnifiedQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [openAlertDialog, setOpenAlertDialog] = useState(false);
   const [alertDialogMessage, setAlertDialogMessage] = useState("");
@@ -45,8 +45,21 @@ const FilterClient = () => {
   const tipoDocumento = watch("tipoDocumento");
   const identificacion = watch("identificacion");
 
+  // Verificar si el cliente ya tiene información completa
+  const hasCompleteClientInfo = cliente && cliente.name && cliente.name.length > 0;
+
   // Verificar si hay identificación pero no se ha buscado cliente
-  const hasIdentificationButNotSearched = identificacion && identificacion.length > 0 && !clientData && !isLoading;
+  // Solo mostrar el mensaje si:
+  // 1. Hay identificación ingresada
+  // 2. NO hay datos del cliente desde la búsqueda
+  // 3. NO hay información completa del cliente en el store
+  // 4. NO está cargando
+  const hasIdentificationButNotSearched = 
+    identificacion && 
+    identificacion.length > 0 && 
+    !clientData && 
+    !hasCompleteClientInfo && 
+    !isLoading;
 
   // Función mejorada para limpiar todo (memoizada)
   const handleClearAll = React.useCallback(() => {
@@ -97,6 +110,26 @@ const FilterClient = () => {
       }
     }
   }, [filterData, reset]); // Removido getValues de las dependencias
+
+  // Efecto adicional para sincronizar identificación desde el cliente cuando no hay filterData
+  React.useEffect(() => {
+    if (cliente && cliente.identification && !filterData) {
+      const currentValues = getValues();
+      
+      // Solo actualizar si la identificación es diferente
+      if (currentValues.identificacion !== cliente.identification) {
+        // Asumir tipo de documento "1" (cédula) por defecto si no está especificado
+        const syncData = {
+          tipoDocumento: "1" as const, 
+          identificacion: cliente.identification,
+        };
+        
+        // Actualizar tanto el formulario como el store
+        reset(syncData);
+        setFilterData(syncData);
+      }
+    }
+  }, [cliente, filterData, reset, getValues, setFilterData]);
 
   const onSubmit = React.useCallback(async (data: FiltrarClientFormValues) => {
     setIsLoading(true);
@@ -160,7 +193,7 @@ const FilterClient = () => {
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
                 <span className="text-sm text-yellow-700">
-                  Para continuar, presione "Buscar Cliente".
+                  Para continuar, presione Buscar Cliente.
                 </span>
               </div>
             </div>

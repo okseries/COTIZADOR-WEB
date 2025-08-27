@@ -439,11 +439,7 @@ const ClientInformation = forwardRef<
                     />
                   )}
                 />
-                {errors.agentId && (
-                  <p className="text-sm text-red-500">
-                    {errors.agentId.message}
-                  </p>
-                )}
+                
               </div>
             </div>
 
