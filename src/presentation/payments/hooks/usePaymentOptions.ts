@@ -282,10 +282,10 @@ export const usePaymentOptions = () => {
         queryKey: ["quotations", userName],
       });
 
-      // // Redirigir al dashboard después de un breve delay
-      // setTimeout(() => {
-      //   window.location.href = "/dashboard";
-      // }, 1000);
+      // Redirigir al dashboard después de un breve delay
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error al procesar la cotización"
