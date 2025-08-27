@@ -20,7 +20,7 @@ import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 
 const FilterClient = () => {
   const { setSearchData, setClientData, clientData } = useClientSearchAdapter();
-  const { filterData, clearQuotation, cliente } = useUnifiedQuotationStore();
+  const { filterData, clearQuotation } = useUnifiedQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [openAlertDialog, setOpenAlertDialog] = useState(false);
   const [alertDialogMessage, setAlertDialogMessage] = useState("");
