@@ -52,7 +52,7 @@ const StepContent = ({ step, setStep }: Props) => {
   return (
     <ClientSearchProvider>
       <div className="bg-white rounded-2xl shadow-lg border border-border">
-        <div className="h-[600px] flex flex-col">
+        <div className="min-h-[500px] max-h-[calc(100vh-200px)] flex flex-col">
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             {/* Mostrar error de validación */}
             {validationError && (

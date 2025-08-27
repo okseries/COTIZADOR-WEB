@@ -200,15 +200,15 @@ const ClientInformation = forwardRef<
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <FilterClient />
 
       {/* Información del Cliente */}
       <Card className="shadow-sm border border-border/50">
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <CardContent className="p-4 lg:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 lg:space-y-4">
             {/* Información básica del cliente */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre completo *</Label>
                 <Controller
@@ -275,7 +275,7 @@ const ClientInformation = forwardRef<
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico *</Label>
                 <Controller
@@ -320,10 +320,10 @@ const ClientInformation = forwardRef<
               </div>
             </div>
 
-            <div className=" w-full border-[0.5px] border-border/30"></div>
+            <div className="w-full border-[0.5px] border-border/30 my-3 lg:my-4"></div>
 
             {/* Tipo de póliza y sub tipo */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="tipoPlan">Tipo de póliza *</Label>
                 <Controller
@@ -386,7 +386,7 @@ const ClientInformation = forwardRef<
             </div>
 
             {/* Canal y Agente */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-red-500Z">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 bg-red-500Z">
               <div className="space-y-2">
                 <Label htmlFor="office">Canal *</Label>
                 <Controller
