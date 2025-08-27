@@ -162,7 +162,7 @@ const AddAfiliadoForm = ({
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {/* Selección de Plan */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="plan-select">Plan *</Label>
           <div className="flex items-center space-x-2">
             <Select value={selectedPlanName} onValueChange={setSelectedPlanName}>
@@ -180,7 +180,7 @@ const AddAfiliadoForm = ({
             </Select>
           </div>
           {errors.plan && <p className="text-red-500 text-xs">{errors.plan}</p>}
-        </div>
+        </div> */}
 
         {/* Parentesco */}
         <div className="space-y-2">
@@ -239,7 +239,7 @@ const AddAfiliadoForm = ({
         </div>
 
         {/* Prima Plan */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label>Prima Plan</Label>
           <div className="h-10 px-3 py-2 border rounded-md bg-gray-100 flex items-center text-sm justify-end w-36 min-w-0">
             <span className="truncate">
@@ -258,7 +258,6 @@ const AddAfiliadoForm = ({
               )}
             </span>
           </div>
-          {/* Mostrar error de prima si existe */}
           {primaError && (
             <p className="text-red-500 text-xs">
               {primaError instanceof Error && primaError.message.includes('No se encontraron planes para la edad') 
@@ -266,7 +265,7 @@ const AddAfiliadoForm = ({
                 : 'Error al obtener la prima del plan'}
             </p>
           )}
-        </div>
+        </div> */}
 
         {/* Botón agregar */}
         <div className="space-y-2">
