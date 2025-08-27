@@ -48,8 +48,8 @@ const FilterClient = () => {
   // Verificar si hay identificación pero no se ha buscado cliente
   const hasIdentificationButNotSearched = identificacion && identificacion.length > 0 && !clientData && !isLoading;
 
-  // Función mejorada para limpiar todo
-  const handleClearAll = () => {
+  // Función mejorada para limpiar todo (memoizada)
+  const handleClearAll = React.useCallback(() => {
     clearQuotation();
     reset({
       tipoDocumento: "1",
@@ -61,7 +61,7 @@ const FilterClient = () => {
       tipoDocumento: "1",
       identificacion: "",
     });
-  };
+  }, [clearQuotation, reset, setClientData, setSearchData]);
 
   // Manejar tecla ESC para cerrar el alert dialog
   React.useEffect(() => {
@@ -96,9 +96,9 @@ const FilterClient = () => {
         });
       }
     }
-  }, [filterData, reset, getValues]);
+  }, [filterData, reset]); // Removido getValues de las dependencias
 
-  const onSubmit = async (data: FiltrarClientFormValues) => {
+  const onSubmit = React.useCallback(async (data: FiltrarClientFormValues) => {
     setIsLoading(true);
     try {
       // Convertir el tipo de documento a número para la API
@@ -136,7 +136,7 @@ const FilterClient = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setSearchData, setClientData]);
 
   return (
     <Card className="mb-2 py-4 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">

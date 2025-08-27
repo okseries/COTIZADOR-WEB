@@ -10,22 +10,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ImprovedAgentSelector } from "@/components/improved/ImprovedAgentSelector";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -64,10 +52,6 @@ const ClientInformation = forwardRef<
   // Obtener datos de búsqueda del filtro (solo para tipo documento e identificación)
   const { searchData, clientData } = useClientSearchAdapter();
 
-  // Estados para los popovers
-  const [openAgent, setOpenAgent] = useState(false);
-  const [searchAgent, setSearchAgent] = useState("");
-
   const {
     control,
     handleSubmit,
@@ -96,7 +80,7 @@ const ClientInformation = forwardRef<
     },
   });
 
-  // Función para guardar datos en el store
+  // Función para guardar datos en el store (memoizada para evitar ciclos)
   const saveToStore = React.useCallback(() => {
     const formData = getValues();
     setCliente(formData);
@@ -162,72 +146,14 @@ const ClientInformation = forwardRef<
   React.useEffect(() => {
     if (clientData?.NOMBRE_COMPLETO) {
       setValue("name", clientData.NOMBRE_COMPLETO);
-      setTimeout(() => {
-        saveToStore();
-      }, 100);
+      saveToStore(); // Llamar directamente sin setTimeout
     }
-  }, [clientData, setValue, saveToStore]);
+  }, [clientData, setValue]); // Removido saveToStore de las dependencias
 
   const canal = watch("office");
   const { data: dynamicOptions = [] } = useDynamicSelectOptions(canal);
   const { data: plans } = usePlans();
   const { data: subPlans } = useSubPlansType();
-
-  // Función para filtrar agentes de manera más precisa
-  const filteredAgents = React.useMemo(() => {
-    if (!searchAgent.trim()) return dynamicOptions;
-    
-    const searchTerm = searchAgent.toLowerCase().trim();
-    
-    return dynamicOptions.filter((item) => {
-      const label = item.label.toLowerCase();
-      const subLabel = (item.subLabel || '').toLowerCase();
-      
-      // Búsqueda exacta al inicio
-      if (label.startsWith(searchTerm) || subLabel.startsWith(searchTerm)) {
-        return true;
-      }
-      
-      // Búsqueda por palabras individuales
-      const labelWords = label.split(' ');
-      const searchWords = searchTerm.split(' ');
-      
-      const wordsMatch = searchWords.every(searchWord => 
-        labelWords.some(labelWord => labelWord.startsWith(searchWord))
-      );
-      
-      if (wordsMatch) return true;
-      
-      // Búsqueda por iniciales
-      const initials = labelWords.map(word => word.charAt(0)).join('');
-      if (initials.includes(searchTerm)) return true;
-      
-      // Búsqueda parcial en cualquier parte
-      return label.includes(searchTerm) || subLabel.includes(searchTerm);
-    }).sort((a, b) => {
-      const aLabel = a.label.toLowerCase();
-      const bLabel = b.label.toLowerCase();
-      const searchLower = searchTerm.toLowerCase();
-      
-      // Priorizar coincidencias exactas al inicio
-      const aStartsWith = aLabel.startsWith(searchLower) ? 0 : 1;
-      const bStartsWith = bLabel.startsWith(searchLower) ? 0 : 1;
-      
-      if (aStartsWith !== bStartsWith) {
-        return aStartsWith - bStartsWith;
-      }
-      
-      // Luego ordenar alfabéticamente
-      return aLabel.localeCompare(bLabel);
-    });
-  }, [dynamicOptions, searchAgent]);
-
-  // Efecto para limpiar la búsqueda cuando se cierre el popover
-  React.useEffect(() => {
-    if (!openAgent) {
-      setSearchAgent("");
-    }
-  }, [openAgent]);
 
   // Efecto para guardar las opciones de agente en el store
   React.useEffect(() => {
@@ -240,28 +166,16 @@ const ClientInformation = forwardRef<
     }
   }, [dynamicOptions, setAgentOptions, agentOptions]);
 
-  // Efecto para guardar automáticamente cuando cambien los campos importantes
+  // COMENTADO: Auto-save eliminado para evitar bucles infinitos
+  // El guardado ahora se hace solo cuando es necesario (al cambiar de paso, etc.)
+  /*
   React.useEffect(() => {
     const subscription = watch((_value, { name }) => {
-      if (
-        name === "tipoPlan" ||
-        name === "clientChoosen" ||
-        name === "identification" ||
-        name === "name" ||
-        name === "contact" ||
-        name === "email" ||
-        name === "address" ||
-        name === "office" ||
-        name === "agent"
-      ) {
-        // Guardar inmediatamente cuando cambien estos campos
-        setTimeout(() => {
-          saveToStore();
-        }, 100);
-      }
+      // Auto-save logic here
     });
-    return () => subscription.unsubscribe(); /// esto lo que hace es limpiar el efecto cuando se desmonta el componente
-  }, [watch, saveToStore]);
+    return () => subscription.unsubscribe();
+  }, [watch]);
+  */
 
   // Función para validar y guardar
   const validateAndSave = React.useCallback(async () => {
@@ -271,7 +185,7 @@ const ClientInformation = forwardRef<
       return true;
     }
     return false;
-  }, [trigger, saveToStore]);
+  }, [trigger]); // Removido saveToStore de las dependencias ya que está memoizado
 
   // Exponer las funciones al padre
   // ejemplo de uso: <ClientInformation ref={clientInfoRef} /> , lo cual sirve para que el componente padre pueda llamar a estas funciones
@@ -472,7 +386,7 @@ const ClientInformation = forwardRef<
             </div>
 
             {/* Canal y Agente */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-red-500Z">
               <div className="space-y-2">
                 <Label htmlFor="office">Canal *</Label>
                 <Controller
@@ -494,7 +408,7 @@ const ClientInformation = forwardRef<
                   )}
                 />
                 {errors.office && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm ">
                     {errors.office.message}
                   </p>
                 )}
@@ -503,84 +417,28 @@ const ClientInformation = forwardRef<
               <FormField
                 control={control}
                 name="agentId"
-                render={({ field }) => {
-                  const selected = dynamicOptions.find(
-                    (item) => item.id === field.value
-                  );
-
-                  return (
-                    <FormItem className="flex flex-col ">
-                      <FormLabel>Agente *</FormLabel>
-                      <Popover open={openAgent} onOpenChange={setOpenAgent}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openAgent}
-                              className={cn(
-                                "w-full truncate justify-between h-11 ",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {selected
-                                ? `${selected.label}`
-                                : "Seleccionar agente..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command shouldFilter={false}>
-                            <CommandInput 
-                              placeholder="Buscar agente..." 
-                              value={searchAgent}
-                              onValueChange={setSearchAgent}
-                            />
-                            <CommandList>
-                              <CommandEmpty>
-                                No se encontraron resultados.
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {filteredAgents.map((item) => (
-                                  <CommandItem
-                                    key={item.id}
-                                    value={`${item.label}`}
-                                    onSelect={() => {
-                                      field.onChange(item.id);
-                                      setValue("agent", item.label);
-                                      setOpenAgent(false);
-                                      setSearchAgent(""); // Limpiar búsqueda al seleccionar
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        item.id === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{item.label}</span>
-                                      {item.subLabel && (
-                                        <span className="text-xs text-muted-foreground">
-                                          {item.subLabel}
-                                        </span>
-                                      )}
-                                    </div>
-                                    
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
+                render={({ field }) => (
+                  <FormItem className="space-y-0">
+                    <Label htmlFor="agentId">Agente *</Label>
+                    <ImprovedAgentSelector
+                      value={field.value || 0}
+                      onValueChange={(agentId, agentName) => {
+                        field.onChange(agentId);
+                        setValue("agent", agentName);
+                      }}
+                      options={dynamicOptions.map(item => ({
+                        id: item.id,
+                        label: item.label,
+                        subLabel: item.subLabel,
+                        isActive: true
+                      }))}
+                      isLoading={false}
+                      error={errors.agentId?.message}
+                      placeholder="Seleccionar agente..."
+                      required={true}
+                    />
+                  </FormItem>
+                )}
               />
             </div>
 
