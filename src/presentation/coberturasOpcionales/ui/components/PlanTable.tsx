@@ -127,7 +127,9 @@ const PlanTable = ({
   const cantidadAfiliados =
     clientChoosen === 2
       ? currentPlan.cantidadAfiliados || 1
-      : currentPlan.afiliados.length;
+      : currentPlan.afiliados?.length || 0;
+
+  
 
   return (
     <Card className="mb-6">
@@ -217,7 +219,8 @@ const PlanTable = ({
                               (c: Copago) => c.id === parseInt(selectedCopago)
                             );
                             if (copago) {
-                              return formatCurrency(copago.price || 0);
+                              const copagoPrice = typeof copago.price === 'string' ? parseFloat(copago.price) : (copago.price || 0);
+                              return formatCurrency(copagoPrice);
                             }
                           }
                           return formatCurrency(0);
@@ -329,7 +332,8 @@ const PlanTable = ({
                               (c: Copago) => c.id === parseInt(selectedCopago)
                             );
                             if (copago) {
-                              return formatCurrency(copago.price || 0);
+                              const copagoPrice = typeof copago.price === 'string' ? parseFloat(copago.price) : (copago.price || 0);
+                              return formatCurrency(copagoPrice);
                             }
                           }
                           return formatCurrency(0);
@@ -436,7 +440,8 @@ const PlanTable = ({
                                 (c: Copago) => c.id === parseInt(selectedCopago)
                               );
                             if (copago) {
-                              return formatCurrency(copago.price || 0);
+                              const copagoPrice = typeof copago.price === 'string' ? parseFloat(copago.price) : (copago.price || 0);
+                              return formatCurrency(copagoPrice);
                             }
                           }
                           return formatCurrency(0);
@@ -451,7 +456,7 @@ const PlanTable = ({
                   <div className="text-base font-medium text-blue-600">
                     {(() => {
                       const habitacionOpcional = currentPlan?.opcionales?.find(
-                        (opt) => opt.nombre === "HABITACION" || opt.nombre === "HABITACIÓN"
+                        (opt) => opt.nombre === "HABITACION" || opt.nombre === "HABITACIÓN" || opt.nombre?.toUpperCase().includes("HABITACION")
                       );
                       const primaUnitaria = cantidadAfiliados > 0 
                         ? (habitacionOpcional?.prima || 0) / cantidadAfiliados 
@@ -534,7 +539,9 @@ const PlanTable = ({
                         (c: Copago) => c.id === parseInt(selectedCopagoAltoCosto)
                       );
                       if (copago) {
-                        subtotalUnitario += copago.price || 0;
+                        const copagoPrice = typeof copago.price === 'string' ? parseFloat(copago.price) : (copago.price || 0);
+                        
+                        subtotalUnitario += copagoPrice;
                       }
                     }
 
@@ -564,7 +571,9 @@ const PlanTable = ({
                           c.id === parseInt(selectedCopagoMedicamentos)
                       );
                       if (copago) {
-                        subtotalUnitario += copago.price || 0;
+                        const copagoPrice = typeof copago.price === 'string' ? parseFloat(copago.price) : (copago.price || 0);
+                        
+                        subtotalUnitario += copagoPrice;
                       }
                     }
 
@@ -593,7 +602,9 @@ const PlanTable = ({
                         (c: Copago) => c.id === parseInt(selectedCopagoHabitacion)
                       );
                       if (copago) {
-                        subtotalUnitario += copago.price || 0;
+                        const copagoPrice = typeof copago.price === 'string' ? parseFloat(copago.price) : (copago.price || 0);
+                        
+                        subtotalUnitario += copagoPrice;
                       }
                     }
 
@@ -608,8 +619,12 @@ const PlanTable = ({
                       }
                     }
 
-                    // Calcular total
-                    const totalSubtotal = subtotalUnitario * cantidadAfiliados;
+                    // Calcular total con validación
+                    const safeCantidadAfiliados = Number.isFinite(cantidadAfiliados) && cantidadAfiliados > 0 ? cantidadAfiliados : 0;
+                    const safeSubtotalUnitario = Number.isFinite(subtotalUnitario) ? subtotalUnitario : 0;
+                    const totalSubtotal = safeSubtotalUnitario * safeCantidadAfiliados;
+
+                    
 
                     // Mostrar unitario + total de forma responsiva
                     return (
@@ -624,7 +639,7 @@ const PlanTable = ({
                         <div className="flex items-baseline gap-2">
                           <div className="text-xs text-gray-600">Total:</div>
                           <div className="text-lg font-bold text-blue-700">
-                            {formatCurrency(totalSubtotal)}
+                            {Number.isFinite(totalSubtotal) ? formatCurrency(totalSubtotal) : formatCurrency(0)}
                           </div>
                         </div>
                       </div>

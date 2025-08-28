@@ -41,14 +41,14 @@ const CoberturasOpcionales = () => {
   } = useCoberturasOpcionales();
 
   // 🔍 DEBUG: Verificar las opciones dinámicas que recibe el componente
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 CoberturasOptionals recibe:', {
-      dynamicHabitacionOptions: dynamicHabitacionOptions?.length || 0,
-      dynamicAltoCostoOptions: dynamicAltoCostoOptions?.length || 0,
-      dynamicMedicamentosOptions: dynamicMedicamentosOptions?.length || 0,
-      habitacionData: dynamicHabitacionOptions?.slice(0, 2)
-    });
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  //   console.log('🔍 CoberturasOptionals recibe:', {
+  //     dynamicHabitacionOptions: dynamicHabitacionOptions?.length || 0,
+  //     dynamicAltoCostoOptions: dynamicAltoCostoOptions?.length || 0,
+  //     dynamicMedicamentosOptions: dynamicMedicamentosOptions?.length || 0,
+  //     habitacionData: dynamicHabitacionOptions?.slice(0, 2)
+  //   });
+  // }
 
   // Mostrar estados de carga/error/vacío
   if (isEmpty || isLoading || hasError) {
