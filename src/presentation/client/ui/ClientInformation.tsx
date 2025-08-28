@@ -201,7 +201,18 @@ const ClientInformation = forwardRef<
 
   return (
     <div className="space-y-4 lg:space-y-6">
-      <FilterClient />
+      <FilterClient onClearForm={() => reset({
+        clientChoosen: 0,
+        identification: "",
+        name: "",
+        contact: "",
+        email: "",
+        address: "",
+        office: "",
+        agent: "",
+        agentId: 0,
+        tipoPlan: 0,
+      })} />
 
       {/* Información del Cliente */}
       <Card className="shadow-sm border border-border/50">

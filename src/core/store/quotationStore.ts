@@ -73,6 +73,7 @@ interface QuotationActions {
   
   // Utilidades
   clearQuotation: () => void;
+  clearCurrentForm: () => void;
   loadExistingQuotation: (quotationRequest: QuotationRequest) => void;
   getFinalObject: () => QuotationRequest;
   resetStepper: () => void;
@@ -235,10 +236,15 @@ export const useQuotationStore = create<QuotationStore>()(
       
       setPaymentPeriod: (period) => set({ paymentPeriod: period }),
       
-      // Utilidades
-      clearQuotation: () => set({ ...initialState }),
-      
-      loadExistingQuotation: (quotationRequest) => {
+  // Utilidades
+  clearQuotation: () => set({ ...initialState }),
+  clearCurrentForm: () => set((state) => ({ 
+    cliente: null,
+    filterData: null,
+    searchData: null,
+    clientSearchResult: null,
+    clientData: { ...initialState.clientData }
+  })),      loadExistingQuotation: (quotationRequest) => {
         const cliente = quotationRequest.cliente;
         
         if (cliente) {

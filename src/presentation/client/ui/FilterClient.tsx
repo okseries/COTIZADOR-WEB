@@ -18,9 +18,13 @@ import { IdentificationInput } from "./IdentificationInput";
 import { getCleanIdentification } from "../helpers/indentification-format";
 import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 
-const FilterClient = () => {
+interface FilterClientProps {
+  onClearForm?: () => void;
+}
+
+const FilterClient = ({ onClearForm }: FilterClientProps) => {
   const { setSearchData, setClientData, clientData } = useClientSearchAdapter();
-  const { filterData, clearQuotation, cliente, setFilterData } = useUnifiedQuotationStore();
+  const { filterData, clearQuotation, clearCurrentForm, cliente, setFilterData, mode } = useUnifiedQuotationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [openAlertDialog, setOpenAlertDialog] = useState(false);
   const [alertDialogMessage, setAlertDialogMessage] = useState("");
@@ -61,7 +65,7 @@ const FilterClient = () => {
     !hasCompleteClientInfo && 
     !isLoading;
 
-  // Función mejorada para limpiar todo (memoizada)
+  // Función para limpiar todo (modo editar)
   const handleClearAll = React.useCallback(() => {
     clearQuotation();
     reset({
@@ -69,12 +73,29 @@ const FilterClient = () => {
       identificacion: "",
     });
     setClientData(null);
-    // Corregir el tipo - usar valores por defecto en lugar de null
     setSearchData({
       tipoDocumento: "1",
       identificacion: "",
     });
-  }, [clearQuotation, reset, setClientData, setSearchData]);
+    // Llamar al callback para resetear el formulario principal
+    onClearForm?.();
+  }, [clearQuotation, reset, setClientData, setSearchData, onClearForm]);
+
+  // Función para limpiar solo el formulario actual (modo crear)
+  const handleClearForm = React.useCallback(() => {
+    clearCurrentForm();
+    reset({
+      tipoDocumento: "1",
+      identificacion: "",
+    });
+    setClientData(null);
+    setSearchData({
+      tipoDocumento: "1",
+      identificacion: "",
+    });
+    // Llamar al callback para resetear el formulario principal
+    onClearForm?.();
+  }, [clearCurrentForm, reset, setClientData, setSearchData, onClearForm]);
 
   // Manejar tecla ESC para cerrar el alert dialog
   React.useEffect(() => {
@@ -176,13 +197,13 @@ const FilterClient = () => {
       <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="w-full sm:w-auto">
           <Button
-            onClick={handleClearAll}
+            onClick={mode === "create" ? handleClearForm : handleClearAll}
             className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
             variant="outline"
             size="sm"
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Limpiar Todo
+            {mode === "create" ? "Limpiar Campos" : "Eliminar Todo"}
           </Button>
         </div>
 
