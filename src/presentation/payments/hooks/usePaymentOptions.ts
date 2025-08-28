@@ -83,7 +83,6 @@ export const usePaymentOptions = () => {
       });
       
       if (hasPeriodInStore) {
-        console.log('🔄 NAVEGACIÓN STEP 4 DETECTADA: Restaurando períodos desde store');
         
         // Restaurar períodos desde el store
         setPaymentPlans(prev => prev.map(plan => {
@@ -92,7 +91,6 @@ export const usePaymentOptions = () => {
           
           if (storedPeriod && storedPeriod !== "" && storedPeriod !== "seleccionar") {
             const typedPeriod = storedPeriod as PeriodoPago;
-            console.log(`✅ Restaurando período "${typedPeriod}" para plan ${plan.plan}`);
             return {
               ...plan,
               selectedPeriod: typedPeriod,
@@ -103,7 +101,6 @@ export const usePaymentOptions = () => {
           return plan;
         }));
         
-        console.log('✅ NAVEGACIÓN STEP 4: Períodos restaurados exitosamente');
       }
     }
   }, [planes.length, paymentPlans.length, mode]);
@@ -235,7 +232,7 @@ export const usePaymentOptions = () => {
     }
   }, []);
 
-  // Enviar cotización finalñ
+  // Enviar cotización final
   //! Esto envia la cotizacion final al backend
   const submitQuotation = useCallback(async () => {
     const userName = authUser?.data?.user;
