@@ -666,8 +666,27 @@ export const useCoberturasOpcionales = () => {
               if (optId) {
                 initialSelections[plan.plan].altoCosto = optId;
               }
-            } else if (opcional.nombre === "COPAGO ALTO COSTO" && opcional.idCopago) {
-              initialCopagos[plan.plan].altoCosto = opcional.idCopago.toString();
+            } else if (opcional.nombre === "COPAGO ALTO COSTO") {
+              // 🆕 MAPEO COPAGO SIN idCopago: usar prima para encontrar coincidencia
+              if (opcional.idCopago) {
+                // Si existe idCopago, usarlo directamente
+                initialCopagos[plan.plan].altoCosto = opcional.idCopago.toString();
+              } else if (copagosAltoCostoQuery.data) {
+                // Si no existe idCopago, mapear por prima
+                const primaUnitaria = (opcional.prima || 0) / (plan.cantidadAfiliados || 1);
+                const copagoMatch = copagosAltoCostoQuery.data.find(copago => {
+                  const precioAPI = typeof copago.price === 'string' ? parseFloat(copago.price) : copago.price;
+                  const diferencia = Math.abs(precioAPI - primaUnitaria);
+                  return diferencia < 1; // Tolerancia de 1 peso
+                });
+                
+                if (copagoMatch) {
+                  initialCopagos[plan.plan].altoCosto = copagoMatch.id.toString();
+                  console.log(`✅ COPAGO ALTO COSTO mapeado: Prima ${primaUnitaria} → ID ${copagoMatch.id}`);
+                } else {
+                  console.warn(`⚠️ No se encontró copago para prima ${primaUnitaria}`);
+                }
+              }
             }
             break;
             
@@ -677,8 +696,27 @@ export const useCoberturasOpcionales = () => {
               if (optId) {
                 initialSelections[plan.plan].medicamentos = optId;
               }
-            } else if (opcional.nombre === "COPAGO MEDICAMENTOS" && opcional.idCopago) {
-              initialCopagos[plan.plan].medicamentos = opcional.idCopago.toString();
+            } else if (opcional.nombre === "COPAGO MEDICAMENTOS") {
+              // 🆕 MAPEO COPAGO SIN idCopago: usar prima para encontrar coincidencia
+              if (opcional.idCopago) {
+                // Si existe idCopago, usarlo directamente
+                initialCopagos[plan.plan].medicamentos = opcional.idCopago.toString();
+              } else if (copagosQuery.data) {
+                // Si no existe idCopago, mapear por prima
+                const primaUnitaria = (opcional.prima || 0) / (plan.cantidadAfiliados || 1);
+                const copagoMatch = copagosQuery.data.find(copago => {
+                  const precioAPI = typeof copago.price === 'string' ? parseFloat(copago.price) : copago.price;
+                  const diferencia = Math.abs(precioAPI - primaUnitaria);
+                  return diferencia < 1; // Tolerancia de 1 peso
+                });
+                
+                if (copagoMatch) {
+                  initialCopagos[plan.plan].medicamentos = copagoMatch.id.toString();
+                  console.log(`✅ COPAGO MEDICAMENTOS mapeado: Prima ${primaUnitaria} → ID ${copagoMatch.id}`);
+                } else {
+                  console.warn(`⚠️ No se encontró copago medicamentos para prima ${primaUnitaria}`);
+                }
+              }
             }
             break;
             
@@ -688,8 +726,27 @@ export const useCoberturasOpcionales = () => {
               if (optId) {
                 initialSelections[plan.plan].habitacion = optId;
               }
-            } else if (opcional.nombre === "COPAGO HABITACIÓN" && opcional.idCopago) {
-              initialCopagos[plan.plan].habitacion = opcional.idCopago.toString();
+            } else if (opcional.nombre === "COPAGO HABITACIÓN") {
+              // 🆕 MAPEO COPAGO SIN idCopago: usar prima para encontrar coincidencia
+              if (opcional.idCopago) {
+                // Si existe idCopago, usarlo directamente
+                initialCopagos[plan.plan].habitacion = opcional.idCopago.toString();
+              } else if (copagosHabitacionQuery.data) {
+                // Si no existe idCopago, mapear por prima
+                const primaUnitaria = (opcional.prima || 0) / (plan.cantidadAfiliados || 1);
+                const copagoMatch = copagosHabitacionQuery.data.find(copago => {
+                  const precioAPI = typeof copago.price === 'string' ? parseFloat(copago.price) : copago.price;
+                  const diferencia = Math.abs(precioAPI - primaUnitaria);
+                  return diferencia < 1; // Tolerancia de 1 peso
+                });
+                
+                if (copagoMatch) {
+                  initialCopagos[plan.plan].habitacion = copagoMatch.id.toString();
+                  console.log(`✅ COPAGO HABITACIÓN mapeado: Prima ${primaUnitaria} → ID ${copagoMatch.id}`);
+                } else {
+                  console.warn(`⚠️ No se encontró copago habitación para prima ${primaUnitaria}`);
+                }
+              }
             }
             break;
             
@@ -1028,10 +1085,14 @@ export const useCoberturasOpcionales = () => {
                 break;
                 
               case "COPAGO ALTO COSTO":
+                // ✅ USAR idCopago directamente (es el ID correcto de la API)
                 if (opcional.idCopago) {
-                  // 🆕 MAPEO INTELIGENTE: Buscar copago correcto en API por prima similar
+                  initialDynamicCopagoSelections[plan.plan].altoCosto = opcional.idCopago.toString();
+                  console.log(`✅ NAVEGACIÓN - Copago Alto Costo usando idCopago para ${plan.plan}: ${opcional.idCopago}`);
+                } else if (opcional.prima && copagosAltoCostoQuery.data) {
+                  // 🔧 NAVEGACIÓN: Mapear por prima para obtener el ID correcto de la API
                   const primaUnitaria = (opcional.prima || 0) / (plan.cantidadAfiliados || 1);
-                  const copagoAPI = copagosAltoCostoQuery.data?.find(copago => {
+                  const copagoAPI = copagosAltoCostoQuery.data.find(copago => {
                     const precioAPI = typeof copago.price === 'string' ? parseFloat(copago.price) : copago.price;
                     const diferencia = Math.abs(precioAPI - primaUnitaria);
                     return diferencia < 1;
@@ -1039,20 +1100,17 @@ export const useCoberturasOpcionales = () => {
                   
                   if (copagoAPI) {
                     initialDynamicCopagoSelections[plan.plan].altoCosto = copagoAPI.id.toString();
-                    console.log(`✅ MAPEO COPAGO ALTO COSTO EXITOSO - ${plan.plan}: Store ID ${opcional.idCopago} → API ID ${copagoAPI.id} (Prima: ${primaUnitaria} ≈ ${copagoAPI.price})`);
+                    console.log(`✅ NAVEGACIÓN - Copago Alto Costo mapeado por prima para ${plan.plan}: Prima ${primaUnitaria} → API ID ${copagoAPI.id}`);
                   } else {
                     // Fallback: usar el primer elemento disponible
                     const primerCopago = copagosAltoCostoQuery.data?.[0];
                     if (primerCopago) {
                       initialDynamicCopagoSelections[plan.plan].altoCosto = primerCopago.id.toString();
-                      console.log(`⚠️ MAPEO COPAGO ALTO COSTO FALLBACK - ${plan.plan}: Store ID ${opcional.idCopago} → API ID ${primerCopago.id} (primera opción disponible)`);
-                    } else {
-                      initialDynamicCopagoSelections[plan.plan].altoCosto = opcional.idCopago.toString();
-                      console.log(`❌ NO SE PUDO MAPEAR COPAGO ALTO COSTO - ${plan.plan}: Usando ID original ${opcional.idCopago}`);
+                      console.log(`⚠️ NAVEGACIÓN - Copago Alto Costo fallback para ${plan.plan}: → API ID ${primerCopago.id}`);
                     }
                   }
                 } else if (opcional.id) {
-                  // 🔧 FALLBACK: Usar ID si no hay idCopago
+                  // 🔧 FALLBACK: Usar ID si no hay prima ni idCopago
                   initialDynamicCopagoSelections[plan.plan].altoCosto = opcional.id.toString();
                   console.log(`🔧 NAVEGACIÓN - Copago Alto Costo usando ID fallback para ${plan.plan}: ${opcional.id}`);
                 }
@@ -1092,10 +1150,14 @@ export const useCoberturasOpcionales = () => {
                 break;
                 
               case "COPAGO MEDICAMENTOS":
+                // ✅ USAR idCopago directamente (es el ID correcto de la API)
                 if (opcional.idCopago) {
-                  // 🆕 MAPEO INTELIGENTE: Buscar copago correcto en API por prima similar
+                  initialDynamicCopagoSelections[plan.plan].medicamentos = opcional.idCopago.toString();
+                  console.log(`✅ NAVEGACIÓN - Copago Medicamentos usando idCopago para ${plan.plan}: ${opcional.idCopago}`);
+                } else if (opcional.prima && copagosQuery.data) {
+                  // 🔧 NAVEGACIÓN: Mapear por prima para obtener el ID correcto de la API
                   const primaUnitaria = (opcional.prima || 0) / (plan.cantidadAfiliados || 1);
-                  const copagoAPI = copagosQuery.data?.find(copago => {
+                  const copagoAPI = copagosQuery.data.find(copago => {
                     const precioAPI = typeof copago.price === 'string' ? parseFloat(copago.price) : copago.price;
                     const diferencia = Math.abs(precioAPI - primaUnitaria);
                     return diferencia < 1;
@@ -1103,20 +1165,17 @@ export const useCoberturasOpcionales = () => {
                   
                   if (copagoAPI) {
                     initialDynamicCopagoSelections[plan.plan].medicamentos = copagoAPI.id.toString();
-                    console.log(`✅ MAPEO COPAGO MEDICAMENTOS EXITOSO - ${plan.plan}: Store ID ${opcional.idCopago} → API ID ${copagoAPI.id} (Prima: ${primaUnitaria} ≈ ${copagoAPI.price})`);
+                    console.log(`✅ NAVEGACIÓN - Copago Medicamentos mapeado por prima para ${plan.plan}: Prima ${primaUnitaria} → API ID ${copagoAPI.id}`);
                   } else {
                     // Fallback: usar el primer elemento disponible
                     const primerCopago = copagosQuery.data?.[0];
                     if (primerCopago) {
                       initialDynamicCopagoSelections[plan.plan].medicamentos = primerCopago.id.toString();
-                      console.log(`⚠️ MAPEO COPAGO MEDICAMENTOS FALLBACK - ${plan.plan}: Store ID ${opcional.idCopago} → API ID ${primerCopago.id} (primera opción disponible)`);
-                    } else {
-                      initialDynamicCopagoSelections[plan.plan].medicamentos = opcional.idCopago.toString();
-                      console.log(`❌ NO SE PUDO MAPEAR COPAGO MEDICAMENTOS - ${plan.plan}: Usando ID original ${opcional.idCopago}`);
+                      console.log(`⚠️ NAVEGACIÓN - Copago Medicamentos fallback para ${plan.plan}: → API ID ${primerCopago.id}`);
                     }
                   }
                 } else if (opcional.id) {
-                  // 🔧 FALLBACK: Usar ID si no hay idCopago
+                  // 🔧 FALLBACK: Usar ID si no hay prima ni idCopago
                   initialDynamicCopagoSelections[plan.plan].medicamentos = opcional.id.toString();
                   console.log(`🔧 NAVEGACIÓN - Copago Medicamentos usando ID fallback para ${plan.plan}: ${opcional.id}`);
                 }
@@ -1162,10 +1221,14 @@ export const useCoberturasOpcionales = () => {
                 break;
                 
               case "COPAGO HABITACIÓN":
+                // ✅ USAR idCopago directamente (es el ID correcto de la API)
                 if (opcional.idCopago) {
-                  // 🆕 MAPEO INTELIGENTE: Buscar copago correcto en API por prima similar
+                  initialDynamicCopagoSelections[plan.plan].habitacion = opcional.idCopago.toString();
+                  console.log(`✅ NAVEGACIÓN - Copago Habitación usando idCopago para ${plan.plan}: ${opcional.idCopago}`);
+                } else if (opcional.prima && copagosHabitacionQuery.data) {
+                  // 🔧 NAVEGACIÓN: Mapear por prima para obtener el ID correcto de la API
                   const primaUnitaria = (opcional.prima || 0) / (plan.cantidadAfiliados || 1);
-                  const copagoAPI = copagosHabitacionQuery.data?.find(copago => {
+                  const copagoAPI = copagosHabitacionQuery.data.find(copago => {
                     const precioAPI = typeof copago.price === 'string' ? parseFloat(copago.price) : copago.price;
                     const diferencia = Math.abs(precioAPI - primaUnitaria);
                     return diferencia < 1;
@@ -1173,33 +1236,17 @@ export const useCoberturasOpcionales = () => {
                   
                   if (copagoAPI) {
                     initialDynamicCopagoSelections[plan.plan].habitacion = copagoAPI.id.toString();
-                    console.log(`✅ MAPEO COPAGO HABITACIÓN EXITOSO - ${plan.plan}: Store ID ${opcional.idCopago} → API ID ${copagoAPI.id} (Prima: ${primaUnitaria} ≈ ${copagoAPI.price})`);
+                    console.log(`✅ NAVEGACIÓN - Copago Habitación mapeado por prima para ${plan.plan}: Prima ${primaUnitaria} → API ID ${copagoAPI.id}`);
                   } else {
                     // Fallback: usar el primer elemento disponible
                     const primerCopago = copagosHabitacionQuery.data?.[0];
                     if (primerCopago) {
                       initialDynamicCopagoSelections[plan.plan].habitacion = primerCopago.id.toString();
-                      console.log(`⚠️ MAPEO COPAGO HABITACIÓN FALLBACK - ${plan.plan}: Store ID ${opcional.idCopago} → API ID ${primerCopago.id} (primera opción disponible)`);
-                    } else {
-                      initialDynamicCopagoSelections[plan.plan].habitacion = opcional.idCopago.toString();
-                      console.log(`❌ NO SE PUDO MAPEAR COPAGO HABITACIÓN - ${plan.plan}: Usando ID original ${opcional.idCopago}`);
+                      console.log(`⚠️ NAVEGACIÓN - Copago Habitación fallback para ${plan.plan}: → API ID ${primerCopago.id}`);
                     }
                   }
-                  
-                  // 🆕 DEBUG ESPECÍFICO PARA FLEX SMART
-                  if (plan.plan.includes('FLEX SMART')) {
-                    console.log(`🚨 FLEX SMART COPAGO HABITACIÓN DETECTADO:`, JSON.stringify({
-                      planName: plan.plan,
-                      idCopago: opcional.idCopago,
-                      mappedId: initialDynamicCopagoSelections[plan.plan].habitacion,
-                      prima: opcional.prima,
-                      primaUnitaria,
-                      nombreOpcional: opcional.nombre,
-                      message: "✅ COPAGO HABITACIÓN ENCONTRADO EN FLEX SMART Y CARGADO CON MAPEO"
-                    }, null, 2));
-                  }
                 } else if (opcional.id) {
-                  // 🔧 FALLBACK: Usar ID si no hay idCopago
+                  // 🔧 FALLBACK: Usar ID si no hay prima ni idCopago
                   initialDynamicCopagoSelections[plan.plan].habitacion = opcional.id.toString();
                   console.log(`🔧 NAVEGACIÓN - Copago Habitación usando ID fallback para ${plan.plan}: ${opcional.id}`);
                 }
@@ -1759,7 +1806,7 @@ export const useCoberturasOpcionales = () => {
               if (copagoOpt) {
                 const primaCopago = copagoOpt.price * multiplicadorPrima;
                 opcionales.push({
-                  id: 2, // ID para Alto Costo (copago)
+                  id: copagoOpt.id, // ✅ ID del copago (no hardcodeado)
                   idCopago: parseInt(currentDynamicCopagos.altoCosto),
                   nombre: "COPAGO ALTO COSTO",
                   descripcion: copagoOpt.descripcion,
@@ -1817,7 +1864,7 @@ export const useCoberturasOpcionales = () => {
               if (copagoOpt) {
                 const primaCopago = copagoOpt.price * multiplicadorPrima;
                 opcionales.push({
-                  id: 1, // ID para Medicamentos (copago)
+                  id: copagoOpt.id, // ✅ ID del copago (no hardcodeado)
                   idCopago: parseInt(currentDynamicCopagos.medicamentos),
                   nombre: "COPAGO MEDICAMENTOS",
                   descripcion: copagoOpt.descripcion,
@@ -1876,7 +1923,7 @@ export const useCoberturasOpcionales = () => {
               if (copagoOpt) {
                 const primaCopago = copagoOpt.price * multiplicadorPrima;
                 opcionales.push({
-                  id: 3, // ID para Habitación (copago)
+                  id: copagoOpt.id, // ✅ ID del copago (no hardcodeado)
                   idCopago: parseInt(currentDynamicCopagos.habitacion),
                   nombre: "COPAGO HABITACIÓN",
                   descripcion: copagoOpt.descripcion,
