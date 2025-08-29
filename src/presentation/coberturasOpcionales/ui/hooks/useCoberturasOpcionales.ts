@@ -1893,7 +1893,14 @@ export const useCoberturasOpcionales = () => {
         }
       }
 
-      if (cliente?.clientChoosen === 1 || (cliente?.clientChoosen === 2 && globalFilters.habitacion)) {
+      // 🆕 FIX CRÍTICO: Para colectivos, considerar tanto filtro global como selecciones dinámicas activas
+      const hasHabitacionSelected = cliente?.clientChoosen === 2 && 
+                                   currentDynamicSelections.habitacion && 
+                                   currentDynamicSelections.habitacion !== "0";
+      
+      if (cliente?.clientChoosen === 1 || 
+          (cliente?.clientChoosen === 2 && globalFilters.habitacion) ||
+          hasHabitacionSelected) {
         if (cliente?.clientChoosen === 2 && currentDynamicSelections.habitacion && currentDynamicSelections.habitacion !== "0") {
           // Para colectivos, usar la selección específica del dropdown dinámico
           const selectedOption = habitacionOptionsQuery.data?.find(opt => opt.opt_id.toString() === currentDynamicSelections.habitacion);
@@ -2370,7 +2377,7 @@ export const useCoberturasOpcionales = () => {
           updatePlanOpcionales(plan.plan, odontologiaValue);
         });
       }
-    }, 100);
+    }, 200); // 🔧 Aumentar timeout para dar tiempo a React a actualizar el estado
   };
 
   const handleDynamicCopagoChange = (planName: string, coberturaType: string, value: string) => {

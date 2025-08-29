@@ -11,7 +11,6 @@ import OdontologiaSelect, { OdontologiaOption } from "./OdontologiaSelect";
 import { CoberturaOption } from "./CoberturaSelect";
 import { CopagoOption } from "./CopagoSelect";
 import DynamicCoberturaSelect from "./DynamicCoberturaSelect";
-import DebugDynamicCoberturaSelect from "./DebugDynamicCoberturaSelect";
 import DynamicCopagoSelect from "./DynamicCopagoSelect";
 import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
 import { useUnifiedQuotationStore } from "@/core";
@@ -374,7 +373,7 @@ const PlanTable = ({
                       Cobertura:
                     </label>
                     <div className="flex-1 min-w-0">
-                      <DebugDynamicCoberturaSelect
+                      <DynamicCoberturaSelect
                         value={dynamicCoberturaSelections?.habitacion || ""}
                         onChange={(value) =>
                           onDynamicCoberturaChange(
