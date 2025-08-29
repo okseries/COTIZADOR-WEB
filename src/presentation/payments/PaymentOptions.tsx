@@ -8,7 +8,7 @@ import { usePaymentOptions, PeriodoPago } from './hooks/usePaymentOptions';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-// import { useQuotationStore } from '@/core';
+import { useQuotationStore } from '@/core';
 // import { useQuotationStore } from '@/core';
 // import { useQuotationStore } from '../quotations/store/useQuotationStore';
 // import { useAuth } from '../auth/store/useAuth.store';
@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 export const PaymentOptions: React.FC = () => {
 
   // //! Eliminar
-  // const {getFinalObject} = useQuotationStore();
+  const {getFinalObject} = useQuotationStore();
   // const { user: authUser } = useAuth();
   // const router = useRouter();
   const {
@@ -34,7 +34,7 @@ export const PaymentOptions: React.FC = () => {
   // };
 
   const handleSubmit = async () => {
-    // const payload = getFinalObject();
+    const payload = getFinalObject();
     
     // Asegurarse de que el usuario esté incluido desde el store de auth
     // const finalPayload = {
@@ -42,10 +42,10 @@ export const PaymentOptions: React.FC = () => {
     //   user: authUser?.data?.user || null
     // };
 
-    // console.log(payload);
+    console.log(payload);
     
     
-    // debugger
+    debugger
     await submitQuotation();
   };
 

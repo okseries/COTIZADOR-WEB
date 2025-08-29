@@ -40,6 +40,7 @@ export interface Opcional {
   nombre: string;
   descripcion: string | null;
   prima: number;
+  tipoOpcionalId?: number; // 🆕 ID del tipo de opcional para mapeo correcto (1=MEDICAMENTOS, 2=ALTO COSTO, 3=HABITACION, 4=ODONTOLOGIA)
 }
 
 export interface ResumenPago {

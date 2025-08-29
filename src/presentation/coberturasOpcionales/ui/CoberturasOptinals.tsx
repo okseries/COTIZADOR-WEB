@@ -87,6 +87,25 @@ const CoberturasOpcionales = () => {
         };
         const dynamicCopagoSelection = dynamicCopagoSelections[plan.plan] || { altoCosto: '', medicamentos: '', habitacion: '' };
         
+        // 🔍 DEBUG CRÍTICO: Log exacto de valores que se pasan a PlanTable
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 CoberturasOptionals - Valores para PlanTable [${plan.plan}]:`, JSON.stringify({
+            planName: plan.plan,
+            odontologiaSelection,
+            dynamicCoberturaSelection,
+            dynamicCopagoSelection,
+            optionsAvailable: {
+              altoCosto: dynamicAltoCostoOptions?.length || 0,
+              medicamentos: dynamicMedicamentosOptions?.length || 0,
+              habitacion: dynamicHabitacionOptions?.length || 0,
+              copagosOptions: dynamicCopagosOptions?.length || 0,
+              copagosAltoCosto: dynamicCopagosAltoCostoOptions?.length || 0,
+              copagosHabitacion: dynamicCopagosHabitacionOptions?.length || 0
+            },
+            timestamp: new Date().toISOString()
+          }, null, 2));
+        }
+        
         return (
           <PlanTable
             key={plan.plan}

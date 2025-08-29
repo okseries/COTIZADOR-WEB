@@ -22,6 +22,7 @@ export interface CoberturasOpcionaleColectivo {
     limit_price:    string;
     tipoNombre:     string;
     descripcion:    string;
+    tipoOpcionalId?: number; // 🆕 ID del tipo de opcional para mapeo correcto
 }
 
 
@@ -31,6 +32,7 @@ export interface Copago {
     name:        string;
     price:       number;
     descripcion: string;
+    tipoOpcionalId?: number; // 🆕 ID del tipo de opcional para mapeo correcto
 }
 
 
