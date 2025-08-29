@@ -191,16 +191,6 @@ export const useCoberturasOpcionales = () => {
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render
   const { cliente, planes, updatePlanByName, mode } = useUnifiedQuotationStore();
   
-  // 🚨 DEBUG CRÍTICO: Verificar el tipoPlan que se está usando
-  console.log('🔍 TIPO PLAN DEBUG:', JSON.stringify({
-    clienteTipoPlan: cliente?.tipoPlan,
-    clienteChoosen: cliente?.clientChoosen,
-    fallbackTipoPlan: cliente?.tipoPlan || 1,
-    problemaPotencial: cliente?.tipoPlan === undefined || cliente?.tipoPlan === null ? 
-      "⚠️ tipoPlan es null/undefined - usando fallback 1 (Voluntario)" : 
-      "✅ tipoPlan definido correctamente"
-  }, null, 2));
-  
   // Obtener el mode para detectar si estamos editando
   const isEditMode = mode !== "create";
   
@@ -1054,15 +1044,6 @@ export const useCoberturasOpcionales = () => {
                   detectedFilters.altoCosto = true;
                   
                   const tipoOpcionalId = opcional.tipoOpcionalId || detectTipoOpcionalId(opcional.nombre);
-                  console.log(`💰 NAVEGACIÓN - Alto Costo cargado para ${plan.plan}:`, JSON.stringify({
-                    planName: plan.plan,
-                    originalId: opcional.id,
-                    mappedId: initialDynamicCoberturaSelections[plan.plan].altoCosto,
-                    tipoOpcionalId: opcional.tipoOpcionalId ? opcional.tipoOpcionalId : `${tipoOpcionalId} (detectado)`,
-                    prima: opcional.prima,
-                    primaUnitaria,
-                    mensaje: "🔧 MAPEO POR PRIMA SIMILAR"
-                  }, null, 2));
                 }
                 break;
                 
@@ -1070,7 +1051,6 @@ export const useCoberturasOpcionales = () => {
                 // ✅ USAR idCopago directamente (es el ID correcto de la API)
                 if (opcional.idCopago) {
                   initialDynamicCopagoSelections[plan.plan].altoCosto = opcional.idCopago.toString();
-                  console.log(`✅ NAVEGACIÓN - Copago Alto Costo usando idCopago para ${plan.plan}: ${opcional.idCopago}`);
                 } else if (opcional.prima && copagosAltoCostoQuery.data) {
                   // 🔧 NAVEGACIÓN: Mapear por prima para obtener el ID correcto de la API
                   const primaUnitaria = (opcional.prima || 0) / (plan.cantidadAfiliados || 1);
@@ -2499,31 +2479,7 @@ export const useCoberturasOpcionales = () => {
   // }
 
   // 🔍 DEBUG CRÍTICO: Verificar valores que se retornan a la UI
-  console.log('🔍 DEBUG UI - Valores retornados a la UI:', JSON.stringify({
-    timestamp: new Date().toISOString(),
-    dynamicCoberturaSelections: Object.entries(dynamicCoberturaSelections).map(([plan, sel]) => ({
-      plan,
-      altoCosto: sel.altoCosto,
-      medicamentos: sel.medicamentos,
-      habitacion: sel.habitacion,
-      odontologia: sel.odontologia
-    })),
-    dynamicCopagoSelections: Object.entries(dynamicCopagoSelections).map(([plan, copagos]) => ({
-      plan,
-      altoCosto: copagos.altoCosto,
-      medicamentos: copagos.medicamentos,
-      habitacion: copagos.habitacion
-    })),
-    planSelections: Object.entries(planSelections).map(([plan, sel]) => ({
-      plan,
-      odontologia: sel.odontologia
-    })),
-    tieneValoresParaUI: {
-      flexSmartDynamicHabitacion: dynamicCoberturaSelections['FLEX SMART']?.habitacion || 'N/A',
-      flexSmartCopagoHabitacion: dynamicCopagoSelections['FLEX SMART']?.habitacion || 'N/A',
-      flexSmartOdontologia: planSelections['FLEX SMART']?.odontologia || 'N/A'
-    }
-  }, null, 2));
+ 
 
   // 🆕 FUNCIÓN PARA VALIDAR Y GUARDAR AL NAVEGAR
   const validateAndSaveToStore = useCallback(async (): Promise<boolean> => {
