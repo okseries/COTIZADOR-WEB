@@ -1,11 +1,16 @@
 "use client"
-import React from 'react'
+import React, { forwardRef, useImperativeHandle } from 'react'
 import { useCoberturasOpcionales } from './hooks/useCoberturasOpcionales';
 import GlobalFilters from './components/GlobalFilters';
 import PlanTable from './components/PlanTable';
 import LoadingState from './components/LoadingState';
 
-const CoberturasOpcionales = () => {
+// 🆕 INTERFACE PARA REF
+export interface CoberturasOpcionalesRef {
+  validateAndSave: () => Promise<boolean>;
+}
+
+const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, ref) => {
   const {
     globalFilters,
     planSelections,
@@ -37,8 +42,16 @@ const CoberturasOpcionales = () => {
     handleCopagoChange,
     handleCopagoHabitacionChange,
     handleDynamicCoberturaChange,
-    handleDynamicCopagoChange
+    handleDynamicCopagoChange,
+    
+    // 🆕 FUNCIÓN DE VALIDACIÓN
+    validateAndSaveToStore
   } = useCoberturasOpcionales();
+
+  // 🆕 EXPONER FUNCIÓN DE VALIDACIÓN AL PADRE
+  useImperativeHandle(ref, () => ({
+    validateAndSave: validateAndSaveToStore
+  }), [validateAndSaveToStore]);
 
   // 🔍 DEBUG: Verificar las opciones dinámicas que recibe el componente
   // if (process.env.NODE_ENV === 'development') {
@@ -143,6 +156,8 @@ const CoberturasOpcionales = () => {
       })}
     </div>
   );
-}
+});
 
-export default CoberturasOpcionales
+CoberturasOpcionales.displayName = 'CoberturasOpcionales';
+
+export default CoberturasOpcionales;

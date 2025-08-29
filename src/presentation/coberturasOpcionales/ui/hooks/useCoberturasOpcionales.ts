@@ -2554,6 +2554,28 @@ export const useCoberturasOpcionales = () => {
     }
   }, null, 2));
 
+  // 🆕 FUNCIÓN PARA VALIDAR Y GUARDAR AL NAVEGAR
+  const validateAndSaveToStore = useCallback(async (): Promise<boolean> => {
+    try {
+      console.log('🔄 NAVEGACIÓN: Validando y guardando coberturas antes de avanzar al siguiente step');
+      
+      // Forzar actualización de todos los planes en el store
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
+      
+      // Dar un pequeño tiempo para que React complete cualquier actualización pendiente
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('✅ NAVEGACIÓN: Coberturas guardadas exitosamente');
+      return true;
+    } catch (error) {
+      console.error('❌ NAVEGACIÓN: Error al guardar coberturas:', error);
+      return false;
+    }
+  }, [updatePlanOpcionales, planes, planSelections]);
+
   return {
     // Estados
     globalFilters,
@@ -2589,7 +2611,10 @@ export const useCoberturasOpcionales = () => {
     handleCopagoChange,
     handleCopagoHabitacionChange,
     handleDynamicCoberturaChange,
-    handleDynamicCopagoChange
+    handleDynamicCopagoChange,
+    
+    // 🆕 FUNCIÓN PARA NAVEGACIÓN
+    validateAndSaveToStore
   };
 
   

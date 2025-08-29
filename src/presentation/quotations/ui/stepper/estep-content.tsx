@@ -3,7 +3,7 @@ import ClientInformation, { ClientInformationRef } from '../../../client/ui/Clie
 import StepButton from './stepButtom';
 import CategoryPlan from '@/presentation/plans/ui/CategoryPlan';
 import { ClientSearchProvider } from '@/presentation/client/hooks/useClientSearch';
-import CoberturasOpcionales from '@/presentation/coberturasOpcionales/ui/CoberturasOptinals';
+import CoberturasOpcionales, { CoberturasOpcionalesRef } from '@/presentation/coberturasOpcionales/ui/CoberturasOptinals';
 import PaymentOptions from '@/presentation/payments/PaymentOptions';
 import { useQuotationData } from '@/core';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,6 +16,7 @@ interface Props {
 
 const StepContent = ({ step, setStep }: Props) => {
   const clientInfoRef = useRef<ClientInformationRef>(null);
+  const coberturasRef = useRef<CoberturasOpcionalesRef>(null);
   const { planes } = useQuotationData();
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -44,6 +45,17 @@ const StepContent = ({ step, setStep }: Props) => {
         setValidationError("Debe agregar al menos un afiliado a los planes seleccionados para continuar.");
         return;
       }
+    }
+
+    // 🆕 VALIDACIÓN PARA STEP 3: Guardar coberturas opcionales antes de avanzar
+    if (step === "step3") {
+      const isValid = await coberturasRef.current?.validateAndSave();
+      if (isValid) {
+        setStep(nextStep);
+      } else {
+        setValidationError("Error al guardar las coberturas opcionales. Por favor, inténtelo nuevamente.");
+      }
+      return;
     }
 
     setStep(nextStep);
@@ -76,7 +88,7 @@ const StepContent = ({ step, setStep }: Props) => {
         )}
         {step === "step3" && (
           <div className="space-y-6">
-            <CoberturasOpcionales/>
+            <CoberturasOpcionales ref={coberturasRef} />
           </div>
         )}
         {step === "step4" && (

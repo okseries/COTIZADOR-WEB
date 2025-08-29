@@ -10,7 +10,7 @@ const QuotationContent = () => {
   return (
     <div className="h-full w-full">
       <FormProvider {...methods}>
-        <Stepper/>
+        <Stepper />
         {/* <StoreDebugger /> */}
       </FormProvider>
     </div>
