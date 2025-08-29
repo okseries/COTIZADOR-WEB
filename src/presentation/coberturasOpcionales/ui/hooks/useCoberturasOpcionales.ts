@@ -1,7 +1,28 @@
+/**
+ * 🎯 HOOK MEJORADO: useCoberturasOpcionales v4.0
+ * 
+ * SOLUCIÓN CRÍTICA - MAPEO CORRECTO DE INTENCIONES:
+ * ✅ opt_id = ID del catálogo que enviamos (intención del usuario)
+ * ✅ Backend re-mapea internamente a sus propios IDs
+ * ✅ MAPEO POR COINCIDENCIA: limit_price + opt_percentage → opt_id (solo para UI)
+ * ✅ ENVIAR INTENCIONES: Siempre enviar opt_ids del catálogo, no IDs guardados
+ * 
+ * FLUJO CORRECTO DESCUBIERTO:
+ * 1. CREAR: Usuario selecciona → enviamos opt_id → backend calcula y asigna su ID
+ * 2. EDITAR: Cotización tiene ID=39 → mapeamos a opt_id para mostrar → usuario cambia → enviamos nuevo opt_id
+ * 3. BACKEND: Recibe opt_id → aplica lógica de negocio → asigna nuevo ID/prima/descripción
+ * 4. RESULTADO: Backend NUNCA preserva nuestros IDs, siempre hace re-mapeo interno
+ * 
+ * 🚨 INSIGHT CLAVE: 
+ * - Frontend envía INTENCIONES (opt_ids)
+ * - Backend devuelve DECISIONES (IDs finales, primas reales, descripciones oficiales)
+ * - NO intentar preservar IDs, solo comunicar lo que el usuario quiere
+ */
+
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useUnifiedQuotationStore } from '@/core';
 import { usePlanesOpcionales, useCoberturasOpcionalesByType, useCopagos } from '../../hooks/usePlanesOpcionales';
-import { CoberturasOpcional, Copago } from '../../interface/Coberturaopcional.interface';
+import { CoberturasOpcional, CoberturasOpcionaleColectivo, Copago } from '../../interface/Coberturaopcional.interface';
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { OdontologiaOption } from '../components/OdontologiaSelect';
 
@@ -39,12 +60,12 @@ const detectTipoOpcionalId = (nombreOpcional: string): number => {
       return 1;
     case "ALTO COSTO":
     case "COPAGO ALTO COSTO":
-      return 2;
+      return 3;
     case "HABITACION":
     case "HABITACIÓN":
     case "COPAGO HABITACIÓN":
     case "COPAGO HABITACION":
-      return 3;
+      return 2;
     case "ODONTOLOGIA":
     case "ODONTOLOGÍA":
       return 4;
@@ -52,6 +73,85 @@ const detectTipoOpcionalId = (nombreOpcional: string): number => {
       console.warn(`⚠️ Nombre de opcional no reconocido para detectar tipoOpcionalId: ${nombreOpcional}`);
       return 0; // Valor por defecto
   }
+};
+
+// 🆕 FUNCIÓN CRÍTICA: Mapear de cotización guardada a opt_id del catálogo
+const mapCotizacionToOptId = (
+  cotizacionOpcional: Opcional,
+  catalogoOpciones: CoberturasOpcionaleColectivo[]
+): string | null => {
+  if (!catalogoOpciones || catalogoOpciones.length === 0) return null;
+  
+  // Extraer información de la descripción de la cotización
+  // Ejemplo: "Alto Costo RD$750,000.00 al 100%" → { limit: "750000", percentage: "1" }
+  const extractInfoFromDescription = (descripcion: string) => {
+    // Patron para extraer monto: "RD$750,000.00" → "750000"
+    const montoMatch = descripcion.match(/RD\$?([\d,]+(?:\.\d{2})?)/);
+    const monto = montoMatch ? montoMatch[1].replace(/,/g, '').replace(/\.00$/, '') : null;
+    
+    // Patron para extraer porcentaje: "al 100%" → "1", "al 90%" → "0.9"
+    const porcentajeMatch = descripcion.match(/al (\d+)%/);
+    const porcentaje = porcentajeMatch ? (parseInt(porcentajeMatch[1]) / 100).toString() : null;
+    
+    return { monto, porcentaje };
+  };
+  
+  const { monto, porcentaje } = extractInfoFromDescription(cotizacionOpcional.descripcion || '');
+  
+  console.log(`🔍 MAPEO ${cotizacionOpcional.nombre}:`, {
+    cotizacionId: cotizacionOpcional.id,
+    descripcion: cotizacionOpcional.descripcion,
+    extraido: { monto, porcentaje },
+    catalogoSize: catalogoOpciones.length
+  });
+  
+  // Buscar coincidencia exacta en el catálogo
+  const match = catalogoOpciones.find(option => {
+    const limitMatch = option.limit_price === monto;
+    const percentageMatch = option.opt_percentage === porcentaje;
+    
+    console.log(`  Comparando opt_id ${option.opt_id}:`, {
+      limit_price: option.limit_price,
+      opt_percentage: option.opt_percentage,
+      limitMatch,
+      percentageMatch,
+      isMatch: limitMatch && percentageMatch
+    });
+    
+    return limitMatch && percentageMatch;
+  });
+  
+  if (match) {
+    console.log(`✅ MAPEO EXITOSO: Cotización ID ${cotizacionOpcional.id} → opt_id ${match.opt_id}`);
+    return match.opt_id.toString();
+  } else {
+    console.warn(`⚠️ NO SE ENCONTRÓ MAPEO para cotización ID ${cotizacionOpcional.id}`, {
+      descripcion: cotizacionOpcional.descripcion,
+      buscando: { monto, porcentaje }
+    });
+    return null;
+  }
+};
+
+// 🆕 FUNCIÓN SIMPLIFICADA: Ya no necesitamos preservar IDs, solo mapear para UI
+// Esta función queda por compatibilidad pero no se usa en el flujo principal
+const mapOptIdToCotizacion = (
+  optId: string,
+  catalogoOpciones: CoberturasOpcionaleColectivo[],
+  cotizacionOriginal: Opcional
+): Partial<Opcional> => {
+  const selectedOption = catalogoOpciones.find(opt => opt.opt_id.toString() === optId);
+  
+  if (!selectedOption) {
+    console.warn(`⚠️ No se encontró opt_id ${optId} en catálogo`);
+    return {};
+  }
+  
+  // 🔄 SOLO retornar datos del catálogo, NO preservar IDs
+  return {
+    descripcion: selectedOption.descripcion,
+    prima: parseFloat(selectedOption.opt_prima)
+  };
 };
 
 export const useCoberturasOpcionales = () => {
@@ -248,51 +348,102 @@ export const useCoberturasOpcionales = () => {
   // Hooks para opciones dinámicas por tipo de cobertura (solo para colectivos)
   const isColectivo = cliente?.clientChoosen === 2;
   
-  // 🚨 FIX CRÍTICO: En modo edición, SIEMPRE ejecutar queries para colectivos
-  const shouldLoadOptions = isColectivo && (isEditMode || globalFilters.altoCosto || globalFilters.medicamentos || globalFilters.habitacion || globalFilters.odontologia);
+  // 🆕 MEJORA CRÍTICA: En modo edición, solo cargar opciones que realmente están seleccionadas
+  // Detectar qué tipos de cobertura están realmente en el store
+  const hasAltoCostoInStore = useMemo(() => {
+    return planes.some(plan => 
+      plan.opcionales.some(opt => 
+        opt.nombre === "ALTO COSTO" || opt.tipoOpcionalId === 3
+      )
+    );
+  }, [planes]);
   
-  console.log('🔧 QUERIES HABILITADAS:', {
+  const hasMedicamentosInStore = useMemo(() => {
+    return planes.some(plan => 
+      plan.opcionales.some(opt => 
+        opt.nombre === "MEDICAMENTOS" || opt.tipoOpcionalId === 1
+      )
+    );
+  }, [planes]);
+  
+  const hasHabitacionInStore = useMemo(() => {
+    return planes.some(plan => 
+      plan.opcionales.some(opt => 
+        opt.nombre === "HABITACION" || opt.tipoOpcionalId === 2
+      )
+    );
+  }, [planes]);
+  
+  // Lógica mejorada para cargar opciones
+  const shouldLoadAltoCosto = isColectivo && (
+    isEditMode ? hasAltoCostoInStore : globalFilters.altoCosto
+  );
+  
+  const shouldLoadMedicamentos = isColectivo && (
+    isEditMode ? hasMedicamentosInStore : globalFilters.medicamentos
+  );
+  
+  const shouldLoadHabitacion = isColectivo && (
+    isEditMode ? hasHabitacionInStore : globalFilters.habitacion
+  );
+  
+  // Odontología no necesita carga dinámica porque es estática
+  const shouldLoadOdontologia = isColectivo && (
+    isEditMode ? false : globalFilters.odontologia // Solo en modo crear
+  );
+  
+  console.log('🔧 QUERIES HABILITADAS MEJORADAS:', {
     isColectivo,
     isEditMode,
-    shouldLoadOptions,
+    storeDetection: {
+      hasAltoCostoInStore,
+      hasMedicamentosInStore, 
+      hasHabitacionInStore
+    },
+    shouldLoad: {
+      altoCosto: shouldLoadAltoCosto,
+      medicamentos: shouldLoadMedicamentos,
+      habitacion: shouldLoadHabitacion,
+      odontologia: shouldLoadOdontologia
+    },
     globalFilters,
-    reason: isEditMode ? "Modo edición - forzando carga" : "Filtros globales activos"
+    reason: isEditMode ? "Modo edición - carga selectiva según store" : "Filtros globales activos"
   });
   
   // Alto Costo
   const altoCostoOptionsQuery = useCoberturasOpcionalesByType(
     'altoCosto', 
     tipoPlanParaAPI, 
-    shouldLoadOptions
+    shouldLoadAltoCosto
   );
   
   // Medicamentos
   const medicamentosOptionsQuery = useCoberturasOpcionalesByType(
     'medicamentos', 
     tipoPlanParaAPI, 
-    shouldLoadOptions
+    shouldLoadMedicamentos
   );
   
   // Habitación
   const habitacionOptionsQuery = useCoberturasOpcionalesByType(
     'habitacion', 
     tipoPlanParaAPI, 
-    shouldLoadOptions
+    shouldLoadHabitacion
   );
   
   // Odontología
   const odontologiaOptionsQuery = useCoberturasOpcionalesByType(
     'odontologia', 
     tipoPlanParaAPI, 
-    shouldLoadOptions
+    shouldLoadOdontologia
   );
 
-  // �🔍 DEBUG CRÍTICO: Log del estado de las queries
+  // 🔍 DEBUG CRÍTICO: Log del estado de las queries
   console.log('🔍 QUERIES STATUS DETALLADO:', {
     altoCosto: {
-      enabled: isColectivo,
-      isColectivo,
-      globalFilterAltoCosto: globalFilters.altoCosto,
+      shouldLoad: shouldLoadAltoCosto,
+      hasInStore: hasAltoCostoInStore,
+      globalFilter: globalFilters.altoCosto,
       isEditMode,
       tipoPlan: cliente?.tipoPlan,
       isLoading: altoCostoOptionsQuery.isLoading,
@@ -301,9 +452,9 @@ export const useCoberturasOpcionales = () => {
       error: altoCostoOptionsQuery.error
     },
     medicamentos: {
-      enabled: isColectivo,
-      isColectivo,
-      globalFilterMedicamentos: globalFilters.medicamentos,
+      shouldLoad: shouldLoadMedicamentos,
+      hasInStore: hasMedicamentosInStore,
+      globalFilter: globalFilters.medicamentos,
       isEditMode,
       isLoading: medicamentosOptionsQuery.isLoading,
       isError: medicamentosOptionsQuery.isError,
@@ -311,9 +462,9 @@ export const useCoberturasOpcionales = () => {
       error: medicamentosOptionsQuery.error
     },
     habitacion: {
-      enabled: isColectivo,
-      isColectivo,
-      globalFilterHabitacion: globalFilters.habitacion,
+      shouldLoad: shouldLoadHabitacion,
+      hasInStore: hasHabitacionInStore,
+      globalFilter: globalFilters.habitacion,
       isEditMode,
       isLoading: habitacionOptionsQuery.isLoading,
       isError: habitacionOptionsQuery.isError,
@@ -321,10 +472,10 @@ export const useCoberturasOpcionales = () => {
       error: habitacionOptionsQuery.error
     },
     odontologia: {
-      enabled: isColectivo,
-      isColectivo,
-      globalFilterOdontologia: globalFilters.odontologia,
+      shouldLoad: shouldLoadOdontologia,
+      globalFilter: globalFilters.odontologia,
       isEditMode,
+      note: "Odontología es estática - no necesita carga dinámica en edición",
       isLoading: odontologiaOptionsQuery.isLoading,
       isError: odontologiaOptionsQuery.isError,
       dataLength: odontologiaOptionsQuery.data?.length || 0,
@@ -437,6 +588,118 @@ export const useCoberturasOpcionales = () => {
   }, [
     planQueriesData.map(q => `${q.planName}:${q.data?.length || 0}`).join(',')
   ]); // Depender solo de una representación string estable de los datos
+
+  // 🆕 EFECTO CRÍTICO: Mapeo correcto entre cotización guardada y catálogo de opciones
+  useEffect(() => {
+    if (!isEditMode || !isColectivo || planes.length === 0) return;
+    
+    console.log('🔄 INICIANDO MAPEO CORRECTO COTIZACIÓN → CATÁLOGO');
+    
+    const initialSelections: {[planName: string]: {
+      altoCosto: string;
+      medicamentos: string;
+      habitacion: string;
+      odontologia: string;
+    }} = {};
+    
+    const initialCopagos: {[planName: string]: {
+      altoCosto: string;
+      medicamentos: string;
+      habitacion: string;
+    }} = {};
+    
+    planes.forEach(plan => {
+      initialSelections[plan.plan] = {
+        altoCosto: "",
+        medicamentos: "",
+        habitacion: "",
+        odontologia: ""
+      };
+      
+      initialCopagos[plan.plan] = {
+        altoCosto: "0",
+        medicamentos: "0", 
+        habitacion: "0"
+      };
+      
+      plan.opcionales.forEach(opcional => {
+        switch (opcional.tipoOpcionalId) {
+          case 3: // Alto Costo
+            if (opcional.nombre === "ALTO COSTO" && altoCostoOptionsQuery.data) {
+              const optId = mapCotizacionToOptId(opcional, altoCostoOptionsQuery.data);
+              if (optId) {
+                initialSelections[plan.plan].altoCosto = optId;
+              }
+            } else if (opcional.nombre === "COPAGO ALTO COSTO" && opcional.idCopago) {
+              initialCopagos[plan.plan].altoCosto = opcional.idCopago.toString();
+            }
+            break;
+            
+          case 1: // Medicamentos
+            if (opcional.nombre === "MEDICAMENTOS" && medicamentosOptionsQuery.data) {
+              const optId = mapCotizacionToOptId(opcional, medicamentosOptionsQuery.data);
+              if (optId) {
+                initialSelections[plan.plan].medicamentos = optId;
+              }
+            } else if (opcional.nombre === "COPAGO MEDICAMENTOS" && opcional.idCopago) {
+              initialCopagos[plan.plan].medicamentos = opcional.idCopago.toString();
+            }
+            break;
+            
+          case 2: // Habitación
+            if (opcional.nombre === "HABITACION" && habitacionOptionsQuery.data) {
+              const optId = mapCotizacionToOptId(opcional, habitacionOptionsQuery.data);
+              if (optId) {
+                initialSelections[plan.plan].habitacion = optId;
+              }
+            } else if (opcional.nombre === "COPAGO HABITACIÓN" && opcional.idCopago) {
+              initialCopagos[plan.plan].habitacion = opcional.idCopago.toString();
+            }
+            break;
+            
+          case 4: // Odontología (estática - no necesita mapeo)
+            if (opcional.nombre === "ODONTOLOGIA") {
+              // Odontología usa mapeo estático por prima
+              const cantidadAfiliados = plan.cantidadAfiliados || 1;
+              const primaUnitaria = opcional.prima / cantidadAfiliados;
+              const odontologiaMatch = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
+              
+              if (odontologiaMatch) {
+                initialSelections[plan.plan].odontologia = odontologiaMatch.value;
+              }
+            }
+            break;
+        }
+      });
+      
+      console.log(`✅ MAPEO COMPLETADO para ${plan.plan}:`, {
+        selecciones: initialSelections[plan.plan],
+        copagos: initialCopagos[plan.plan]
+      });
+    });
+    
+    // Aplicar las selecciones mapeadas
+    setDynamicCoberturaSelections(initialSelections);
+    setDynamicCopagoSelections(initialCopagos);
+    
+    console.log('🎯 MAPEO CORRECTO APLICADO:', {
+      totalPlanes: planes.length,
+      seleccionesTotales: Object.keys(initialSelections).length,
+      copagosTotales: Object.keys(initialCopagos).length
+    });
+    
+  }, [
+    isEditMode,
+    isColectivo,
+    planes.length,
+    altoCostoOptionsQuery.data?.length,
+    medicamentosOptionsQuery.data?.length,
+    habitacionOptionsQuery.data?.length,
+    // Solo ejecutar cuando los datos del catálogo estén disponibles
+    altoCostoOptionsQuery.isLoading,
+    medicamentosOptionsQuery.isLoading,
+    habitacionOptionsQuery.isLoading
+  ]);
 
   // Inicializar selecciones de odontología para cada plan - CON CONTROL DE REFS
   useEffect(() => {
@@ -566,14 +829,14 @@ export const useCoberturasOpcionales = () => {
         
         console.log('✅ FILTROS GLOBALES ACTUALIZADOS DESDE STORE');
       } else {
-        // 🚨 FIX CRÍTICO: En modo edición, SIEMPRE FORZAR filtros activos para que los queries se ejecuten
+        // 🆕 MODO EDICIÓN SIN OPCIONALES: No forzar filtros, la detección selectiva se encarga
         if (isEditMode) {
-          console.log('🔧 MODO EDICIÓN SIN OPCIONALES: Forzando TODOS los filtros activos para cargar opciones desde API');
+          console.log('🔧 MODO EDICIÓN SIN OPCIONALES: Usando detección selectiva - no hay opcionales para cargar');
           setGlobalFilters({
-            altoCosto: true,
-            medicamentos: true,
-            habitacion: true,
-            odontologia: true
+            altoCosto: false,
+            medicamentos: false,
+            habitacion: false,
+            odontologia: false
           });
         } else {
           console.log('🆕 MODO CREAR: Filtros desactivados hasta selección manual');
@@ -1132,12 +1395,12 @@ export const useCoberturasOpcionales = () => {
           if (opcional.nombre === "ALTO COSTO" && opcional.id) {
             // 🆕 USAR tipoOpcionalId PARA MAPEO DIRECTO
             if (opcional.tipoOpcionalId) {
-              // Verificar que el tipoOpcionalId coincida con el tipo correcto (2 = ALTO COSTO)
-              if (opcional.tipoOpcionalId === 2) {
+              // Verificar que el tipoOpcionalId coincida con el tipo correcto (3 = ALTO COSTO)
+              if (opcional.tipoOpcionalId === 3) {
                 selections.altoCosto = opcional.id.toString();
                 console.log(`💰 ALTO COSTO - Mapeo directo con tipoOpcionalId: ${opcional.tipoOpcionalId} -> ID: ${opcional.id}`);
               } else {
-                console.warn(`💰 ALTO COSTO - tipoOpcionalId incorrecto: ${opcional.tipoOpcionalId}, esperado: 2`);
+                console.warn(`💰 ALTO COSTO - tipoOpcionalId incorrecto: ${opcional.tipoOpcionalId}, esperado: 3`);
                 selections.altoCosto = opcional.id.toString(); // Usar ID de todas formas
               }
             } else {
@@ -1178,12 +1441,12 @@ export const useCoberturasOpcionales = () => {
           } else if (opcional.nombre === "HABITACION" && opcional.id) {
             // 🆕 USAR tipoOpcionalId PARA MAPEO DIRECTO
             if (opcional.tipoOpcionalId) {
-              // Verificar que el tipoOpcionalId coincida con el tipo correcto (3 = HABITACION)
-              if (opcional.tipoOpcionalId === 3) {
+              // Verificar que el tipoOpcionalId coincida con el tipo correcto (2 = HABITACION)
+              if (opcional.tipoOpcionalId === 2) {
                 selections.habitacion = opcional.id.toString();
                 console.log(`🏠 HABITACIÓN - Mapeo directo con tipoOpcionalId: ${opcional.tipoOpcionalId} -> ID: ${opcional.id}`);
               } else {
-                console.warn(`🏠 HABITACIÓN - tipoOpcionalId incorrecto: ${opcional.tipoOpcionalId}, esperado: 3`);
+                console.warn(`🏠 HABITACIÓN - tipoOpcionalId incorrecto: ${opcional.tipoOpcionalId}, esperado: 2`);
                 selections.habitacion = opcional.id.toString(); // Usar ID de todas formas
               }
             } else {
@@ -1437,14 +1700,20 @@ export const useCoberturasOpcionales = () => {
           if (selectedOption) {
             const primaBase = parseFloat(selectedOption.opt_prima) * multiplicadorPrima;
             
+            // 🆕 ESTRATEGIA CORREGIDA: SIEMPRE usar opt_id del catálogo
+            // El backend hará el re-mapeo interno, nosotros solo enviamos intenciones
+            const finalId = selectedOption.opt_id; // ✅ SIEMPRE opt_id del catálogo
+            
+            console.log(`💡 ALTO COSTO - Usando opt_id del catálogo: ${finalId} (Backend decidirá ID final)`);
+            
             // Agregar la cobertura base
             opcionales.push({
-              id: selectedOption.opt_id,
+              id: finalId, // ✅ opt_id del catálogo (intención del usuario)
               idCopago: currentDynamicCopagos.altoCosto ? parseInt(currentDynamicCopagos.altoCosto) : undefined,
               nombre: "ALTO COSTO",
               descripcion: selectedOption.descripcion,
               prima: primaBase, // Prima base de la cobertura
-              tipoOpcionalId: 2 // 🆕 ID del tipo de opcional para Alto Costo
+              tipoOpcionalId: 3 // 🆕 ID del tipo de opcional para Alto Costo
             });
             subTotalOpcional += primaBase;
             
@@ -1459,7 +1728,7 @@ export const useCoberturasOpcionales = () => {
                   nombre: "COPAGO ALTO COSTO",
                   descripcion: copagoOpt.descripcion,
                   prima: primaCopago, // El copago se suma al total
-                  tipoOpcionalId: 2 // 🆕 ID del tipo de opcional para Alto Costo
+                  tipoOpcionalId: 3 // 🆕 ID del tipo de opcional para Alto Costo
                 });
                 subTotalOpcional += primaCopago;
               }
@@ -1476,7 +1745,7 @@ export const useCoberturasOpcionales = () => {
             nombre: "ALTO COSTO",
             descripcion: data.altoCosto,
             prima: primaCalculada,
-            tipoOpcionalId: 2 // 🆕 ID del tipo de opcional para Alto Costo
+            tipoOpcionalId: 3 // 🆕 ID del tipo de opcional para Alto Costo
           });
           subTotalOpcional += primaCalculada;
         }
@@ -1489,9 +1758,15 @@ export const useCoberturasOpcionales = () => {
           if (selectedOption) {
             const primaBase = parseFloat(selectedOption.opt_prima) * multiplicadorPrima;
 
+            // 🆕 ESTRATEGIA CORREGIDA: SIEMPRE usar opt_id del catálogo
+            // El backend hará el re-mapeo interno, nosotros solo enviamos intenciones
+            const finalId = selectedOption.opt_id; // ✅ SIEMPRE opt_id del catálogo
+            
+            console.log(`💡 MEDICAMENTOS - Usando opt_id del catálogo: ${finalId} (Backend decidirá ID final)`);
+
             // Agregar la cobertura base
             opcionales.push({
-              id: selectedOption.opt_id,
+              id: finalId, // ✅ opt_id del catálogo (intención del usuario)
               idCopago: currentDynamicCopagos.medicamentos ? parseInt(currentDynamicCopagos.medicamentos) : undefined,
               nombre: "MEDICAMENTOS",
               descripcion: selectedOption.descripcion,
@@ -1542,14 +1817,20 @@ export const useCoberturasOpcionales = () => {
           if (selectedOption) {
             const primaBase = parseFloat(selectedOption.opt_prima) * multiplicadorPrima;
             
+            // 🆕 ESTRATEGIA CORREGIDA: SIEMPRE usar opt_id del catálogo
+            // El backend hará el re-mapeo interno, nosotros solo enviamos intenciones
+            const finalId = selectedOption.opt_id; // ✅ SIEMPRE opt_id del catálogo
+            
+            console.log(`💡 HABITACION - Usando opt_id del catálogo: ${finalId} (Backend decidirá ID final)`);
+            
             // Agregar la cobertura base
             opcionales.push({
-              id: selectedOption.opt_id,
+              id: finalId, // ✅ opt_id del catálogo (intención del usuario)
               idCopago: currentDynamicCopagos.habitacion ? parseInt(currentDynamicCopagos.habitacion) : undefined,
               nombre: "HABITACION",
               descripcion: selectedOption.descripcion,
               prima: primaBase, // Prima base de la cobertura
-              tipoOpcionalId: 3 // 🆕 ID del tipo de opcional para Habitación
+              tipoOpcionalId: 2 // 🆕 ID del tipo de opcional para Habitación
             });
             subTotalOpcional += primaBase;
             
@@ -1564,7 +1845,7 @@ export const useCoberturasOpcionales = () => {
                   nombre: "COPAGO HABITACIÓN",
                   descripcion: copagoOpt.descripcion,
                   prima: primaCopago, // El copago se suma al total
-                  tipoOpcionalId: 3 // 🆕 ID del tipo de opcional para Habitación
+                  tipoOpcionalId: 2 // 🆕 ID del tipo de opcional para Habitación
                 });
                 subTotalOpcional += primaCopago;
               }
@@ -1583,7 +1864,7 @@ export const useCoberturasOpcionales = () => {
             nombre: "HABITACION",
             descripcion: data.habitacion,
             prima: primaCalculada,
-            tipoOpcionalId: 3 // 🆕 ID del tipo de opcional para Habitación
+            tipoOpcionalId: 2 // 🆕 ID del tipo de opcional para Habitación
           });
           subTotalOpcional += primaCalculada;
         }

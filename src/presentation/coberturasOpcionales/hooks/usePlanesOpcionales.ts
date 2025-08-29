@@ -61,7 +61,7 @@ export const useCoberturasOpcionalesByType = (coberturaType: string, idPlantype:
             case 'altoCosto': return 3; // ID para Alto Costo
             case 'medicamentos': return 1; // ID para Medicamentos  
             case 'habitacion': return 2; // ID para Habitación
-            case 'odontologia': return 4; // ID para Odontología
+            case 'odontologia': return 4; // ID para Odontología - ⚠️ CONFIRMAR CON API
             default: return null;
         }
     };
