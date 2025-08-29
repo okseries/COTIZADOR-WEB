@@ -78,9 +78,13 @@ const detectTipoOpcionalId = (nombreOpcional: string): number => {
 // 🆕 FUNCIÓN CRÍTICA: Mapear de cotización guardada a opt_id del catálogo
 const mapCotizacionToOptId = (
   cotizacionOpcional: Opcional,
-  catalogoOpciones: CoberturasOpcionaleColectivo[]
+  catalogoOpciones: CoberturasOpcionaleColectivo[],
+  cantidadAfiliados: number = 1 // 🆕 PARÁMETRO CRÍTICO: cantidad de afiliados para dividir prima
 ): string | null => {
   if (!catalogoOpciones || catalogoOpciones.length === 0) return null;
+  
+  // 🔧 CÁLCULO CORRECTO: Convertir prima total a prima unitaria
+  const primaUnitaria = (cotizacionOpcional.prima || 0) / cantidadAfiliados;
   
   // Extraer información de la descripción de la cotización
   // Ejemplo: "Alto Costo RD$750,000.00 al 100%" → { limit: "750000", percentage: "1" }
@@ -101,25 +105,53 @@ const mapCotizacionToOptId = (
   console.log(`🔍 MAPEO ${cotizacionOpcional.nombre}:`, {
     cotizacionId: cotizacionOpcional.id,
     descripcion: cotizacionOpcional.descripcion,
+    primaTotal: cotizacionOpcional.prima,
+    cantidadAfiliados,
+    primaUnitaria, // 🆕 Prima calculada por afiliado
     extraido: { monto, porcentaje },
     catalogoSize: catalogoOpciones.length
   });
   
-  // Buscar coincidencia exacta en el catálogo
-  const match = catalogoOpciones.find(option => {
-    const limitMatch = option.limit_price === monto;
-    const percentageMatch = option.opt_percentage === porcentaje;
-    
-    console.log(`  Comparando opt_id ${option.opt_id}:`, {
-      limit_price: option.limit_price,
-      opt_percentage: option.opt_percentage,
-      limitMatch,
-      percentageMatch,
-      isMatch: limitMatch && percentageMatch
+  // 🆕 BÚSQUEDA DUAL: Primero por descripción, luego por prima similar
+  let match = null;
+  
+  // Método 1: Buscar coincidencia exacta por descripción
+  if (monto && porcentaje) {
+    match = catalogoOpciones.find(option => {
+      const limitMatch = option.limit_price === monto;
+      const percentageMatch = option.opt_percentage === porcentaje;
+      
+      console.log(`  Comparando opt_id ${option.opt_id} (método descripción):`, {
+        limit_price: option.limit_price,
+        opt_percentage: option.opt_percentage,
+        limitMatch,
+        percentageMatch,
+        isMatch: limitMatch && percentageMatch
+      });
+      
+      return limitMatch && percentageMatch;
     });
-    
-    return limitMatch && percentageMatch;
-  });
+  }
+  
+  // Método 2: Si no encontró por descripción, buscar por prima similar
+  if (!match) {
+    match = catalogoOpciones.find(option => {
+      const primaAPI = parseFloat(option.opt_prima || "0");
+      const diferencia = Math.abs(primaAPI - primaUnitaria);
+      const tolerancia = 1; // Tolerancia de 1 peso
+      const esSimilar = diferencia < tolerancia;
+      
+      console.log(`  Comparando opt_id ${option.opt_id} (método prima):`, {
+        opt_prima: primaAPI,
+        primaUnitariaCotizacion: primaUnitaria,
+        diferencia,
+        tolerancia,
+        esSimilar
+      });
+      
+      return esSimilar;
+    });
+  }
   
   if (match) {
     console.log(`✅ MAPEO EXITOSO: Cotización ID ${cotizacionOpcional.id} → opt_id ${match.opt_id}`);
@@ -127,6 +159,7 @@ const mapCotizacionToOptId = (
   } else {
     console.warn(`⚠️ NO SE ENCONTRÓ MAPEO para cotización ID ${cotizacionOpcional.id}`, {
       descripcion: cotizacionOpcional.descripcion,
+      primaUnitaria,
       buscando: { monto, porcentaje }
     });
     return null;
@@ -623,10 +656,13 @@ export const useCoberturasOpcionales = () => {
       };
       
       plan.opcionales.forEach(opcional => {
-        switch (opcional.tipoOpcionalId) {
+        // 🆕 DETECCIÓN AUTOMÁTICA: Si no hay tipoOpcionalId, detectarlo por nombre
+        const tipoDetectado = opcional.tipoOpcionalId || detectTipoOpcionalId(opcional.nombre);
+        
+        switch (tipoDetectado) {
           case 3: // Alto Costo
             if (opcional.nombre === "ALTO COSTO" && altoCostoOptionsQuery.data) {
-              const optId = mapCotizacionToOptId(opcional, altoCostoOptionsQuery.data);
+              const optId = mapCotizacionToOptId(opcional, altoCostoOptionsQuery.data, plan.cantidadAfiliados || 1);
               if (optId) {
                 initialSelections[plan.plan].altoCosto = optId;
               }
@@ -637,7 +673,7 @@ export const useCoberturasOpcionales = () => {
             
           case 1: // Medicamentos
             if (opcional.nombre === "MEDICAMENTOS" && medicamentosOptionsQuery.data) {
-              const optId = mapCotizacionToOptId(opcional, medicamentosOptionsQuery.data);
+              const optId = mapCotizacionToOptId(opcional, medicamentosOptionsQuery.data, plan.cantidadAfiliados || 1);
               if (optId) {
                 initialSelections[plan.plan].medicamentos = optId;
               }
@@ -648,7 +684,7 @@ export const useCoberturasOpcionales = () => {
             
           case 2: // Habitación
             if (opcional.nombre === "HABITACION" && habitacionOptionsQuery.data) {
-              const optId = mapCotizacionToOptId(opcional, habitacionOptionsQuery.data);
+              const optId = mapCotizacionToOptId(opcional, habitacionOptionsQuery.data, plan.cantidadAfiliados || 1);
               if (optId) {
                 initialSelections[plan.plan].habitacion = optId;
               }
