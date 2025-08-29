@@ -534,25 +534,7 @@ export const useCoberturasOpcionales = () => {
     cliente?.clientChoosen || 1
   );
   
-  // 🔍 DEBUG COPAGOS STATUS
-  // console.log('🔍 COPAGOS STATUS:', {
-  //   medicamentos: {
-  //     isLoading: copagosQuery.isLoading,
-  //     dataLength: copagosQuery.data?.length || 0,
-  //     error: copagosQuery.error
-  //   },
-  //   altoCosto: {
-  //     isLoading: copagosAltoCostoQuery.isLoading,
-  //     dataLength: copagosAltoCostoQuery.data?.length || 0,
-  //     error: copagosAltoCostoQuery.error
-  //   },
-  //   habitacion: {
-  //     isLoading: copagosHabitacionQuery.isLoading,
-  //     dataLength: copagosHabitacionQuery.data?.length || 0,
-  //     error: copagosHabitacionQuery.error
-  //   }
-  // });
-
+  // Estados derivados para la UI
   // 🚨 NUEVO: Resetear editModeInitializedRef cuando cambien las opciones disponibles
   useEffect(() => {
     if (isEditMode && cliente?.clientChoosen === 2) {
@@ -2458,20 +2440,9 @@ export const useCoberturasOpcionales = () => {
       return newSelections;
     });
     
-    // Actualizar inmediatamente los planes correspondientes
-    setTimeout(() => {
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        const odontologiaValue = planSelections[planName]?.odontologia || "0";
-        updatePlanOpcionales(planName, odontologiaValue);
-      } else {
-        // INDIVIDUAL: Actualizar todos los planes
-        planes.forEach(plan => {
-          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-          updatePlanOpcionales(plan.plan, odontologiaValue);
-        });
-      }
-    }, 100);
+    // ✅ OPTIMIZACIÓN: Sincronización movida a validateAndSaveToStore()
+    // Ya no necesitamos setTimeout aquí - los datos se sincronizan de manera
+    // confiable cuando el usuario navega al presionar "Siguiente"
   };
 
   /**
