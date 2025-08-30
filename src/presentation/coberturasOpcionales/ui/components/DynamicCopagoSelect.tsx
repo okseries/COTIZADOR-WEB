@@ -1,5 +1,10 @@
+/**
+ * Componente para selección dinámica de copagos
+ * Versión original sin cambios visuales
+ */
+
 "use client"
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copago } from '../../interface/Coberturaopcional.interface';
 
@@ -10,12 +15,14 @@ interface DynamicCopagoSelectProps {
   placeholder?: string;
 }
 
-const DynamicCopagoSelect = ({ value, onChange, options = [], placeholder = "Seleccionar copago (opcional)" }: DynamicCopagoSelectProps) => {
+const DynamicCopagoSelect = ({ 
+  value, 
+  onChange, 
+  options = [], 
+  placeholder = "Seleccionar copago (opcional)"
+}: DynamicCopagoSelectProps) => {
   // Asegurar que value siempre sea string para evitar controlled/uncontrolled switching
   const safeValue = value || "";
-  
-
-  
   
   return (
     <Select
@@ -30,11 +37,11 @@ const DynamicCopagoSelect = ({ value, onChange, options = [], placeholder = "Sel
         <SelectItem value="0">
           Ninguna (No seleccionar)
         </SelectItem>
-        {options?.map((option) => (
+        {options.map((option) => (
           <SelectItem key={option.id} value={option.id.toString()}>
             {option.descripcion}
           </SelectItem>
-        )) || []}
+        ))}
       </SelectContent>
     </Select>
   );

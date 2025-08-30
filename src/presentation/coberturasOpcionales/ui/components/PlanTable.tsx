@@ -15,7 +15,6 @@ import DynamicCopagoSelect from "./DynamicCopagoSelect";
 import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
 import { useUnifiedQuotationStore } from "@/core";
 import { Cliente } from "@/presentation/quotations/interface/quotation.interface";
-import { Badge } from "@/components/ui/badge";
 
 // Tipo para las selecciones de cobertura
 type CoberturaSelections = {
@@ -78,12 +77,12 @@ interface PlanTableProps {
   onCopagoHabitacionChange: (planName: string, value: string) => void;
   onDynamicCoberturaChange: (
     planName: string,
-    coberturaType: string,
+    coberturaType: "altoCosto" | "medicamentos" | "habitacion",
     value: string
   ) => void;
   onDynamicCopagoChange: (
     planName: string,
-    coberturaType: string,
+    coberturaType: "altoCosto" | "medicamentos" | "habitacion",
     value: string
   ) => void;
 }
@@ -135,9 +134,7 @@ const PlanTable = ({
     <Card className="mb-6">
       <CardHeader>
         <CardTitle>
-          <Badge className=" bg-gradient-to-b from-[#009590] to-[#0269aa] text-white mr-2">
-            {planName}
-          </Badge>
+          {planName}
         </CardTitle>
         
       </CardHeader>
@@ -148,8 +145,8 @@ const PlanTable = ({
 
           {/* Alto Costo */}
           {(clientChoosen === 1 || globalFilters.altoCosto) && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-800 mb-3">Alto Costo</h3>
+            <div className="border rounded p-4">
+              <h3 className="font-medium mb-3">Alto Costo</h3>
               {clientChoosen === 2 ? (
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -250,8 +247,8 @@ const PlanTable = ({
 
           {/* Medicamentos */}
           {(clientChoosen === 1 || globalFilters.medicamentos) && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-800 mb-3">Medicamentos</h3>
+            <div className="border rounded p-4">
+              <h3 className="font-medium mb-3">Medicamentos</h3>
               {clientChoosen === 2 ? (
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">

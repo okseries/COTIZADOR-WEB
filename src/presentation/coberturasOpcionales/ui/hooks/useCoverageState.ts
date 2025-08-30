@@ -1,8 +1,10 @@
 /**
  * Hook centralizado para manejar el estado de coberturas opcionales
+ * Versión refactorizada con todos los valores derivados
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useUnifiedQuotationStore } from '@/core';
 import { 
   GlobalFilters,
   PlanSelections,
@@ -21,6 +23,14 @@ const defaultCoberturaSelections: CoberturaSelections = {
 };
 
 export const useCoverageState = () => {
+  // Acceso al store global
+  const { cliente, planes, mode, updatePlanByName } = useUnifiedQuotationStore();
+  
+  // Valores derivados
+  const isEditMode = useMemo(() => mode !== "create", [mode]);
+  const isCollective = useMemo(() => cliente?.clientChoosen === 2, [cliente?.clientChoosen]);
+  const tipoPlanParaAPI = useMemo(() => cliente?.tipoPlan || 1, [cliente?.tipoPlan]);
+  
   // Estados de selección
   const [planSelections, setPlanSelections] = useState<PlanSelections>({});
   const [coberturaSelections, setCoberturaSelections] = useState<Record<string, CoberturaSelections>>({});
@@ -41,6 +51,15 @@ export const useCoverageState = () => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   return {
+    // Datos del store
+    cliente,
+    planes,
+    mode,
+    isEditMode,
+    isCollective,
+    tipoPlanParaAPI,
+    updatePlanByName,
+    
     // Estados de selección
     planSelections,
     setPlanSelections,

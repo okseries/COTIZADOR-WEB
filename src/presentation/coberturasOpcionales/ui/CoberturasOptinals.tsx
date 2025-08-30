@@ -28,7 +28,7 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
     dynamicAltoCostoOptions,
     dynamicMedicamentosOptions,
     dynamicHabitacionOptions,
-    dynamicODONTOLOGIA_OPTIONS,
+    dynamicODONTOLOGIA_OPTIONS: dynamicOdontologiaOptions,
     dynamicCopagosOptions,
     dynamicCopagosAltoCostoOptions,
     dynamicCopagosHabitacionOptions,
@@ -84,7 +84,7 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
       />
 
       {/* Tablas por plan */}
-      {planes.map(plan => {
+      {planes.map((plan: any) => {
         const planData = planesData[plan.plan];
         const odontologiaSelection = planSelections[plan.plan]?.odontologia || "0";
         const coberturaSelection = coberturaSelections[plan.plan];
@@ -121,7 +121,7 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
             dynamicAltoCostoOptions={dynamicAltoCostoOptions}
             dynamicMedicamentosOptions={dynamicMedicamentosOptions}
             dynamicHabitacionOptions={dynamicHabitacionOptions}
-            dynamicOdontologiaOptions={dynamicODONTOLOGIA_OPTIONS}
+            dynamicOdontologiaOptions={dynamicOdontologiaOptions}
             dynamicCopagosOptions={dynamicCopagosOptions}
             dynamicCopagosAltoCostoOptions={dynamicCopagosAltoCostoOptions}
             dynamicCopagosHabitacionOptions={dynamicCopagosHabitacionOptions}

@@ -10,6 +10,8 @@ interface UseQueriesConfig {
   planes: any[];
   globalFilters: any;
   isEditMode: boolean;
+  isCollective: boolean;
+  tipoPlanParaAPI: number;
   hasAltoCostoInStore: boolean;
   hasMedicamentosInStore: boolean;
   hasHabitacionInStore: boolean;
@@ -20,13 +22,14 @@ export const useCoverageQueries = ({
   planes,
   globalFilters,
   isEditMode,
+  isCollective,
+  tipoPlanParaAPI,
   hasAltoCostoInStore,
   hasMedicamentosInStore,
   hasHabitacionInStore
 }: UseQueriesConfig) => {
   
-  const tipoPlanParaAPI = cliente?.tipoPlan || 1;
-  const isColectivo = cliente?.clientChoosen === 2;
+  const isColectivo = isCollective;
 
   // Crear hooks individuales para cada plan - siempre llamar los hooks con condición de enabled
   const plan1Query = usePlanesOpcionales(
@@ -163,8 +166,18 @@ export const useCoverageQueries = ({
     copagosAltoCostoQuery,
     copagosHabitacionQuery,
     
+    // Data arrays (for convenience)
+    altoCostoOptions: altoCostoOptionsQuery.data || [],
+    medicamentosOptions: medicamentosOptionsQuery.data || [],
+    habitacionOptions: habitacionOptionsQuery.data || [],
+    odontologiaOptions: odontologiaOptionsQuery.data || [],
+    copagosOptions: copagosQuery.data || [],
+    copagosAltoCostoOptions: copagosAltoCostoQuery.data || [],
+    copagosHabitacionOptions: copagosHabitacionQuery.data || [],
+    
     // Estado derivado
     isLoading: planQueriesData.some(q => q.isLoading),
-    hasError: planQueriesData.some(q => q.error)
+    hasError: planQueriesData.some(q => q.error),
+    isEmpty: planes.length === 0
   };
 };

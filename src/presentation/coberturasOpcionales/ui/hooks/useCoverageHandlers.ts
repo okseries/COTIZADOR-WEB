@@ -1,20 +1,27 @@
 /**
- * Hook personalizado para manejar cambios en coberturas opcionales
+ * Hook especializado para manejar los handlers de cambios en las coberturas
  */
 
 import { useCallback } from 'react';
-import { updateSelectionsForClientType } from '../../utils/handler.utils';
+import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
+import { Cliente } from '@/presentation/quotations/interface/quotation.interface';
+import { 
+  CoberturaSelections, 
+  PlanSelections,
+  DynamicCoberturaSelections,
+  DynamicCopagoSelectionsMap
+} from '../../types/coverage.types';
 
-interface UseHandlersProps {
+interface UseCoverageHandlersProps {
   isUpdating: boolean;
   setIsUpdating: (value: boolean) => void;
-  cliente: any;
-  planes: any[];
-  planSelections: Record<string, Record<string, string>>;
-  updatePlanOpcionales: (planName: string, value: string) => void;
-  setPlanSelections: Function;
-  setDynamicCoberturaSelections: Function;
-  setDynamicCopagoSelections: Function;
+  cliente: Cliente | null;
+  planes: Plan[];
+  planSelections: PlanSelections;
+  updatePlanOpcionales: (planName: string, odontologiaValue: string) => void;
+  setPlanSelections: React.Dispatch<React.SetStateAction<PlanSelections>>;
+  setDynamicCoberturaSelections: React.Dispatch<React.SetStateAction<DynamicCoberturaSelections>>;
+  setDynamicCopagoSelections: React.Dispatch<React.SetStateAction<DynamicCopagoSelectionsMap>>;
   navigationLoadedRef: React.MutableRefObject<boolean>;
 }
 
@@ -29,25 +36,25 @@ export const useCoverageHandlers = ({
   setDynamicCoberturaSelections,
   setDynamicCopagoSelections,
   navigationLoadedRef
-}: UseHandlersProps) => {
-  
-  const isCollective = cliente?.clientChoosen === 2;
+}: UseCoverageHandlersProps) => {
 
   const handleOdontologiaChange = useCallback((planName: string, value: string) => {
     if (isUpdating) return;
     
-    setIsUpdating(true);
+    // 🆕 RESETEAR FLAG DE NAVEGACIÓN cuando el usuario hace cambios manuales
+    navigationLoadedRef.current = false;
     
-    // Actualizar selecciones
-    setPlanSelections((prev: any) => {
+    setPlanSelections(prev => {
       const newSelections = { ...prev };
       
-      if (isCollective) {
+      if (cliente?.clientChoosen === 2) {
+        // Para colectivos, solo actualizar el plan específico
         newSelections[planName] = {
           ...newSelections[planName],
           odontologia: value
         };
       } else {
+        // Para individuales, actualizar todos los planes con el mismo valor
         planes.forEach(plan => {
           newSelections[plan.plan] = {
             ...newSelections[plan.plan],
@@ -59,41 +66,58 @@ export const useCoverageHandlers = ({
       return newSelections;
     });
     
-    // Actualizar store
-    if (isCollective) {
+    // Actualizar inmediatamente para reflejar cambios
+    if (cliente?.clientChoosen === 2) {
       updatePlanOpcionales(planName, value);
     } else {
+      // Para individuales, actualizar todos los planes
       planes.forEach(plan => {
         updatePlanOpcionales(plan.plan, value);
       });
     }
-    
-    setIsUpdating(false);
-  }, [isUpdating, setIsUpdating, isCollective, planes, updatePlanOpcionales, setPlanSelections]);
+  }, [
+    isUpdating,
+    cliente?.clientChoosen,
+    planes,
+    updatePlanOpcionales,
+    setPlanSelections,
+    navigationLoadedRef
+  ]);
 
   const handleDynamicCoberturaChange = useCallback((
     planName: string, 
-    coberturaType: string, 
+    coberturaType: keyof Pick<DynamicCoberturaSelections[string], 'altoCosto' | 'medicamentos' | 'habitacion'>, 
     value: string
   ) => {
     if (isUpdating) return;
     
-    // Reset navegación al hacer selección manual
+    // 🆕 RESETEAR FLAG DE NAVEGACIÓN cuando el usuario hace cambios manuales
     navigationLoadedRef.current = false;
     
-    setDynamicCoberturaSelections((prev: any) => {
+    setDynamicCoberturaSelections(prev => {
       const newSelections = { ...prev };
       
-      if (isCollective) {
-        const currentPlanSelections = newSelections[planName] || {};
+      if (cliente?.clientChoosen === 2) {
+        const currentPlanSelections = newSelections[planName] || {
+          altoCosto: "0",
+          medicamentos: "0",
+          habitacion: "0",
+          odontologia: "0"
+        };
         newSelections[planName] = {
           ...currentPlanSelections,
           [coberturaType]: value
         };
       } else {
         planes.forEach(plan => {
+          const currentPlanSelections = newSelections[plan.plan] || {
+            altoCosto: "0",
+            medicamentos: "0",
+            habitacion: "0",
+            odontologia: "0"
+          };
           newSelections[plan.plan] = {
-            ...newSelections[plan.plan],
+            ...currentPlanSelections,
             [coberturaType]: value
           };
         });
@@ -102,31 +126,41 @@ export const useCoverageHandlers = ({
       return newSelections;
     });
     
-    // Limpiar copago si se selecciona "Ninguna"
-    if (value === "0") {
-      setDynamicCopagoSelections((prev: any) => {
-        const newSelections = { ...prev };
+    // Si se está seleccionando una cobertura, limpiar el copago relacionado
+    if (value && value !== "0") {
+      setDynamicCopagoSelections(prev => {
+        const newCopagoSelections = { ...prev };
         
-        if (isCollective) {
-          newSelections[planName] = {
-            ...newSelections[planName],
-            [coberturaType]: "0"
+        if (cliente?.clientChoosen === 2) {
+          const currentCopagoSelections = newCopagoSelections[planName] || {
+            altoCosto: "0",
+            medicamentos: "0",
+            habitacion: "0"
+          };
+          newCopagoSelections[planName] = {
+            ...currentCopagoSelections,
+            [coberturaType]: "0" // Resetear copago cuando cambia la cobertura
           };
         } else {
           planes.forEach(plan => {
-            newSelections[plan.plan] = {
-              ...newSelections[plan.plan],
-              [coberturaType]: "0"
+            const currentCopagoSelections = newCopagoSelections[plan.plan] || {
+              altoCosto: "0",
+              medicamentos: "0",
+              habitacion: "0"
+            };
+            newCopagoSelections[plan.plan] = {
+              ...currentCopagoSelections,
+              [coberturaType]: "0" // Resetear copago cuando cambia la cobertura
             };
           });
         }
         
-        return newSelections;
+        return newCopagoSelections;
       });
     }
     
     // Actualizar el store inmediatamente
-    if (isCollective) {
+    if (cliente?.clientChoosen === 2) {
       const odontologiaValue = planSelections[planName]?.odontologia || "0";
       updatePlanOpcionales(planName, odontologiaValue);
     } else {
@@ -135,7 +169,16 @@ export const useCoverageHandlers = ({
         updatePlanOpcionales(plan.plan, odontologiaValue);
       });
     }
-  }, [isUpdating, isCollective, planes, planSelections, updatePlanOpcionales, navigationLoadedRef, setDynamicCoberturaSelections, setDynamicCopagoSelections]);
+  }, [
+    isUpdating,
+    cliente?.clientChoosen,
+    planes,
+    planSelections,
+    updatePlanOpcionales,
+    setDynamicCoberturaSelections,
+    setDynamicCopagoSelections,
+    navigationLoadedRef
+  ]);
 
   return {
     handleOdontologiaChange,

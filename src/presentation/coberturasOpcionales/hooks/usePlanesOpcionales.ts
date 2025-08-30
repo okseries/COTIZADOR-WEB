@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
 import { GetCoberturasOpcionales, getCoberturasOpcionales_colectivo, getCopagos } from "../service/coberturas-opcionales.service";
-import { useTiposCoberturasOpcionales } from '../service/tipos-coberturas.service';
 
 
 
