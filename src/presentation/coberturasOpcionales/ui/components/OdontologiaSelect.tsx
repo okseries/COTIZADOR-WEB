@@ -14,7 +14,7 @@ interface OdontologiaSelectProps {
   options: OdontologiaOption[];
 }
 
-const OdontologiaSelect = ({ value, onChange, options }: OdontologiaSelectProps) => {
+const OdontologiaSelect = ({ value, onChange, options = [] }: OdontologiaSelectProps) => {
   // Asegurar que value siempre sea string para evitar controlled/uncontrolled switching
   const safeValue = value || "0";
   
@@ -23,9 +23,9 @@ const OdontologiaSelect = ({ value, onChange, options }: OdontologiaSelectProps)
     console.log('🦷 OdontologiaSelect:', JSON.stringify({
       originalValue: value,
       safeValue,
-      optionsCount: options.length,
-      hasMatchingOption: options.some(opt => opt.value === safeValue),
-      availableOptions: options.map(opt => ({ value: opt.value, label: opt.label })),
+      optionsCount: options?.length || 0,
+      hasMatchingOption: options?.some(opt => opt.value === safeValue) || false,
+      availableOptions: options?.map(opt => ({ value: opt.value, label: opt.label })) || [],
       timestamp: new Date().toISOString()
     }, null, 2));
   }
@@ -37,8 +37,8 @@ const OdontologiaSelect = ({ value, onChange, options }: OdontologiaSelectProps)
         effectTrigger: 'value or options changed',
         value,
         safeValue,
-        optionsLength: options.length,
-        hasMatchingOption: options.some(opt => opt.value === safeValue),
+        optionsLength: options?.length || 0,
+        hasMatchingOption: options?.some(opt => opt.value === safeValue) || false,
         timestamp: new Date().toISOString()
       }, null, 2));
     }
@@ -53,11 +53,11 @@ const OdontologiaSelect = ({ value, onChange, options }: OdontologiaSelectProps)
         <SelectValue placeholder="Seleccionar opción de odontología" />
       </SelectTrigger>
       <SelectContent>
-        {options.map((option) => (
+        {options?.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>
-        ))}
+        )) || []}
       </SelectContent>
     </Select>
   );

@@ -34,92 +34,38 @@ import {
 import { detectOptionalType, mapQuotationToOptId } from '../../utils/coverage.utils';
 import { createCoverageOptional, createCopagoOptional, createStaticOptional } from '../../utils/optional.helpers';
 import { useCoverageHandlers } from './useCoverageHandlers';
+import { useCoverageState } from './useCoverageState';
+import { useCoverageQueries } from './useCoverageQueries';
 import { updateSelectionsForClientType, updatePlansInStore } from '../../utils/handler.utils';
-
-// Valores por defecto
-const defaultCoberturaSelections: CoberturaSelections = {
-  altoCosto: DEFAULT_SELECTION_VALUE,
-  medicamentos: DEFAULT_SELECTION_VALUE, 
-  habitacion: DEFAULT_SELECTION_VALUE,
-  odontologia: DEFAULT_SELECTION_VALUE
-};
-
-
-
-// Datos estáticos para odontología
-const odontologiaOptions: OdontologiaOption[] = [
-  { value: "0", label: "Ninguna (No seleccionar)", prima: 0 },
-  { value: "1", label: "Nivel I", prima: 150 },
-  { value: "2", label: "Nivel II", prima: 350 },
-  { value: "3", label: "Nivel III", prima: 700 }
-];
-
-// Helper: Detectar tipoOpcionalId automáticamente basado en el nombre
-const detectTipoOpcionalId = (nombreOpcional: string): number => {
-  switch (nombreOpcional.toUpperCase()) {
-    case "MEDICAMENTOS":
-    case "COPAGO MEDICAMENTOS":
-      return 1;
-    case "ALTO COSTO":
-    case "COPAGO ALTO COSTO":
-      return 3;
-    case "HABITACION":
-    case "HABITACIÓN":
-    case "COPAGO HABITACIÓN":
-    case "COPAGO HABITACION":
-      return 2;
-    case "ODONTOLOGIA":
-    case "ODONTOLOGÍA":
-      return 4;
-    default:
-      console.warn(`⚠️ Nombre de opcional no reconocido para detectar tipoOpcionalId: ${nombreOpcional}`);
-      return 0; // Valor por defecto
-  }
-};
-
-// Función auxiliar: Extraer información de descripción
-const extractInfoFromDescription = (descripcion: string) => {
-  const montoMatch = descripcion.match(/RD\$?([\d,]+(?:\.\d{2})?)/);
-  const monto = montoMatch ? montoMatch[1].replace(/,/g, '').replace(/\.00$/, '') : null;
-  
-  const porcentajeMatch = descripcion.match(/al (\d+)%/);
-  const porcentaje = porcentajeMatch ? (parseInt(porcentajeMatch[1]) / 100).toString() : null;
-  
-  return { monto, porcentaje };
-};
-
-// � FUNCIÓN SIMPLIFICADA: Mapeo directo usando originalOptId (solución arquitectónica correcta)
-const mapCotizacionToOptId = (
-  cotizacionOpcional: Opcional,
-  catalogoOpciones: CoberturasOpcionaleColectivo[],
-  cantidadAfiliados: number = 1
-): string | null => {
-  if (!catalogoOpciones || catalogoOpciones.length === 0) return null;
-  
-  // Prioridad 1: Mapeo directo por originalOptId
-  if (cotizacionOpcional.originalOptId) {
-    const match = catalogoOpciones.find(opt => opt.opt_id === cotizacionOpcional.originalOptId);
-    return match ? match.opt_id.toString() : null;
-  }
-  
-  // Fallback: Mapeo por descripción para cotizaciones legadas
-  if (cotizacionOpcional.descripcion) {
-    const { monto, porcentaje } = extractInfoFromDescription(cotizacionOpcional.descripcion);
-    
-    if (monto && porcentaje) {
-      const match = catalogoOpciones.find(option => {
-        return option.limit_price === monto && option.opt_percentage === porcentaje;
-      });
-      return match ? match.opt_id.toString() : null;
-    }
-  }
-  
-  return null;
-};
 
 export const useCoberturasOpcionales = () => {
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render
   const { cliente, planes, updatePlanByName, mode } = useUnifiedQuotationStore();
+  
+  // Hook centralizado para manejar estado
+  const {
+    planSelections,
+    setPlanSelections,
+    coberturaSelections,
+    setCoberturaSelections,
+    copagoSelections,
+    setCopagoSelections,
+    copagoHabitacionSelections,
+    setCopagoHabitacionSelections,
+    dynamicCoberturaSelections,
+    setDynamicCoberturaSelections,
+    dynamicCopagoSelections,
+    setDynamicCopagoSelections,
+    userHasModifiedFilters,
+    setUserHasModifiedFilters,
+    globalFilters,
+    setGlobalFilters,
+    planesData,
+    setPlanesData,
+    isUpdating,
+    setIsUpdating,
+    defaultCoberturaSelections
+  } = useCoverageState();
   
   // Obtener el mode para detectar si estamos editando
   const isEditMode = mode !== "create";
@@ -140,24 +86,7 @@ export const useCoberturasOpcionales = () => {
     }
     previousModeRef.current = mode;
   }, [mode]);
-  
-  // Estados locales con tipado mejorado
-  const [userHasModifiedFilters, setUserHasModifiedFilters] = useState(false);
-  const [globalFilters, setGlobalFilters] = useState<GlobalFilters>({
-    altoCosto: false,
-    medicamentos: false,
-    habitacion: false,
-    odontologia: false
-  });
-  
-  const [planSelections, setPlanSelections] = useState<PlanSelections>({});
-  const [coberturaSelections, setCoberturaSelections] = useState<Record<string, CoberturaSelections>>({});
-  const [planesData, setPlanesData] = useState<PlanesData>({});
-  const [copagoSelections, setCopagoSelections] = useState<Record<string, string>>({});
-  const [copagoHabitacionSelections, setCopagoHabitacionSelections] = useState<Record<string, string>>({});
-  const [dynamicCoberturaSelections, setDynamicCoberturaSelections] = useState<DynamicCoberturaSelections>({});
-  const [dynamicCopagoSelections, setDynamicCopagoSelections] = useState<DynamicCopagoSelectionsMap>({});
-  const [isUpdating, setIsUpdating] = useState(false);
+
   const handleCopagoHabitacionChange = (planName: string, value: string) => {
     if (isUpdating) return;
     
@@ -219,41 +148,6 @@ export const useCoberturasOpcionales = () => {
     }
   };
 
-  // Crear hooks individuales para cada plan - siempre llamar los hooks con condición de enabled
-  const plan1Query = usePlanesOpcionales(
-    planes[0]?.plan || '', 
-    tipoPlanParaAPI, 
-    cliente?.clientChoosen || 1, 
-    !!planes[0]?.plan // enabled solo si hay nombre de plan
-  );
-  const plan2Query = usePlanesOpcionales(
-    planes[1]?.plan || '', 
-    tipoPlanParaAPI, 
-    cliente?.clientChoosen || 1, 
-    !!planes[1]?.plan
-  );
-  const plan3Query = usePlanesOpcionales(
-    planes[2]?.plan || '', 
-    tipoPlanParaAPI, 
-    cliente?.clientChoosen || 1, 
-    !!planes[2]?.plan
-  );
-  const plan4Query = usePlanesOpcionales(
-    planes[3]?.plan || '', 
-    tipoPlanParaAPI, 
-    cliente?.clientChoosen || 1, 
-    !!planes[3]?.plan
-  );
-  const plan5Query = usePlanesOpcionales(
-    planes[4]?.plan || '', 
-    tipoPlanParaAPI, 
-    cliente?.clientChoosen || 1, 
-    !!planes[4]?.plan
-  );
-
-  // Hooks para opciones dinámicas por tipo de cobertura (solo para colectivos)
-  const isColectivo = cliente?.clientChoosen === 2;
-  
   // 🆕 MEJORA CRÍTICA: En modo edición, solo cargar opciones que realmente están seleccionadas
   // Detectar qué tipos de cobertura están realmente en el store
   const hasAltoCostoInStore = useMemo(() => {
@@ -279,70 +173,31 @@ export const useCoberturasOpcionales = () => {
       )
     );
   }, [planes]);
-  
-  // Lógica mejorada para cargar opciones
-  const shouldLoadAltoCosto = isColectivo && (
-    isEditMode ? hasAltoCostoInStore : globalFilters.altoCosto
-  );
-  
-  const shouldLoadMedicamentos = isColectivo && (
-    isEditMode ? hasMedicamentosInStore : globalFilters.medicamentos
-  );
-  
-  const shouldLoadHabitacion = isColectivo && (
-    isEditMode ? hasHabitacionInStore : globalFilters.habitacion
-  );
-  
-  // Odontología no necesita carga dinámica porque es estática
-  const shouldLoadOdontologia = isColectivo && (
-    isEditMode ? false : globalFilters.odontologia // Solo en modo crear
-  );
-  
-  // Alto Costo
-  const altoCostoOptionsQuery = useCoberturasOpcionalesByType(
-    'altoCosto', 
-    tipoPlanParaAPI, 
-    shouldLoadAltoCosto
-  );
-  
-  // Medicamentos
-  const medicamentosOptionsQuery = useCoberturasOpcionalesByType(
-    'medicamentos', 
-    tipoPlanParaAPI, 
-    shouldLoadMedicamentos
-  );
-  
-  // Habitación
-  const habitacionOptionsQuery = useCoberturasOpcionalesByType(
-    'habitacion', 
-    tipoPlanParaAPI, 
-    shouldLoadHabitacion
-  );
-  
-  // Odontología
-  const odontologiaOptionsQuery = useCoberturasOpcionalesByType(
-    'odontologia', 
-    tipoPlanParaAPI, 
-    shouldLoadOdontologia
-  );
 
-  // Copagos para medicamentos (solo si medicamentos está seleccionado)
-  const copagosQuery = useCopagos(
-    1, // ID para medicamentos
-    cliente?.clientChoosen || 1
-  );
+  // Hook centralizado para todas las queries
+  const {
+    planQueriesData,
+    altoCostoOptionsQuery,
+    medicamentosOptionsQuery,
+    habitacionOptionsQuery,
+    odontologiaOptionsQuery: ODONTOLOGIA_OPTIONSQuery,
+    copagosQuery,
+    copagosAltoCostoQuery,
+    copagosHabitacionQuery,
+    isLoading,
+    hasError
+  } = useCoverageQueries({
+    cliente,
+    planes,
+    globalFilters,
+    isEditMode,
+    hasAltoCostoInStore,
+    hasMedicamentosInStore,
+    hasHabitacionInStore
+  });
 
-  // Copagos para alto costo
-  const copagosAltoCostoQuery = useCopagos(
-    3, // ID para alto costo
-    cliente?.clientChoosen || 1
-  );
-
-  // Copagos para habitación  
-  const copagosHabitacionQuery = useCopagos(
-    2, // ID para habitación
-    cliente?.clientChoosen || 1
-  );
+  // Variable auxiliar
+  const isColectivo = cliente?.clientChoosen === 2;
   
   // Estados derivados para la UI
   // 🚨 NUEVO: Resetear editModeInitializedRef cuando cambien las opciones disponibles
@@ -363,35 +218,6 @@ export const useCoberturasOpcionales = () => {
     altoCostoOptionsQuery.data?.length,
     medicamentosOptionsQuery.data?.length,
     habitacionOptionsQuery.data?.length
-  ]);
-
-  // Combinar resultados en un array
-  const planQueriesData: Array<{
-    planName: string;
-    data: CoberturasOpcional[] | null;
-    isLoading: boolean;
-    error: unknown;
-  }> = useMemo(() => {
-    const queries = [plan1Query, plan2Query, plan3Query, plan4Query, plan5Query];
-    return planes.map((plan, index) => ({
-      planName: plan.plan,
-      data: planes[index] ? queries[index]?.data || null : null,
-      isLoading: planes[index] ? queries[index]?.isLoading || false : false,
-      error: planes[index] ? queries[index]?.error || null : null
-    }));
-  }, [
-    planes.length,
-    planes.map(p => p.plan).join(','),
-    plan1Query?.data,
-    plan2Query?.data,
-    plan3Query?.data,
-    plan4Query?.data,
-    plan5Query?.data,
-    plan1Query?.isLoading,
-    plan2Query?.isLoading,
-    plan3Query?.isLoading,
-    plan4Query?.isLoading,
-    plan5Query?.isLoading
   ]);
 
   // Cargar datos de las peticiones
@@ -538,7 +364,7 @@ export const useCoberturasOpcionales = () => {
               // Odontología usa mapeo estático por prima
               const cantidadAfiliados = plan.cantidadAfiliados || 1;
               const primaUnitaria = opcional.prima / cantidadAfiliados;
-              const odontologiaMatch = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
+              const odontologiaMatch = ODONTOLOGIA_OPTIONS.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
               
               if (odontologiaMatch) {
                 initialSelections[plan.plan].odontologia = odontologiaMatch.value;
@@ -593,7 +419,7 @@ export const useCoberturasOpcionales = () => {
           const cantidadAfiliados = plan.cantidadAfiliados || 1;
           const primaUnitaria = odontologiaOpcional.prima / cantidadAfiliados;
           
-          const staticOdontologiaMatch = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
+          const staticOdontologiaMatch = ODONTOLOGIA_OPTIONS.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
           
           if (staticOdontologiaMatch) {
             odontologiaValue = staticOdontologiaMatch.value;
@@ -606,7 +432,7 @@ export const useCoberturasOpcionales = () => {
           const cantidadAfiliados = plan.cantidadAfiliados || 1;
           const primaUnitaria = odontologiaOpcional.prima / cantidadAfiliados;
           
-          const staticOdontologiaMatch = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
+          const staticOdontologiaMatch = ODONTOLOGIA_OPTIONS.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
           
           if (staticOdontologiaMatch) {
             odontologiaValue = staticOdontologiaMatch.value;
@@ -808,7 +634,7 @@ export const useCoberturasOpcionales = () => {
                   const cantidadAfiliados = plan.cantidadAfiliados || 1;
                   const primaUnitaria = opcional.prima / cantidadAfiliados;
                   
-                  const matchingOption = odontologiaOptions.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
+                  const matchingOption = ODONTOLOGIA_OPTIONS.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
                   
                   if (matchingOption) {
                     initialPlanSelections[plan.plan].odontologia = matchingOption.value;
@@ -838,7 +664,7 @@ export const useCoberturasOpcionales = () => {
     planSelections, 
     dynamicCoberturaSelections, 
     copagoSelections, 
-    odontologiaOptions
+    ODONTOLOGIA_OPTIONS
   ]);
   
   // Inicializar selecciones dinámicas cuando hay datos disponibles - CON CONTROL DE REFS
@@ -1287,7 +1113,7 @@ export const useCoberturasOpcionales = () => {
     copagosHabitacionQuery.data,
     updatePlanByName,
     coberturaSelections,
-    odontologiaOptions,
+    ODONTOLOGIA_OPTIONS,
     isUpdating
   ]); // Agregar isUpdating como dependencia crítica
 
@@ -1477,9 +1303,7 @@ export const useCoberturasOpcionales = () => {
     }
   };
 
-  // Estados derivados
-  const isLoading = planQueriesData.some(q => q.isLoading);
-  const hasError = planQueriesData.some(q => q.error);
+  // Estado derivado adicional
   const isEmpty = !cliente || planes.length === 0;
 
   const validateAndSaveToStore = useCallback(async (): Promise<boolean> => {
@@ -1509,13 +1333,13 @@ export const useCoberturasOpcionales = () => {
     planesData,
     cliente,
     planes,
-    odontologiaOptions: ODONTOLOGIA_OPTIONS,
+    ODONTOLOGIA_OPTIONS: ODONTOLOGIA_OPTIONS,
     
     // Opciones dinámicas desde API
     dynamicAltoCostoOptions: altoCostoOptionsQuery.data || [],
     dynamicMedicamentosOptions: medicamentosOptionsQuery.data || [],
     dynamicHabitacionOptions: habitacionOptionsQuery.data || [],
-    dynamicOdontologiaOptions: odontologiaOptionsQuery.data || [],
+    dynamicODONTOLOGIA_OPTIONS: ODONTOLOGIA_OPTIONSQuery.data || [],
     dynamicCopagosOptions: copagosQuery.data || [],
     dynamicCopagosAltoCostoOptions: copagosAltoCostoQuery.data || [],
     dynamicCopagosHabitacionOptions: copagosHabitacionQuery.data || [],

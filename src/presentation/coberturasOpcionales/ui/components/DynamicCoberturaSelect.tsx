@@ -10,7 +10,7 @@ interface DynamicCoberturaSelectProps {
   placeholder?: string;
 }
 
-const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Seleccionar opción" }: DynamicCoberturaSelectProps) => {
+const DynamicCoberturaSelect = ({ value, onChange, options = [], placeholder = "Seleccionar opción" }: DynamicCoberturaSelectProps) => {
   // Asegurar que value siempre sea string para evitar controlled/uncontrolled switching
   const safeValue = value || "";
   
@@ -19,10 +19,10 @@ const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Selec
     console.log(`🔍 DynamicCoberturaSelect [${placeholder}]:`, JSON.stringify({
       originalValue: value,
       safeValue,
-      optionsCount: options.length,
+      optionsCount: options?.length || 0,
       placeholder,
-      hasMatchingOption: options.some(opt => opt.opt_id.toString() === safeValue),
-      availableOptions: options.map(opt => ({ id: opt.opt_id, desc: opt.descripcion })),
+      hasMatchingOption: options?.some(opt => opt.opt_id.toString() === safeValue) || false,
+      availableOptions: options?.map(opt => ({ id: opt.opt_id, desc: opt.descripcion })) || [],
       timestamp: new Date().toISOString()
     }, null, 2));
   }
@@ -34,8 +34,8 @@ const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Selec
         effectTrigger: 'value or options changed',
         value,
         safeValue,
-        optionsLength: options.length,
-        hasMatchingOption: options.some(opt => opt.opt_id.toString() === safeValue),
+        optionsLength: options?.length || 0,
+        hasMatchingOption: options?.some(opt => opt.opt_id.toString() === safeValue) || false,
         timestamp: new Date().toISOString()
       }, null, 2));
     }
@@ -54,11 +54,11 @@ const DynamicCoberturaSelect = ({ value, onChange, options, placeholder = "Selec
         <SelectItem value="0">
           Ninguna (No seleccionar)
         </SelectItem>
-        {options.map((option) => (
+        {options?.map((option) => (
           <SelectItem key={option.opt_id} value={option.opt_id.toString()}>
             {option.descripcion}
           </SelectItem>
-        ))}
+        )) || []}
       </SelectContent>
     </Select>
   );

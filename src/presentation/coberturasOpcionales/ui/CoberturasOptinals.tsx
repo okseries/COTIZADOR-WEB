@@ -22,13 +22,13 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
     planesData,
     cliente,
     planes,
-    odontologiaOptions,
+    ODONTOLOGIA_OPTIONS,
     
     // Opciones dinámicas desde API
     dynamicAltoCostoOptions,
     dynamicMedicamentosOptions,
     dynamicHabitacionOptions,
-    dynamicOdontologiaOptions,
+    dynamicODONTOLOGIA_OPTIONS,
     dynamicCopagosOptions,
     dynamicCopagosAltoCostoOptions,
     dynamicCopagosHabitacionOptions,
@@ -110,7 +110,7 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
             clientChoosen={cliente?.clientChoosen || 1}
             globalFilters={globalFilters}
             odontologiaSelection={odontologiaSelection}
-            odontologiaOptions={odontologiaOptions}
+            odontologiaOptions={ODONTOLOGIA_OPTIONS}
             coberturaSelections={coberturaSelection}
             copagoSelection={copagoSelection}
             copagoHabitacionSelection={copagoHabitacionSelection}
@@ -121,7 +121,7 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
             dynamicAltoCostoOptions={dynamicAltoCostoOptions}
             dynamicMedicamentosOptions={dynamicMedicamentosOptions}
             dynamicHabitacionOptions={dynamicHabitacionOptions}
-            dynamicOdontologiaOptions={dynamicOdontologiaOptions}
+            dynamicOdontologiaOptions={dynamicODONTOLOGIA_OPTIONS}
             dynamicCopagosOptions={dynamicCopagosOptions}
             dynamicCopagosAltoCostoOptions={dynamicCopagosAltoCostoOptions}
             dynamicCopagosHabitacionOptions={dynamicCopagosHabitacionOptions}
