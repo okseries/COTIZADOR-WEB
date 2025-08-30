@@ -15,6 +15,8 @@ interface UseQueriesConfig {
   hasAltoCostoInStore: boolean;
   hasMedicamentosInStore: boolean;
   hasHabitacionInStore: boolean;
+  mode?: string;
+  quotationId?: string | number;
 }
 
 export const useCoverageQueries = ({
@@ -26,7 +28,9 @@ export const useCoverageQueries = ({
   tipoPlanParaAPI,
   hasAltoCostoInStore,
   hasMedicamentosInStore,
-  hasHabitacionInStore
+  hasHabitacionInStore,
+  mode,
+  quotationId
 }: UseQueriesConfig) => {
   
   const isColectivo = isCollective;
@@ -36,31 +40,41 @@ export const useCoverageQueries = ({
     planes[0]?.plan || '', 
     tipoPlanParaAPI, 
     cliente?.clientChoosen || 1, 
-    !!planes[0]?.plan // enabled solo si hay nombre de plan
+    !!planes[0]?.plan, // enabled solo si hay nombre de plan
+    mode,
+    quotationId
   );
   const plan2Query = usePlanesOpcionales(
     planes[1]?.plan || '', 
     tipoPlanParaAPI, 
     cliente?.clientChoosen || 1, 
-    !!planes[1]?.plan
+    !!planes[1]?.plan,
+    mode,
+    quotationId
   );
   const plan3Query = usePlanesOpcionales(
     planes[2]?.plan || '', 
     tipoPlanParaAPI, 
     cliente?.clientChoosen || 1, 
-    !!planes[2]?.plan
+    !!planes[2]?.plan,
+    mode,
+    quotationId
   );
   const plan4Query = usePlanesOpcionales(
     planes[3]?.plan || '', 
     tipoPlanParaAPI, 
     cliente?.clientChoosen || 1, 
-    !!planes[3]?.plan
+    !!planes[3]?.plan,
+    mode,
+    quotationId
   );
   const plan5Query = usePlanesOpcionales(
     planes[4]?.plan || '', 
     tipoPlanParaAPI, 
     cliente?.clientChoosen || 1, 
-    !!planes[4]?.plan
+    !!planes[4]?.plan,
+    mode,
+    quotationId
   );
 
   // Lógica mejorada para cargar opciones
@@ -85,46 +99,60 @@ export const useCoverageQueries = ({
   const altoCostoOptionsQuery = useCoberturasOpcionalesByType(
     'altoCosto', 
     tipoPlanParaAPI, 
-    shouldLoadAltoCosto
+    shouldLoadAltoCosto,
+    mode,
+    quotationId
   );
   
   // Medicamentos
   const medicamentosOptionsQuery = useCoberturasOpcionalesByType(
     'medicamentos', 
     tipoPlanParaAPI, 
-    shouldLoadMedicamentos
+    shouldLoadMedicamentos,
+    mode,
+    quotationId
   );
   
   // Habitación
   const habitacionOptionsQuery = useCoberturasOpcionalesByType(
     'habitacion', 
     tipoPlanParaAPI, 
-    shouldLoadHabitacion
+    shouldLoadHabitacion,
+    mode,
+    quotationId
   );
   
   // Odontología
   const odontologiaOptionsQuery = useCoberturasOpcionalesByType(
     'odontologia', 
     tipoPlanParaAPI, 
-    shouldLoadOdontologia
+    shouldLoadOdontologia,
+    mode,
+    quotationId
   );
 
   // Copagos para medicamentos (solo si medicamentos está seleccionado)
   const copagosQuery = useCopagos(
     1, // ID para medicamentos
-    cliente?.clientChoosen || 1
+    cliente?.clientChoosen || 1,
+    mode,
+    quotationId
   );
 
   // Copagos para alto costo
   const copagosAltoCostoQuery = useCopagos(
     3, // ID para alto costo
-    cliente?.clientChoosen || 1
+    cliente?.clientChoosen || 1,
+    mode,
+    quotationId
   );
 
   // Copagos para habitación  
   const copagosHabitacionQuery = useCopagos(
     2, // ID para habitación
-    cliente?.clientChoosen || 1
+    cliente?.clientChoosen || 1,
+    mode,
+    quotationId
   );
 
   // Combinar resultados en un array

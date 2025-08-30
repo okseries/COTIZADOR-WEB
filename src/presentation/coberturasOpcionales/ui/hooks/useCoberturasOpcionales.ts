@@ -6,43 +6,35 @@
  * - Mapeo correcto entre frontend (opt_id) y backend 
  * - Soporte para modos crear/editar
  * - Manejo diferenciado entre individuales y colectivos
+ * - Invalidación de caché inteligente para modo edición
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import {  useEffect, useMemo, useCallback } from 'react';
 import { useUnifiedQuotationStore } from '@/core';
-import { usePlanesOpcionales, useCoberturasOpcionalesByType, useCopagos } from '../../hooks/usePlanesOpcionales';
-import { CoberturasOpcional, CoberturasOpcionaleColectivo, Copago } from '../../interface/Coberturaopcional.interface';
-import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
-import { OdontologiaOption } from '../components/OdontologiaSelect';
+import { CoberturasOpcional } from '../../interface/Coberturaopcional.interface';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Importar constantes y utilidades
 import { 
-  COVERAGE_TYPES, 
-  OPTIONAL_TYPE_IDS, 
-  DEFAULT_SELECTION_VALUE, 
   ODONTOLOGIA_OPTIONS 
 } from '../../constants/coverage.constants';
 import { 
   CoberturaSelections, 
-  DynamicCopagoSelections, 
-  GlobalFilters,
-  PlanSelections,
-  PlanesData,
-  DynamicCoberturaSelections,
-  DynamicCopagoSelectionsMap
 } from '../../types/coverage.types';
 import { detectOptionalType, mapQuotationToOptId } from '../../utils/coverage.utils';
-import { createCoverageOptional, createCopagoOptional, createStaticOptional } from '../../utils/optional.helpers';
 import { useCoverageHandlers } from './useCoverageHandlers';
 import { useCoverageState } from './useCoverageState';
 import { useCoverageQueries } from './useCoverageQueries';
 import { usePlanUpdater } from './usePlanUpdater';
 import { useInitializationEffects } from './useInitializationEffects';
-import { updateSelectionsForClientType, updatePlansInStore } from '../../utils/handler.utils';
+import { useCacheManager } from './useCacheManager';
 
 export const useCoberturasOpcionales = () => {
+  const queryClient = useQueryClient();
+  const { clearAllCache, prepareForEdit, nuclearReset } = useCacheManager();
+  
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render
-  const { cliente, planes, updatePlanByName, mode } = useUnifiedQuotationStore();
+  const { cliente, planes,  mode } = useUnifiedQuotationStore();
   
   // Hook centralizado para manejar estado
   const {
@@ -77,6 +69,36 @@ export const useCoberturasOpcionales = () => {
   
   // API parameters
   const tipoPlanParaAPI = cliente?.tipoPlan || 1;
+  
+  // 🔥 FUNCIÓN PARA INVALIDAR CACHÉ MANUALMENTE
+  const invalidateQueries = useCallback(() => {
+    const currentQuotationId = typeof mode === "number" ? mode : undefined;
+    const currentMode = typeof mode === "number" ? "edit" : mode;
+    
+    // 🔥 LIMPIEZA RADICAL: Remover completamente todas las queries relacionadas
+    queryClient.removeQueries({ queryKey: ["planesOpcionales"] });
+    queryClient.removeQueries({ queryKey: ["coberturasOpcionalesColectivo"] });
+    queryClient.removeQueries({ queryKey: ["coberturasOpcionalesByType"] });
+    queryClient.removeQueries({ queryKey: ["copagos"] });
+    
+    // También invalidar por si acaso
+    queryClient.invalidateQueries({ queryKey: ["planesOpcionales"] });
+    queryClient.invalidateQueries({ queryKey: ["coberturasOpcionalesColectivo"] });
+    queryClient.invalidateQueries({ queryKey: ["coberturasOpcionalesByType"] });
+    queryClient.invalidateQueries({ queryKey: ["copagos"] });
+    
+    console.log(`� CACHE COMPLETELY CLEARED for mode: ${currentMode}, quotationId: ${currentQuotationId}`);
+  }, [mode, queryClient]);
+
+  // 🔥 LIMPIEZA COMPLETA AL CAMBIAR A MODO EDICIÓN
+  useEffect(() => {
+    if (typeof mode === "number" && mode > 0) {
+      console.log(`🚨 EDIT MODE DETECTED - CLEARING ALL CACHE for quotation ID: ${mode}`);
+      
+      // Usar el cache manager para limpiar
+      prepareForEdit(mode);
+    }
+  }, [mode, prepareForEdit]);
 
   // 🆕 MEJORA CRÍTICA: En modo edición, solo cargar opciones que realmente están seleccionadas
   // Detectar qué tipos de cobertura están realmente en el store
@@ -125,7 +147,9 @@ export const useCoberturasOpcionales = () => {
     tipoPlanParaAPI,
     hasAltoCostoInStore,
     hasMedicamentosInStore,
-    hasHabitacionInStore
+    hasHabitacionInStore,
+    mode: typeof mode === "number" ? "edit" : mode,
+    quotationId: typeof mode === "number" ? mode : undefined
   });
   
   // Hook de inicialización y efectos
@@ -167,6 +191,46 @@ export const useCoberturasOpcionales = () => {
     setCopagoHabitacionSelections,
     defaultCoberturaSelections
   });
+
+  // 🔥 EFECTO PARA DETECTAR DATOS FALTANTES EN MODO EDICIÓN Y REFETCH
+  useEffect(() => {
+    if (isEditMode && isColectivo && planes.length > 0) {
+      // Verificar si hay opcionales en el store pero las opciones de API están vacías
+      const hasOpcionalesInStore = planes.some(plan => plan.opcionales.length > 0);
+      const hasEmptyAPIOptions = 
+        (hasAltoCostoInStore && (!altoCostoOptionsQuery.data || altoCostoOptionsQuery.data.length === 0)) ||
+        (hasMedicamentosInStore && (!medicamentosOptionsQuery.data || medicamentosOptionsQuery.data.length === 0)) ||
+        (hasHabitacionInStore && (!habitacionOptionsQuery.data || habitacionOptionsQuery.data.length === 0));
+
+      if (hasOpcionalesInStore && hasEmptyAPIOptions && !altoCostoOptionsQuery.isLoading && !medicamentosOptionsQuery.isLoading && !habitacionOptionsQuery.isLoading) {
+        console.log(`🔄 Detected missing API data in edit mode, forcing refetch...`);
+        
+        // Forzar refetch de las queries que están vacías
+        if (hasAltoCostoInStore && (!altoCostoOptionsQuery.data || altoCostoOptionsQuery.data.length === 0)) {
+          altoCostoOptionsQuery.refetch();
+        }
+        if (hasMedicamentosInStore && (!medicamentosOptionsQuery.data || medicamentosOptionsQuery.data.length === 0)) {
+          medicamentosOptionsQuery.refetch();
+        }
+        if (hasHabitacionInStore && (!habitacionOptionsQuery.data || habitacionOptionsQuery.data.length === 0)) {
+          habitacionOptionsQuery.refetch();
+        }
+      }
+    }
+  }, [
+    isEditMode,
+    isColectivo,
+    planes.length,
+    hasAltoCostoInStore,
+    hasMedicamentosInStore,
+    hasHabitacionInStore,
+    altoCostoOptionsQuery.data?.length,
+    medicamentosOptionsQuery.data?.length,
+    habitacionOptionsQuery.data?.length,
+    altoCostoOptionsQuery.isLoading,
+    medicamentosOptionsQuery.isLoading,
+    habitacionOptionsQuery.isLoading
+  ]);
 
   // Hook de actualización de planes
   const { updatePlanOpcionales } = usePlanUpdater({
@@ -1112,6 +1176,12 @@ export const useCoberturasOpcionales = () => {
     handleCopagoHabitacionChange,
     handleDynamicCoberturaChange,
     handleDynamicCopagoChange,
+    
+    // 🆕 Cache management
+    invalidateQueries,
+    clearAllCache,
+    prepareForEdit,
+    nuclearReset,
     
     // Navegación
     validateAndSaveToStore
