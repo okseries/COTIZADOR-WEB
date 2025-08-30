@@ -36,14 +36,16 @@ export const PaymentOptions: React.FC = () => {
   const handleSubmit = async () => {
     const payload = getFinalObject();
     
-    // Asegurarse de que el usuario esté incluido desde el store de auth
-    // const finalPayload = {
-    //   ...payload,
-    //   user: authUser?.data?.user || null
-    // };
-
-    console.log(payload);
-    
+    console.log("🚀 PAYLOAD FINAL ANTES DEL ENVÍO:", JSON.stringify(payload, null, 2));
+    console.log("🔍 VERIFICANDO ORIGINAL_OPT_ID EN OPCIONALES:");
+    payload.planes?.forEach(plan => {
+      console.log(`Plan ${plan.plan}:`, plan.opcionales?.map(opt => ({
+        nombre: opt.nombre,
+        originalOptId: opt.originalOptId || 'NO_PRESENTE',
+        id: opt.id,
+        tipoOpcionalId: opt.tipoOpcionalId || 'NO_PRESENTE'
+      })));
+    });
     
     debugger
     await submitQuotation();

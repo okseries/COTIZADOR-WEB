@@ -252,7 +252,7 @@ export const usePaymentOptions = () => {
         planes: paymentPlans.map((plan) => ({
           plan: plan.plan,
           afiliados: plan.afiliados,
-          opcionales: plan.opcionales,
+          opcionales: plan.opcionales, // ✅ Ya incluye originalOptId desde useCoberturasOpcionales
           resumenPago: plan.resumenPago,
           cantidadAfiliados: plan.cantidadAfiliados,
           tipo: plan.tipo,

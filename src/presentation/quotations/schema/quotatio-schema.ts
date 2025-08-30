@@ -15,6 +15,7 @@ export const opcionalSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido"),
   descripcion: z.string().nullable(),
   prima: z.number().min(0, "La prima debe ser un número positivo"),
+  originalOptId: z.number().optional(), // 🆕 ID original del catálogo para mapeo confiable
 });
 
 // Schema para resumen de pago

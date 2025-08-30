@@ -86,7 +86,9 @@ const extractInfoFromDescription = (descripcion: string) => {
   return { monto, porcentaje };
 };
 
-// 🆕 FUNCIÓN ROBUSTA: Mapear de cotización guardada a opt_id del catálogo con múltiples estrategias
+// � FUNCIÓN SIMPLIFICADA: Mapeo directo usando originalOptId (solución arquitectónica correcta)
+// ✅ PRIORIDAD 1: originalOptId es la fuente de verdad
+// ⚠️ FALLBACK: Mapeo por descripción solo para cotizaciones antiguas sin originalOptId
 const mapCotizacionToOptId = (
   cotizacionOpcional: Opcional,
   catalogoOpciones: CoberturasOpcionaleColectivo[],
@@ -94,22 +96,22 @@ const mapCotizacionToOptId = (
 ): string | null => {
   if (!catalogoOpciones || catalogoOpciones.length === 0) return null;
   
-  // 🎯 ESTRATEGIA 1: Si existe originalOptId (más confiable)
+  // 🎯 ESTRATEGIA PRINCIPAL: originalOptId es la fuente de verdad (solución definitiva)
   if (cotizacionOpcional.originalOptId) {
     const matchByOriginalId = catalogoOpciones.find(opt => opt.opt_id === cotizacionOpcional.originalOptId);
     if (matchByOriginalId) {
+      console.log(`✅ MAPEO DIRECTO EXITOSO: originalOptId ${cotizacionOpcional.originalOptId} → opt_id ${matchByOriginalId.opt_id}`);
       return matchByOriginalId.opt_id.toString();
+    } else {
+      console.warn(`⚠️ originalOptId ${cotizacionOpcional.originalOptId} no encontrado en catálogo actual - posible cambio de plan`);
     }
   }
   
-  // 🎯 ESTRATEGIA 2: Buscar por descripción exacta (MÁXIMA PRIORIDAD)
+  // 🚨 FALLBACK: Solo si no existe originalOptId, usar mapeo por descripción
+  // Este método es menos confiable y solo debería usarse para cotizaciones antiguas
   if (cotizacionOpcional.descripcion) {
+    console.warn(`⚠️ USANDO FALLBACK: No hay originalOptId, mapeando por descripción para "${cotizacionOpcional.nombre}"`);
     const { monto, porcentaje } = extractInfoFromDescription(cotizacionOpcional.descripcion);
-    
-    // 🚨 DETECCIÓN ESPECÍFICA del caso problemático (opt_id 32 → 17)
-    if (monto === "8000" && porcentaje === "0.7") {
-      console.warn(`🚨 CASO CRÍTICO DETECTADO: Medicamentos RD$8,000 al 70% - Verificando mapeo por descripción`);
-    }
     
     if (monto && porcentaje) {
       const matchByDescription = catalogoOpciones.find(option => {
@@ -119,88 +121,26 @@ const mapCotizacionToOptId = (
       });
       
       if (matchByDescription) {
-        // 🚨 LOGGING ESPECÍFICO para el caso problemático
-        if (monto === "8000" && porcentaje === "0.7") {
-          console.log(`✅ ÉXITO CRÍTICO: Mapeo correcto por descripción exacta - opt_id=${matchByDescription.opt_id} (debería ser 32)`);
-        }
-        
+        console.log(`✅ FALLBACK EXITOSO: Descripción mapeada → opt_id ${matchByDescription.opt_id}`);
         return matchByDescription.opt_id.toString();
       } else {
-        // 🚨 LOGGING ESPECÍFICO para el caso problemático (opt_id 32)
-        if (monto === "8000" && porcentaje === "0.7") {
-          console.error(`❌ FALLO CRÍTICO: No se encontró opt_id 32 en catálogo actual`, {
-            busqueda: { monto, porcentaje },
-            catalogoOpciones: catalogoOpciones.map(opt => ({
-              opt_id: opt.opt_id,
-              limit_price: opt.limit_price,
-              opt_percentage: opt.opt_percentage,
-              descripcion: opt.descripcion
-            }))
-          });
-        }
+        console.error(`❌ FALLBACK FALLÓ: No se encontró coincidencia por descripción`, {
+          busqueda: { monto, porcentaje },
+          descripcion: cotizacionOpcional.descripcion
+        });
       }
     }
-    
-    // 🎯 ESTRATEGIA 2B: Buscar por descripción similar (fuzzy matching)
-    const matchByFuzzyDescription = catalogoOpciones.find(option => {
-      const similarity = calculateDescriptionSimilarity(cotizacionOpcional.descripcion || '', option.descripcion || '');
-      return similarity > 0.8; // 80% de similitud
-    });
-    
-    if (matchByFuzzyDescription) {
-      return matchByFuzzyDescription.opt_id.toString();
-    }
   }
   
-  // 🎯 ESTRATEGIA 3: Buscar por ID directo si existe en catálogo
-  if (cotizacionOpcional.id) {
-    const matchByDirectId = catalogoOpciones.find(opt => opt.opt_id === cotizacionOpcional.id);
-    if (matchByDirectId) {
-      return matchByDirectId.opt_id.toString();
-    }
-  }
-  
-  // 🎯 ESTRATEGIA 4: Buscar por tipoOpcionalId si está disponible
-  if (cotizacionOpcional.tipoOpcionalId) {
-    const matchByType = catalogoOpciones.find(opt => opt.tipoOpcionalId === cotizacionOpcional.tipoOpcionalId);
-    if (matchByType) {
-      return matchByType.opt_id.toString();
-    }
-  }
-  
-  // 🎯 ESTRATEGIA 5: ÚLTIMO RECURSO - Mapeo por prima (MUY RESTRICTIVO)
-  // ⚠️ SOLO después de que fallen todas las estrategias de descripción más confiables
-  const primaUnitaria = (cotizacionOpcional.prima || 0) / cantidadAfiliados;
-  
-  // 🚨 ADVERTENCIA CRÍTICA: Mapeo por prima es peligroso sin validación de descripción
-  const matchByExactPrima = catalogoOpciones.find(option => {
-    const primaAPI = parseFloat(option.opt_prima || "0");
-    return Math.abs(primaAPI - primaUnitaria) < 0.01; // Tolerancia muy baja para coincidencia exacta
+  // 🚨 NO SE PUDO MAPEAR: Cotización muy antigua o datos incompletos
+  console.error(`❌ MAPEO IMPOSIBLE:`, {
+    id: cotizacionOpcional.id,
+    originalOptId: cotizacionOpcional.originalOptId || 'NO_EXISTE',
+    descripcion: cotizacionOpcional.descripcion || 'NO_EXISTE',
+    nombre: cotizacionOpcional.nombre,
+    mensaje: "Cotización requiere re-selección manual por el usuario"
   });
   
-  if (matchByExactPrima) {
-    // � VALIDACIÓN CRÍTICA OBLIGATORIA: Verificar coherencia con descripción
-    if (cotizacionOpcional.descripcion) {
-      const { monto: expectedMonto, porcentaje: expectedPorcentaje } = extractInfoFromDescription(cotizacionOpcional.descripcion);
-      
-      if (expectedMonto && expectedPorcentaje) {
-        const isCoherent = matchByExactPrima.limit_price === expectedMonto && 
-                          matchByExactPrima.opt_percentage === expectedPorcentaje;
-        
-        if (!isCoherent && expectedMonto === "8000" && expectedPorcentaje === "0.7") {
-          console.error(`❌ PREVENIDO: opt_id 32 → ${matchByExactPrima.opt_id} (prima similar, descripción diferente)`);
-          return null; // Rechazar mapeo incorrecto
-        } else if (isCoherent) {
-          return matchByExactPrima.opt_id.toString();
-        }
-      } else {
-        return matchByExactPrima.opt_id.toString();
-      }
-    } else {
-      return matchByExactPrima.opt_id.toString();
-    }
-  }
-  // 🚨 FALLBACK EXTREMO: DESHABILITADO para prevenir mapeos incorrectos
   return null;
 };
 
@@ -2248,6 +2188,88 @@ export const useCoberturasOpcionales = () => {
     }, 200); // 🔧 Aumentar timeout para dar tiempo a React a actualizar el estado
   };
 
+  // Handler para cambios dinámicos de copagos
+  const handleDynamicCopagoChange = (planName: string, copagoType: string, value: string) => {
+    // Prevenir actualizaciones múltiples simultáneas
+    if (isUpdating) return;
+    
+    console.log(`🔧 COPAGO DINÁMICO - Iniciando cambio:`, JSON.stringify({
+      planName,
+      copagoType,
+      value,
+      clientChoosen: cliente?.clientChoosen,
+      isUpdating
+    }, null, 2));
+    
+    // 🆕 LÓGICA DIFERENCIADA: 
+    // - Colectivos: Solo actualizar el plan específico
+    // - Individuales: Aplicar a todos los planes
+    setDynamicCopagoSelections(prev => {
+      const newSelections = { ...prev };
+      
+      if (cliente?.clientChoosen === 2) {
+        // COLECTIVO: Solo actualizar el plan específico
+        const currentPlanSelections = newSelections[planName] || {
+          altoCosto: "0",
+          medicamentos: "0",
+          habitacion: "0"
+        };
+        newSelections[planName] = {
+          ...currentPlanSelections,
+          [copagoType]: value
+        };
+        
+        console.log(`✅ COLECTIVO - Copago actualizado para ${planName}:`, JSON.stringify({
+          planName,
+          copagoType,
+          value,
+          seleccionesActualizadas: newSelections[planName]
+        }, null, 2));
+      } else {
+        // INDIVIDUAL: Aplicar el cambio a todos los planes existentes (comportamiento original)
+        planes.forEach(plan => {
+          const currentPlanSelections = newSelections[plan.plan] || {
+            altoCosto: "0",
+            medicamentos: "0",
+            habitacion: "0"
+          };
+          newSelections[plan.plan] = {
+            ...currentPlanSelections,
+            [copagoType]: value
+          };
+        });
+        
+        console.log(`✅ INDIVIDUAL - Copago aplicado a todos los planes:`, JSON.stringify({
+          copagoType,
+          value,
+          totalPlanes: planes.length,
+          planesAfectados: planes.map(p => p.plan)
+        }, null, 2));
+      }
+      
+      return newSelections;
+    });
+    
+    // Usar timeout para actualizar el store
+    setTimeout(() => {
+      console.log(`⏰ TIMEOUT - Actualizando store para copago ${copagoType} en ${planName}, valor: ${value}`);
+      
+      if (cliente?.clientChoosen === 2) {
+        // COLECTIVO: Solo actualizar el plan específico
+        const odontologiaValue = planSelections[planName]?.odontologia || "0";
+        console.log(`🎯 COLECTIVO - Actualizando solo plan ${planName} con odontología: ${odontologiaValue}`);
+        updatePlanOpcionales(planName, odontologiaValue);
+      } else {
+        // INDIVIDUAL: Actualizar todos los planes
+        console.log(`🎯 INDIVIDUAL - Actualizando todos los planes`);
+        planes.forEach(plan => {
+          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+          updatePlanOpcionales(plan.plan, odontologiaValue);
+        });
+      }
+    }, 200);
+  };
+
   /**
    * 🎯 LÓGICA DIFERENCIADA PARA COBERTURAS OPCIONALES:
    * 
@@ -2336,6 +2358,7 @@ export const useCoberturasOpcionales = () => {
     handleCopagoChange,
     handleCopagoHabitacionChange,
     handleDynamicCoberturaChange,
+    handleDynamicCopagoChange, // 🆕 FUNCIÓN FALTANTE AGREGADA
     
     // 🆕 FUNCIÓN PARA NAVEGACIÓN
     validateAndSaveToStore

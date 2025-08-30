@@ -23,9 +23,13 @@ export interface QuotationPayload {
       cantidadAfiliados: number;
     }>;
     opcionales: Array<{
+      id?: number;
+      idCopago?: number;
       nombre: string;
       descripcion: string | null;
       prima: number;
+      tipoOpcionalId?: number;
+      originalOptId?: number; // 🆕 ID original del catálogo para mapeo confiable
     }>;
     resumenPago: {
       subTotalAfiliado: number;
