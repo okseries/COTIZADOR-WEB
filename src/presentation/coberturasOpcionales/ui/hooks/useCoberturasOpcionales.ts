@@ -211,20 +211,14 @@ export const useCoberturasOpcionales = () => {
     }
   }>({});
   const handleCopagoHabitacionChange = (planName: string, value: string) => {
-    // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    // 🆕 LÓGICA DIFERENCIADA: 
-    // - Colectivos: Solo actualizar el plan específico
-    // - Individuales: Aplicar a todos los planes
     setCopagoHabitacionSelections(prev => {
       const newSelections = { ...prev };
       
       if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
         newSelections[planName] = value;
       } else {
-        // INDIVIDUAL: Aplicar el cambio a todos los planes existentes (comportamiento original)
         planes.forEach(plan => {
           newSelections[plan.plan] = value;
         });
@@ -233,19 +227,16 @@ export const useCoberturasOpcionales = () => {
       return newSelections;
     });
     
-    setTimeout(() => {
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        const odontologiaValue = planSelections[planName]?.odontologia || "0";
-        updatePlanOpcionales(planName, odontologiaValue);
-      } else {
-        // INDIVIDUAL: Actualizar todos los planes
-        planes.forEach(plan => {
-          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-          updatePlanOpcionales(plan.plan, odontologiaValue);
-        });
-      }
-    }, 100);
+    // Actualizar inmediatamente
+    if (cliente?.clientChoosen === 2) {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    } else {
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
+    }
   };
   const [isUpdating, setIsUpdating] = useState(false);
   
@@ -253,20 +244,14 @@ export const useCoberturasOpcionales = () => {
   const tipoPlanParaAPI = cliente?.tipoPlan || 1;
   
   const handleCopagoChange = (planName: string, value: string) => {
-    // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    // 🆕 LÓGICA DIFERENCIADA: 
-    // - Colectivos: Solo actualizar el plan específico
-    // - Individuales: Aplicar a todos los planes
     setCopagoSelections(prev => {
       const newSelections = { ...prev };
       
       if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
         newSelections[planName] = value;
       } else {
-        // INDIVIDUAL: Aplicar el cambio a todos los planes existentes (comportamiento original)
         planes.forEach(plan => {
           newSelections[plan.plan] = value;
         });
@@ -275,19 +260,16 @@ export const useCoberturasOpcionales = () => {
       return newSelections;
     });
     
-    setTimeout(() => {
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        const odontologiaValue = planSelections[planName]?.odontologia || "0";
-        updatePlanOpcionales(planName, odontologiaValue);
-      } else {
-        // INDIVIDUAL: Actualizar todos los planes
-        planes.forEach(plan => {
-          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-          updatePlanOpcionales(plan.plan, odontologiaValue);
-        });
-      }
-    }, 100);
+    // Actualizar inmediatamente
+    if (cliente?.clientChoosen === 2) {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    } else {
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
+    }
   };
 
   // Crear hooks individuales para cada plan - siempre llamar los hooks con condición de enabled
@@ -1077,20 +1059,14 @@ export const useCoberturasOpcionales = () => {
   const updatePlanOpcionales = useCallback((planName: string, odontologiaValue: string) => {
     if (isUpdating) return;
     
-    
-    
-    
-    
     setIsUpdating(true);
     
-    setTimeout(() => {
-      // Obtener planesData actual del estado
-      const planDataCurrent = planesData[planName];
-      if (!planDataCurrent || !planDataCurrent[0]) {
-        
-        setIsUpdating(false);
-        return;
-      }
+    // Obtener planesData actual del estado
+    const planDataCurrent = planesData[planName];
+    if (!planDataCurrent || !planDataCurrent[0]) {
+      setIsUpdating(false);
+      return;
+    }
 
       const opcionales: Opcional[] = [];
       const data = planDataCurrent[0];
@@ -1351,7 +1327,6 @@ export const useCoberturasOpcionales = () => {
       } 
       
       setIsUpdating(false);
-    }, 100);
   }, [
     planesData, 
     planes, 
@@ -1371,68 +1346,58 @@ export const useCoberturasOpcionales = () => {
     isUpdating
   ]); // Agregar isUpdating como dependencia crítica
 
-  // Actualizar todos los planes cuando cambian los filtros globales (solo para clientChoosen === 2) - SIMPLIFICADO
+  // Actualizar planes cuando cambian los filtros globales (solo para colectivos)
   useEffect(() => {
-    // 🚨 FIX CRÍTICO: En modo edición, solo ejecutar si los filtros han sido inicializados correctamente
-    // Evita que se borren opcionales cuando se resetean temporalmente los filtros al navegar
     const shouldUpdate = cliente?.clientChoosen === 2 && 
                         !isUpdating && 
                         Object.keys(planesData).length > 0 &&
                         (!isEditMode || editModeInitializedRef.current);
     
-    // 🚨 NUEVO FIX: En modo edición, NO actualizar si ya hay opcionales en el store
-    // Solo actualizar si realmente se necesita (crear nuevas opcionales, no regenerar existentes)
     const hasExistingOpcionales = isEditMode && planes.some(plan => plan.opcionales.length > 0);
     
     if (shouldUpdate && !hasExistingOpcionales) {
-      const timer = setTimeout(() => {
-        planes.forEach(plan => {
-          if (planesData[plan.plan] && planSelections[plan.plan]) {
-            const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-            updatePlanOpcionales(plan.plan, odontologiaValue);
-          }
-        });
-      }, 200);
-      return () => clearTimeout(timer);
-    } 
+      planes.forEach(plan => {
+        if (planesData[plan.plan] && planSelections[plan.plan]) {
+          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+          updatePlanOpcionales(plan.plan, odontologiaValue);
+        }
+      });
+    }
   }, [
     globalFilters.altoCosto, 
     globalFilters.medicamentos, 
     globalFilters.habitacion, 
     globalFilters.odontologia,
     cliente?.clientChoosen
-  ]); // SIMPLIFICADO: Solo las dependencias críticas
+  ]);
 
-  // Actualizar automáticamente para individuales (clientChoosen === 1) cuando se cargan los datos - SIMPLIFICADO
+  // Actualizar automáticamente para individuales cuando se cargan los datos
   useEffect(() => {
     if (cliente?.clientChoosen === 1 && !isUpdating && Object.keys(planesData).length > 0 && Object.keys(planSelections).length > 0) {
-      const timer = setTimeout(() => {
-        planes.forEach(plan => {
-          if (planesData[plan.plan] && planSelections[plan.plan]) {
-            const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-            updatePlanOpcionales(plan.plan, odontologiaValue);
-          }
-        });
-      }, 200);
-      return () => clearTimeout(timer);
+      planes.forEach(plan => {
+        if (planesData[plan.plan] && planSelections[plan.plan]) {
+          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+          updatePlanOpcionales(plan.plan, odontologiaValue);
+        }
+      });
     }
   }, [
     cliente?.clientChoosen,
     Object.keys(planesData).length,
     Object.keys(planSelections).length
-  ]); // SIMPLIFICADO
+  ]);
 
   // ELIMINADO: useEffect problemático que causaba bucle infinito
   // Ya no es necesario un useEffect complejo para cargar datos por primera vez
 
   const handleGlobalFilterChange = (filter: string, checked: boolean) => {
-    setUserHasModifiedFilters(true); // Marcar que el usuario ha modificado los filtros
+    setUserHasModifiedFilters(true);
     setGlobalFilters(prev => ({
       ...prev,
       [filter]: checked
     }));
 
-    // Si se está desactivando una cobertura, limpiar las selecciones dinámicas y copagos
+    // Si se está desactivando una cobertura, limpiar las selecciones relacionadas
     if (!checked && cliente?.clientChoosen === 2) {
       planes.forEach(plan => {
         // Limpiar selección de cobertura
@@ -1444,7 +1409,7 @@ export const useCoberturasOpcionales = () => {
           }
         }));
         
-        // Limpiar copago relacionado específico al tipo de cobertura
+        // Limpiar copago relacionado
         setDynamicCopagoSelections(prev => ({
           ...prev,
           [plan.plan]: {
@@ -1453,7 +1418,7 @@ export const useCoberturasOpcionales = () => {
           }
         }));
 
-        // CRÍTICO: También limpiar la selección de odontología cuando se desmarca el filtro
+        // Limpiar odontología si es necesario
         if (filter === 'odontologia') {
           setPlanSelections(prev => ({
             ...prev,
@@ -1465,103 +1430,70 @@ export const useCoberturasOpcionales = () => {
         }
       });
       
-      // Forzar actualización inmediata del store para sincronizar visual con datos
-      setTimeout(() => {
-        planes.forEach(plan => {
-          const odontologiaValue = filter === 'odontologia' ? "0" : (planSelections[plan.plan]?.odontologia || "0");
-          updatePlanOpcionales(plan.plan, odontologiaValue);
-        });
-      }, 50);
+      // Actualizar el store inmediatamente
+      planes.forEach(plan => {
+        const odontologiaValue = filter === 'odontologia' ? "0" : (planSelections[plan.plan]?.odontologia || "0");
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
     }
   };
 
   const handleOdontologiaChange = (planName: string, value: string) => {
-    // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) {
-      
       return;
     }
     
-    
-    
-    // ⭐ MEJORA: Marcar como actualizando inmediatamente para prevenir clicks múltiples
     setIsUpdating(true);
     
-    // 🆕 LÓGICA CORREGIDA FINAL: 
-    // - COLECTIVOS (clientChoosen === 2): Cada plan selecciona independientemente (incluyendo odontología)
-    // - INDIVIDUALES (clientChoosen === 1): Aplicar a todos los planes (comportamiento unificado)
     setPlanSelections(prev => {
       const newSelections = { ...prev };
       
       if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico (odontología también es independiente)
+        // COLECTIVO: Solo actualizar el plan específico
         newSelections[planName] = {
           ...newSelections[planName],
           odontologia: value
         };
-        
-        
       } else {
-        // INDIVIDUAL: Aplicar el cambio a todos los planes (comportamiento unificado)
+        // INDIVIDUAL: Aplicar el cambio a todos los planes
         planes.forEach(plan => {
           newSelections[plan.plan] = {
             ...newSelections[plan.plan],
             odontologia: value
           };
         });
-        
-       
       }
       
       return newSelections;
     });
     
-    // Debounce para procesar la actualización del store
-    const timeoutId = setTimeout(() => {
-      
-      
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        updatePlanOpcionales(planName, value);
-      } else {
-        // INDIVIDUAL: Actualizar TODOS los planes en el store
-        planes.forEach(plan => {
-          updatePlanOpcionales(plan.plan, value);
-        });
-      }
-      
-      // Liberar el flag después de procesar
-      setTimeout(() => {
-        setIsUpdating(false);
-        
-      }, 50);
-    }, 150); // Reducido para mejor responsividad
-    
-    // Limpiar timeout previo si existe
-    if (odontologiaTimeoutRef.current) {
-      clearTimeout(odontologiaTimeoutRef.current);
+    // Actualizar el store inmediatamente
+    if (cliente?.clientChoosen === 2) {
+      updatePlanOpcionales(planName, value);
+    } else {
+      planes.forEach(plan => {
+        updatePlanOpcionales(plan.plan, value);
+      });
     }
-    odontologiaTimeoutRef.current = timeoutId;
+    
+    // Liberar el flag
+    setTimeout(() => {
+      setIsUpdating(false);
+    }, 100);
   };
 
   const handleCoberturaChange = (planName: string, coberturaType: keyof CoberturaSelections, value: string) => {
-    // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    // 🆕 LÓGICA DIFERENCIADA: 
-    // - Colectivos: Solo actualizar el plan específico
-    // - Individuales: Aplicar a todos los planes
     setCoberturaSelections(prev => {
       const newSelections = { ...prev };
       
       if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
         newSelections[planName] = {
           ...newSelections[planName],
           [coberturaType]: value
         };
       } else {
-        // INDIVIDUAL: Aplicar el cambio a todos los planes existentes (comportamiento original)
         planes.forEach(plan => {
           newSelections[plan.plan] = {
             ...newSelections[plan.plan],
@@ -1573,79 +1505,56 @@ export const useCoberturasOpcionales = () => {
       return newSelections;
     });
     
-    // Actualizar inmediatamente los planes correspondientes
-    setTimeout(() => {
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        const odontologiaValue = planSelections[planName]?.odontologia || "0";
-        updatePlanOpcionales(planName, odontologiaValue);
-      } else {
-        // INDIVIDUAL: Actualizar todos los planes
-        planes.forEach(plan => {
-          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-          updatePlanOpcionales(plan.plan, odontologiaValue);
-        });
-      }
-    }, 100);
+    // Actualizar inmediatamente
+    if (cliente?.clientChoosen === 2) {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    } else {
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
+    }
   };
 
-  // Nuevos handlers para selecciones dinámicas
   const handleDynamicCoberturaChange = (planName: string, coberturaType: string, value: string) => {
-    // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    // 🆕 RESET CRÍTICO: Usuario está haciendo selección manual - ya no es navegación
+    // Reset navegación al hacer selección manual
     navigationLoadedRef.current = false;
     
-  
-    
-    // 🆕 LÓGICA DIFERENCIADA: 
-    // - Colectivos: Solo actualizar el plan específico
-    // - Individuales: Aplicar a todos los planes
     setDynamicCoberturaSelections(prev => {
       const newSelections = { ...prev };
       
       if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
         const currentPlanSelections = newSelections[planName] || {};
         newSelections[planName] = {
           ...currentPlanSelections,
           [coberturaType]: value
         };
-        
-        
-        
       } else {
-        // INDIVIDUAL: Aplicar el cambio a todos los planes existentes (comportamiento original)
-        const updatedPlans: string[] = [];
         planes.forEach(plan => {
           newSelections[plan.plan] = {
             ...newSelections[plan.plan],
             [coberturaType]: value
           };
-          updatedPlans.push(plan.plan);
         });
-        
-        
       }
       
       return newSelections;
     });
     
-    // Si se selecciona "Ninguna" (valor "0"), también limpiar el copago asociado
+    // Limpiar copago si se selecciona "Ninguna"
     if (value === "0") {
-      
       setDynamicCopagoSelections(prev => {
         const newSelections = { ...prev };
         
         if (cliente?.clientChoosen === 2) {
-          // COLECTIVO: Solo limpiar el plan específico
           newSelections[planName] = {
             ...newSelections[planName],
             [coberturaType]: "0"
           };
         } else {
-          // INDIVIDUAL: Limpiar todos los planes
           planes.forEach(plan => {
             newSelections[plan.plan] = {
               ...newSelections[plan.plan],
@@ -1658,39 +1567,25 @@ export const useCoberturasOpcionales = () => {
       });
     }
     
-    // Usar un timeout más largo para evitar conflictos de estado
-    //! TODO: usar otra logica y evitar los timeouts
-    setTimeout(() => {
-      
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        const odontologiaValue = planSelections[planName]?.odontologia || "0";
-        updatePlanOpcionales(planName, odontologiaValue);
-      } else {
-        // INDIVIDUAL: Actualizar todos los planes
-        planes.forEach(plan => {
-          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-          updatePlanOpcionales(plan.plan, odontologiaValue);
-        });
-      }
-    }, 200); // 🔧 Aumentar timeout para dar tiempo a React a actualizar el estado
+    // Actualizar el store inmediatamente
+    if (cliente?.clientChoosen === 2) {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    } else {
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
+    }
   };
 
-  // Handler para cambios dinámicos de copagos
   const handleDynamicCopagoChange = (planName: string, copagoType: string, value: string) => {
-    // Prevenir actualizaciones múltiples simultáneas
     if (isUpdating) return;
     
-    
-    
-    // 🆕 LÓGICA DIFERENCIADA: 
-    // - Colectivos: Solo actualizar el plan específico
-    // - Individuales: Aplicar a todos los planes
     setDynamicCopagoSelections(prev => {
       const newSelections = { ...prev };
       
       if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
         const currentPlanSelections = newSelections[planName] || {
           altoCosto: "0",
           medicamentos: "0",
@@ -1700,10 +1595,7 @@ export const useCoberturasOpcionales = () => {
           ...currentPlanSelections,
           [copagoType]: value
         };
-        
-        
       } else {
-        // INDIVIDUAL: Aplicar el cambio a todos los planes existentes (comportamiento original)
         planes.forEach(plan => {
           const currentPlanSelections = newSelections[plan.plan] || {
             altoCosto: "0",
@@ -1715,50 +1607,30 @@ export const useCoberturasOpcionales = () => {
             [copagoType]: value
           };
         });
-        
-        
       }
       
       return newSelections;
     });
     
-    // Usar timeout para actualizar el store
-    //! Por que usar timeout para actualizar el store  si el store deberia actualizarse cuando se da click en siguiente?
-    setTimeout(() => {
-      
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        const odontologiaValue = planSelections[planName]?.odontologia || "0";
-        updatePlanOpcionales(planName, odontologiaValue);
-      } else {
-        // INDIVIDUAL: Actualizar todos los planes
-        planes.forEach(plan => {
-          const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-          updatePlanOpcionales(plan.plan, odontologiaValue);
-        });
-      }
-    }, 200);
+    // Actualizar el store inmediatamente
+    if (cliente?.clientChoosen === 2) {
+      const odontologiaValue = planSelections[planName]?.odontologia || "0";
+      updatePlanOpcionales(planName, odontologiaValue);
+    } else {
+      planes.forEach(plan => {
+        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
+        updatePlanOpcionales(plan.plan, odontologiaValue);
+      });
+    }
   };
 
   /**
-   * 🎯 LÓGICA DIFERENCIADA PARA COBERTURAS OPCIONALES:
+   * LÓGICA DIFERENCIADA PARA COBERTURAS OPCIONALES:
    * 
-   * COLECTIVOS (clientChoosen === 2):
-   * - TODAS LAS COBERTURAS (incluyendo odontología): Selecciones independientes por plan
-   * - COPAGOS: Selecciones independientes por plan
-   * - Al cambiar cualquier cobertura, SOLO afecta al plan específico
-   * - Permite configuraciones granulares por plan en todo
-   * - Cada plan puede tener diferentes niveles de odontología, medicamentos, etc.
+   * COLECTIVOS (clientChoosen === 2): Selecciones independientes por plan
+   * INDIVIDUALES (clientChoosen === 1): Selecciones se aplican a todos los planes
    * 
-   * INDIVIDUALES (clientChoosen === 1):
-   * - TODAS las selecciones se aplican a TODOS los planes (comportamiento unificado)
-   * - Al cambiar cualquier opción, se sincroniza en todos los planes
-   * - Mantiene consistencia familiar total
-   * 
-   * NAVEGACIÓN ENTRE STEPS:
-   * - Las selecciones específicas por plan se preservan al navegar
-   * - CADA PLAN mantiene sus selecciones individuales en colectivos
-   * - Los copagos y coberturas específicas se restauran individualmente por plan
+   * NAVEGACIÓN: Las selecciones específicas por plan se preservan al navegar
    */
 
   // Estados para filtros globales y selecciones de planes
@@ -1771,22 +1643,17 @@ export const useCoberturasOpcionales = () => {
   // 🔍 DEBUG CRÍTICO: Verificar valores que se retornan a la UI
  
 
-  // 🆕 FUNCIÓN PARA VALIDAR Y GUARDAR AL NAVEGAR
   const validateAndSaveToStore = useCallback(async (): Promise<boolean> => {
     try {
-      
-      // Forzar actualización de todos los planes en el store
+      // Actualizar todos los planes en el store
       planes.forEach(plan => {
         const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
         updatePlanOpcionales(plan.plan, odontologiaValue);
       });
       
-      // Dar un pequeño tiempo para que React complete cualquier actualización pendiente
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       return true;
     } catch (error) {
-      console.error('❌ NAVEGACIÓN: Error al guardar coberturas:', error);
+      console.error('Error al guardar coberturas:', error);
       return false;
     }
   }, [updatePlanOpcionales, planes, planSelections]);
@@ -1835,4 +1702,3 @@ export const useCoberturasOpcionales = () => {
   
 };
 
-// 🆕 MAPEO INTELIGENTE POST-NAVEGACIÓN: Convertir IDs del store a opciones de API
