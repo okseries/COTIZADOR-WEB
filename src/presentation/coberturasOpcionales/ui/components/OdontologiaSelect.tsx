@@ -18,13 +18,19 @@ const OdontologiaSelect = ({ value, onChange, options = [] }: OdontologiaSelectP
   // Asegurar que value siempre sea string para evitar controlled/uncontrolled switching
   const safeValue = value || "0";
   
+  // Verificar que el valor exista en las opciones disponibles
+  const isValidValue = options.some(opt => opt.value === safeValue);
+  const finalValue = isValidValue ? safeValue : "0";
+  
   // 🔍 DEBUG CRÍTICO: Log para verificar valores de odontología
   if (process.env.NODE_ENV === 'development') {
     console.log('🦷 OdontologiaSelect:', JSON.stringify({
       originalValue: value,
       safeValue,
+      finalValue,
+      isValidValue,
       optionsCount: options?.length || 0,
-      hasMatchingOption: options?.some(opt => opt.value === safeValue) || false,
+      hasMatchingOption: options?.some(opt => opt.value === finalValue) || false,
       availableOptions: options?.map(opt => ({ value: opt.value, label: opt.label })) || [],
       timestamp: new Date().toISOString()
     }, null, 2));
@@ -36,28 +42,43 @@ const OdontologiaSelect = ({ value, onChange, options = [] }: OdontologiaSelectP
       console.log('🔄 OdontologiaSelect - EFFECT:', JSON.stringify({
         effectTrigger: 'value or options changed',
         value,
-        safeValue,
+        finalValue,
         optionsLength: options?.length || 0,
-        hasMatchingOption: options?.some(opt => opt.value === safeValue) || false,
+        isValidValue,
         timestamp: new Date().toISOString()
       }, null, 2));
     }
-  }, [value, options, safeValue]);
+  }, [value, options, finalValue, isValidValue]);
+  
+  // No renderizar el Select hasta que tengamos opciones
+  if (!options || options.length === 0) {
+    return (
+      <div className="w-full mt-2 h-10 border border-gray-300 rounded-md flex items-center px-3 text-gray-500">
+        Cargando opciones...
+      </div>
+    );
+  }
   
   return (
     <Select
-      value={safeValue}
+      key={`odontologia-${finalValue}-${options.length}`} // Forzar re-render cuando cambien las opciones
+      value={finalValue}
       onValueChange={(newValue) => onChange(newValue)}
     >
       <SelectTrigger className="w-full mt-2">
-        <SelectValue placeholder="Seleccionar opción de odontología" />
+        <SelectValue 
+          placeholder="Seleccionar opción de odontología"
+        >
+          {/* Forzar el display del valor seleccionado */}
+          {finalValue && options.find(opt => opt.value === finalValue)?.label}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {options?.map((option) => (
+        {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>
-        )) || []}
+        ))}
       </SelectContent>
     </Select>
   );

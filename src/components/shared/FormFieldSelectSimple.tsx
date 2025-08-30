@@ -35,13 +35,46 @@ export function SelectSimple({
   className = "",
   disabled = false,
 }: SelectSimpleProps) {
+  // Validar que el valor actual existe en las opciones
+  const isValidValue = (val: string) => {
+    if (!val) return false;
+    return options.some(option => option.value === val);
+  };
+  
+  // Si las opciones están cargando, mostrar loading
+  if (options.length === 0) {
+    return (
+      <Select disabled>
+        <SelectTrigger
+          id={id}
+          className={`w-full py-5 ${error ? "border-red-500" : ""} ${className}`}
+        >
+          <SelectValue placeholder="Cargando opciones..." />
+        </SelectTrigger>
+      </Select>
+    );
+  }
+  
+  const finalValue = isValidValue(value || '') ? value : '';
+  
+  // Debug logging
+  console.log(`SelectSimple - id: ${id}, value: ${value}, finalValue: ${finalValue}, options: ${options.length}, isValid: ${isValidValue(value || '')}`);
+  
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
+    <Select 
+      key={`simple-${finalValue}-${options.length}`}
+      value={finalValue} 
+      onValueChange={onChange} 
+      disabled={disabled}
+    >
       <SelectTrigger
         id={id}
         className={`w-full py-5 ${error ? "border-red-500" : ""} ${className}`}
       >
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder}>
+          {/* Forzar el display del valor seleccionado */}
+          {finalValue && options.find(opt => opt.value === finalValue)?.label}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

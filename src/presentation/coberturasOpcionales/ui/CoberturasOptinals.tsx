@@ -1,6 +1,7 @@
 "use client"
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { useCoberturasOpcionales } from './hooks/useCoberturasOpcionales';
+import { useQuotationStore } from '@/core/store/quotationStore';
 import GlobalFilters from './components/GlobalFilters';
 import PlanTable from './components/PlanTable';
 import LoadingState from './components/LoadingState';
@@ -11,6 +12,10 @@ export interface CoberturasOpcionalesRef {
 }
 
 const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, ref) => {
+  // Obtener mode del store y convertir a string
+  const storeMode = useQuotationStore((state) => state.mode);
+  const mode = storeMode === "create" ? "create" : "edit";
+  
   const {
     globalFilters,
     planSelections,
@@ -46,7 +51,7 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
     
     // 🆕 FUNCIÓN DE VALIDACIÓN
     validateAndSaveToStore
-  } = useCoberturasOpcionales();
+  } = useCoberturasOpcionales({ mode });
 
   // 🆕 EXPONER FUNCIÓN DE VALIDACIÓN AL PADRE
   useImperativeHandle(ref, () => ({
@@ -91,6 +96,15 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
         const copagoSelection = copagoSelections[plan.plan] || "";
         const copagoHabitacionSelection = copagoHabitacionSelections[plan.plan] || "";
         
+        // 🔍 DEBUG SIMPLIFICADO: Solo mostrar si hay problemas
+        if (process.env.NODE_ENV === 'development' && !planSelections[plan.plan]) {
+          console.log(`❌ PROBLEMA EN PLAN ${plan.plan}:`, {
+            odontologiaSelection,
+            planSelectionsForPlan: planSelections[plan.plan],
+            hasOdontologiaOptions: ODONTOLOGIA_OPTIONS?.length > 0
+          });
+        }
+        
         // Selecciones dinámicas - FIX: Asegurar que siempre haya un objeto válido
         const dynamicCoberturaSelection = dynamicCoberturaSelections[plan.plan] || {
           altoCosto: '',
@@ -99,6 +113,17 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
           odontologia: ''
         };
         const dynamicCopagoSelection = dynamicCopagoSelections[plan.plan] || { altoCosto: '', medicamentos: '', habitacion: '' };
+        
+        // DEBUG: Log de selecciones dinámicas para este plan
+        console.log(`🔍 SELECCIONES DINÁMICAS PARA ${plan.plan}:`, {
+          coberturas: dynamicCoberturaSelection,
+          copagos: dynamicCopagoSelection,
+          opcionesDisponibles: {
+            altoCosto: dynamicAltoCostoOptions?.length || 0,
+            medicamentos: dynamicMedicamentosOptions?.length || 0,
+            habitacion: dynamicHabitacionOptions?.length || 0
+          }
+        });
         
         return (
           <PlanTable

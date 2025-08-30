@@ -573,13 +573,14 @@ export const useCoberturasOpcionales = () => {
   
   // Efecto para navegación entre steps
   useEffect(() => {
-    // Detectar navegación de vuelta al Step 3
-    const isReturningToStep3 = planes.length > 0 && 
-                               Object.keys(planSelections).length < planes.length &&
-                               Object.keys(dynamicCoberturaSelections).length < planes.length &&
-                               planes.some(plan => plan.opcionales.length > 0);
+    // 🔄 CARGAR DESDE STORE en modo edit cuando hay datos disponibles
+    const shouldLoadFromStore = isEditMode && planes.length > 0 && 
+                               planes.some(plan => plan.opcionales.length > 0) &&
+                               !editModeInitializedRef.current; // Solo una vez
     
-    if (isReturningToStep3) {
+    if (shouldLoadFromStore) {
+      console.log('🔄 CARGANDO DATOS DESDE STORE - Modo Edit');
+      
       const hasOpcionalesInStore = planes.some(plan => plan.opcionales.length > 0);
       
       if (hasOpcionalesInStore) {
@@ -624,52 +625,63 @@ export const useCoberturasOpcionales = () => {
           
           // 🔧 MAPEAR TODAS LAS SELECCIONES ESPECÍFICAS DE ESTE PLAN - USANDO originalOptId
           plan.opcionales.forEach(opcional => {
+            console.log(`🔍 PROCESANDO OPCIONAL - Plan: ${plan.plan}, Nombre: ${opcional.nombre}, ID: ${opcional.id}, OriginalOptId: ${opcional.originalOptId}, Prima: ${opcional.prima}, IdCopago: ${opcional.idCopago}`);
+            
             switch (opcional.nombre) {
               case "ALTO COSTO":
-                if (opcional.originalOptId) {
-                  initialDynamicCoberturaSelections[plan.plan].altoCosto = opcional.originalOptId.toString();
+                // Para coberturas dinámicas, usar originalOptId si existe, sino usar id
+                const altoCostoOptId = opcional.originalOptId || opcional.id;
+                if (altoCostoOptId) {
+                  initialDynamicCoberturaSelections[plan.plan].altoCosto = altoCostoOptId.toString();
                   detectedFilters.altoCosto = true;
-                } else if (opcional.id) {
-                  initialDynamicCoberturaSelections[plan.plan].altoCosto = opcional.id.toString();
-                  detectedFilters.altoCosto = true;
+                  console.log(`✅ ALTO COSTO ENCONTRADO - Plan: ${plan.plan}, OriginalOptId: ${altoCostoOptId}`);
                 }
                 break;
                 
               case "COPAGO ALTO COSTO":
-                if (opcional.idCopago) {
-                  initialDynamicCopagoSelections[plan.plan].altoCosto = opcional.idCopago.toString();
+                // Para copagos, usar idCopago si existe, sino usar originalOptId o id
+                const altoCostoCopagoId = opcional.idCopago || opcional.originalOptId || opcional.id;
+                if (altoCostoCopagoId) {
+                  initialDynamicCopagoSelections[plan.plan].altoCosto = altoCostoCopagoId.toString();
+                  console.log(`✅ COPAGO ALTO COSTO ENCONTRADO - Plan: ${plan.plan}, CopagoId: ${altoCostoCopagoId}`);
                 }
                 break;
                 
               case "MEDICAMENTOS":
-                if (opcional.originalOptId) {
-                  initialDynamicCoberturaSelections[plan.plan].medicamentos = opcional.originalOptId.toString();
+                // Para coberturas dinámicas, usar originalOptId si existe, sino usar id
+                const medicamentosOptId = opcional.originalOptId || opcional.id;
+                if (medicamentosOptId) {
+                  initialDynamicCoberturaSelections[plan.plan].medicamentos = medicamentosOptId.toString();
                   detectedFilters.medicamentos = true;
-                } else if (opcional.id) {
-                  initialDynamicCoberturaSelections[plan.plan].medicamentos = opcional.id.toString();
-                  detectedFilters.medicamentos = true;
+                  console.log(`✅ MEDICAMENTOS ENCONTRADO - Plan: ${plan.plan}, OriginalOptId: ${medicamentosOptId}`);
                 }
                 break;
                 
               case "COPAGO MEDICAMENTOS":
-                if (opcional.idCopago) {
-                  initialDynamicCopagoSelections[plan.plan].medicamentos = opcional.idCopago.toString();
+                // Para copagos, usar idCopago si existe, sino usar originalOptId o id
+                const medicamentosCopagoId = opcional.idCopago || opcional.originalOptId || opcional.id;
+                if (medicamentosCopagoId) {
+                  initialDynamicCopagoSelections[plan.plan].medicamentos = medicamentosCopagoId.toString();
+                  console.log(`✅ COPAGO MEDICAMENTOS ENCONTRADO - Plan: ${plan.plan}, CopagoId: ${medicamentosCopagoId}`);
                 }
                 break;
                 
               case "HABITACION":
-                if (opcional.originalOptId) {
-                  initialDynamicCoberturaSelections[plan.plan].habitacion = opcional.originalOptId.toString();
+                // Para coberturas dinámicas, usar originalOptId si existe, sino usar id
+                const habitacionOptId = opcional.originalOptId || opcional.id;
+                if (habitacionOptId) {
+                  initialDynamicCoberturaSelections[plan.plan].habitacion = habitacionOptId.toString();
                   detectedFilters.habitacion = true;
-                } else if (opcional.id) {
-                  initialDynamicCoberturaSelections[plan.plan].habitacion = opcional.id.toString();
-                  detectedFilters.habitacion = true;
+                  console.log(`✅ HABITACION ENCONTRADA - Plan: ${plan.plan}, OriginalOptId: ${habitacionOptId}`);
                 }
                 break;
                 
               case "COPAGO HABITACIÓN":
-                if (opcional.idCopago) {
-                  initialDynamicCopagoSelections[plan.plan].habitacion = opcional.idCopago.toString();
+                // Para copagos, usar idCopago si existe, sino usar originalOptId o id
+                const habitacionCopagoId = opcional.idCopago || opcional.originalOptId || opcional.id;
+                if (habitacionCopagoId) {
+                  initialDynamicCopagoSelections[plan.plan].habitacion = habitacionCopagoId.toString();
+                  console.log(`✅ COPAGO HABITACIÓN ENCONTRADO - Plan: ${plan.plan}, CopagoId: ${habitacionCopagoId}`);
                 }
                 break;
                 
@@ -679,11 +691,17 @@ export const useCoberturasOpcionales = () => {
                   const cantidadAfiliados = plan.cantidadAfiliados || 1;
                   const primaUnitaria = opcional.prima / cantidadAfiliados;
                   
+                  console.log(`🔍 PROCESANDO ODONTOLOGÍA - Plan: ${plan.plan}, Prima: ${opcional.prima}, PrimaUnitaria: ${primaUnitaria}`);
+                  
                   const matchingOption = ODONTOLOGIA_OPTIONS.find(opt => Math.abs(opt.prima - primaUnitaria) < 1);
                   
                   if (matchingOption) {
                     initialPlanSelections[plan.plan].odontologia = matchingOption.value;
                     detectedFilters.odontologia = true;
+                    
+                    console.log(`✅ ODONTOLOGÍA ENCONTRADA - Plan: ${plan.plan}, Valor: ${matchingOption.value}, Label: ${matchingOption.label}`);
+                  } else {
+                    console.log(`❌ NO SE ENCONTRÓ MATCH PARA ODONTOLOGÍA - Plan: ${plan.plan}, PrimaUnitaria: ${primaUnitaria}, OpcionesDisponibles:`, ODONTOLOGIA_OPTIONS.map(opt => `${opt.value}:${opt.prima}`));
                   }
                 }
                 break;
@@ -698,13 +716,21 @@ export const useCoberturasOpcionales = () => {
         setCopagoSelections(initialCopagoSelections);
         setCopagoHabitacionSelections(initialCopagoHabitacionSelections);
         
+        console.log('✅ SELECCIONES APLICADAS DESDE STORE:', {
+          planSelections: initialPlanSelections,
+          detectedFilters
+        });
+        
         // Activar filtros globales basados en lo encontrado
         setGlobalFilters(detectedFilters);
         
+        // Marcar como inicializado para evitar sobreescritura
+        editModeInitializedRef.current = true;
         navigationLoadedRef.current = true;
       }
     }
   }, [
+    isEditMode,
     planes.length, 
     planSelections, 
     dynamicCoberturaSelections, 

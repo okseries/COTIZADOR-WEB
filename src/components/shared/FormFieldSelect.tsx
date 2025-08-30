@@ -39,6 +39,32 @@ function FormFieldSelect<TOption, TForm extends FieldValues = FieldValues>({
 }: FormFieldSelectProps<TOption, TForm>) {
   const [open, setOpen] = useState(false);
 
+  // Si no hay opciones, mostrar estado de carga
+  if (options.length === 0) {
+    return (
+      <FormField
+        control={form.control}
+        name={name}
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              <Button
+                variant="outline"
+                disabled
+                className="w-full justify-between text-muted-foreground"
+              >
+                Cargando opciones...
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    );
+  }
+
   return (
     <FormField
       control={form.control}
@@ -46,6 +72,9 @@ function FormFieldSelect<TOption, TForm extends FieldValues = FieldValues>({
       render={({ field }) => {
         // Find selected option - moved inside render to avoid subscription issues
         const selectedOption = options.find(opt => getOptionValue(opt) === field.value);
+        
+        // Debug logging
+        console.log(`FormFieldSelect - ${name}: value=${field.value}, options=${options.length}, selectedOption=${selectedOption ? getOptionLabel(selectedOption) : 'none'}`);
         
         return (
           <FormItem className="flex flex-col">

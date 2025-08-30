@@ -63,23 +63,24 @@ export const useCoverageQueries = ({
     !!planes[4]?.plan
   );
 
-  // Lógica mejorada para cargar opciones
-  const shouldLoadAltoCosto = isColectivo && (
-    isEditMode ? hasAltoCostoInStore : globalFilters.altoCosto
-  );
-  
-  const shouldLoadMedicamentos = isColectivo && (
-    isEditMode ? hasMedicamentosInStore : globalFilters.medicamentos
-  );
-  
-  const shouldLoadHabitacion = isColectivo && (
-    isEditMode ? hasHabitacionInStore : globalFilters.habitacion
-  );
-  
-  // Odontología no necesita carga dinámica porque es estática
-  const shouldLoadOdontologia = isColectivo && (
-    isEditMode ? false : globalFilters.odontologia // Solo en modo crear
-  );
+  // SIMPLIFICADO: Siempre cargar opciones para que los selects funcionen
+  const shouldLoadAltoCosto = isColectivo && planes.length > 0;
+  const shouldLoadMedicamentos = isColectivo && planes.length > 0;
+  const shouldLoadHabitacion = isColectivo && planes.length > 0;
+  const shouldLoadOdontologia = isColectivo && planes.length > 0;
+
+  // 🔍 DEBUG: Verificar condiciones de carga
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 QUERIES CONDITIONS:', {
+      isColectivo,
+      planesLength: planes.length,
+      shouldLoadAltoCosto,
+      shouldLoadMedicamentos,
+      shouldLoadHabitacion,
+      shouldLoadOdontologia,
+      tipoPlanParaAPI
+    });
+  }
 
   // Alto Costo
   const altoCostoOptionsQuery = useCoberturasOpcionalesByType(
@@ -150,6 +151,36 @@ export const useCoverageQueries = ({
     plan4Query?.isLoading,
     plan5Query?.isLoading
   ]);
+
+  // 🔍 DEBUG: Estado de las queries
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 QUERIES STATUS:', {
+      altoCosto: {
+        isLoading: altoCostoOptionsQuery.isLoading,
+        dataLength: altoCostoOptionsQuery.data?.length || 0,
+        hasData: !!altoCostoOptionsQuery.data,
+        error: altoCostoOptionsQuery.error
+      },
+      medicamentos: {
+        isLoading: medicamentosOptionsQuery.isLoading,
+        dataLength: medicamentosOptionsQuery.data?.length || 0,
+        hasData: !!medicamentosOptionsQuery.data,
+        error: medicamentosOptionsQuery.error
+      },
+      habitacion: {
+        isLoading: habitacionOptionsQuery.isLoading,
+        dataLength: habitacionOptionsQuery.data?.length || 0,
+        hasData: !!habitacionOptionsQuery.data,
+        error: habitacionOptionsQuery.error
+      },
+      odontologia: {
+        isLoading: odontologiaOptionsQuery.isLoading,
+        dataLength: odontologiaOptionsQuery.data?.length || 0,
+        hasData: !!odontologiaOptionsQuery.data,
+        error: odontologiaOptionsQuery.error
+      }
+    });
+  }
 
   return {
     // Plan queries

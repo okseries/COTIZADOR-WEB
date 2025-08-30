@@ -76,7 +76,6 @@ interface QuotationActions {
   clearCurrentForm: () => void;
   loadExistingQuotation: (quotationRequest: QuotationRequest) => void;
   getFinalObject: () => QuotationRequest;
-  resetStepper: () => void;
 }
 
 type QuotationStore = UnifiedQuotationState & QuotationActions;
@@ -237,7 +236,10 @@ export const useQuotationStore = create<QuotationStore>()(
       setPaymentPeriod: (period) => set({ paymentPeriod: period }),
       
   // Utilidades
-  clearQuotation: () => set({ ...initialState }),
+  clearQuotation: () => {
+    console.log('🧹 LIMPIANDO COTIZACIÓN COMPLETA');
+    set({ ...initialState });
+  },
   clearCurrentForm: () => set((state) => ({ 
     cliente: null,
     filterData: null,
@@ -245,6 +247,20 @@ export const useQuotationStore = create<QuotationStore>()(
     clientSearchResult: null,
     clientData: { ...initialState.clientData }
   })),      loadExistingQuotation: (quotationRequest) => {
+        // 🧹 LIMPIEZA COMPLETA: Primero limpiar todo el store antes de cargar nueva cotización
+        console.log('🧹 LIMPIANDO STORE ANTES DE CARGAR NUEVA COTIZACIÓN:', {
+          oldClient: get().cliente?.identification,
+          newClient: quotationRequest.cliente?.identification
+        });
+        
+        // Resetear completamente el store al estado inicial
+        set({ ...initialState });
+        
+        // Invalidar queries de React Query para forzar recarga de datos
+        if (typeof window !== 'undefined' && (window as any).queryClient) {
+          (window as any).queryClient.invalidateQueries();
+        }
+        
         const cliente = quotationRequest.cliente;
         
         if (cliente) {
@@ -267,13 +283,19 @@ export const useQuotationStore = create<QuotationStore>()(
             tipoPlan: cliente.tipoPlan || 0,
           };
           
+          console.log('📝 CARGANDO NUEVA COTIZACIÓN:', {
+            cliente: cliente.identification,
+            planesCount: quotationRequest.planes?.length || 0,
+            mode: 'edit'
+          });
+          
           set({
             user: quotationRequest.user,
             cliente: quotationRequest.cliente,
             planes: quotationRequest.planes || [],
             filterData: filterData,
             clientData: clientData,
-            // Asegurar que se mantenga el step actual o resetear a step1
+            mode: 1, // Modo edición (cualquier número != "create")
             currentStep: 'step1'
           });
         } else {
@@ -304,15 +326,7 @@ export const useQuotationStore = create<QuotationStore>()(
         }
         
         return { user: authenticatedUser, cliente, planes };
-      },
-      
-      resetStepper: () => set({
-        currentStep: 'step1',
-        clientData: { ...initialState.clientData },
-        selectedPlans: [],
-        selectedOptionalCoverages: {},
-        paymentPeriod: ''
-      })
+      }
     }),
     {
       name: 'unified-quotation-v2',
