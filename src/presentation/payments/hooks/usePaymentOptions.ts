@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useUnifiedQuotationStore } from "@/core";
 import { useAuth } from "../../auth/store/useAuth.store";
 import { paymentService } from "../services/payment.service";
@@ -161,6 +161,10 @@ export const usePaymentOptions = () => {
 
           // Aplicar el período seleccionado a todos los planes
           const summary = calculatePaymentSummary(plan, periodo);
+          
+          console.log(`🔄 Updating plan ${plan.plan} with period ${periodo}:`);
+          console.log(`   Summary:`, summary);
+          
           const updatedPlan = {
             ...plan,
             selectedPeriod: periodo,
@@ -170,6 +174,8 @@ export const usePaymentOptions = () => {
               ...summary,
             },
           };
+
+          console.log(`   Updated plan resumenPago:`, updatedPlan.resumenPago);
 
           // Actualizar en el store de forma asíncrona para evitar el error de renderizado
           setTimeout(() => {
@@ -193,13 +199,48 @@ export const usePaymentOptions = () => {
     );
   }, [paymentPlans]);
 
-  // Calcular total general
-  const getTotalGeneral = () => {
-    return paymentPlans.reduce(
-      (total, plan) => total + (plan.resumenPago?.totalPagar || 0),
-      0
-    );
-  };
+  // Calcular total general con useMemo para mejor rendimiento y sincronización
+  const totalGeneral = useMemo(() => {
+    if (paymentPlans.length === 0) {
+      return 0;
+    }
+
+    const total = paymentPlans.reduce((total, plan) => {
+      // Si no hay período seleccionado, no sumar nada
+      if (!plan.selectedPeriod || plan.selectedPeriod === "seleccionar") {
+        console.log(`⚠️ Plan ${plan.plan} no tiene período seleccionado`);
+        return total;
+      }
+
+      // Calcular el total correctamente con el período seleccionado
+      const subTotalAfiliado = plan.afiliados.reduce(
+        (sum, afiliado) => sum + parseFloat(afiliado.subtotal.toString()),
+        0
+      );
+
+      const subTotalOpcional = plan.opcionales.reduce(
+        (sum, opcional) => sum + opcional.prima,
+        0
+      );
+
+      const baseTotal = subTotalAfiliado + subTotalOpcional;
+      const multiplier = MULTIPLICADORES[plan.selectedPeriod];
+      const totalPlanConPeriodo = baseTotal * multiplier;
+
+      console.log(`📊 Plan: ${plan.plan}`);
+      console.log(`   Subtotal Afiliado: ${subTotalAfiliado}`);
+      console.log(`   Subtotal Opcional: ${subTotalOpcional}`);
+      console.log(`   Base Total: ${baseTotal}`);
+      console.log(`   Período: ${plan.selectedPeriod} (x${multiplier})`);
+      console.log(`   Total con período: ${totalPlanConPeriodo}`);
+      console.log(`   ResumenPago.totalPagar: ${plan.resumenPago?.totalPagar || 'N/A'}`);
+
+      return total + totalPlanConPeriodo;
+    }, 0);
+
+    console.log(`💰 TOTAL GENERAL CALCULADO: ${total}`);
+    return total;
+  }, [paymentPlans]); // Recalcular cuando cambien los paymentPlans
 
   // Función para descargar PDF
   //! Modificado para funcionar mejor en móviles
@@ -305,7 +346,7 @@ export const usePaymentOptions = () => {
     isSubmitting,
     error,
     isFormValid: isFormValid(),
-    totalGeneral: getTotalGeneral(),
+    totalGeneral,
     handlePeriodChange,
     submitQuotation,
     MULTIPLICADORES,
