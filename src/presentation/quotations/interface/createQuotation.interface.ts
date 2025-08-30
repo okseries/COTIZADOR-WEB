@@ -41,6 +41,7 @@ export interface Opcional {
   descripcion: string | null;
   prima: number;
   tipoOpcionalId?: number; // 🆕 ID del tipo de opcional para mapeo correcto (1=MEDICAMENTOS, 2=ALTO COSTO, 3=HABITACION, 4=ODONTOLOGIA)
+  originalOptId?: number; // 🆕 ID original del catálogo para mapeo confiable en edición
 }
 
 export interface ResumenPago {

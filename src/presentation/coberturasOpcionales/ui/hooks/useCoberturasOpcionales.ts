@@ -75,95 +75,135 @@ const detectTipoOpcionalId = (nombreOpcional: string): number => {
   }
 };
 
-// 🆕 FUNCIÓN CRÍTICA: Mapear de cotización guardada a opt_id del catálogo
+// 🆕 FUNCIÓN ROBUSTA: Mapear de cotización guardada a opt_id del catálogo con múltiples estrategias
 const mapCotizacionToOptId = (
   cotizacionOpcional: Opcional,
   catalogoOpciones: CoberturasOpcionaleColectivo[],
-  cantidadAfiliados: number = 1 // 🆕 PARÁMETRO CRÍTICO: cantidad de afiliados para dividir prima
+  cantidadAfiliados: number = 1
 ): string | null => {
   if (!catalogoOpciones || catalogoOpciones.length === 0) return null;
   
-  // 🔧 CÁLCULO CORRECTO: Convertir prima total a prima unitaria
-  const primaUnitaria = (cotizacionOpcional.prima || 0) / cantidadAfiliados;
-  
-  // Extraer información de la descripción de la cotización
-  // Ejemplo: "Alto Costo RD$750,000.00 al 100%" → { limit: "750000", percentage: "1" }
-  const extractInfoFromDescription = (descripcion: string) => {
-    // Patron para extraer monto: "RD$750,000.00" → "750000"
-    const montoMatch = descripcion.match(/RD\$?([\d,]+(?:\.\d{2})?)/);
-    const monto = montoMatch ? montoMatch[1].replace(/,/g, '').replace(/\.00$/, '') : null;
-    
-    // Patron para extraer porcentaje: "al 100%" → "1", "al 90%" → "0.9"
-    const porcentajeMatch = descripcion.match(/al (\d+)%/);
-    const porcentaje = porcentajeMatch ? (parseInt(porcentajeMatch[1]) / 100).toString() : null;
-    
-    return { monto, porcentaje };
-  };
-  
-  const { monto, porcentaje } = extractInfoFromDescription(cotizacionOpcional.descripcion || '');
-  
-  console.log(`🔍 MAPEO ${cotizacionOpcional.nombre}:`, {
+  console.log(`� MAPEO ROBUSTO ${cotizacionOpcional.nombre}:`, {
     cotizacionId: cotizacionOpcional.id,
+    originalOptId: cotizacionOpcional.originalOptId || "no disponible",
+    tipoOpcionalId: cotizacionOpcional.tipoOpcionalId,
     descripcion: cotizacionOpcional.descripcion,
-    primaTotal: cotizacionOpcional.prima,
-    cantidadAfiliados,
-    primaUnitaria, // 🆕 Prima calculada por afiliado
-    extraido: { monto, porcentaje },
-    catalogoSize: catalogoOpciones.length
+    prima: cotizacionOpcional.prima,
+    cantidadAfiliados
   });
   
-  // 🆕 BÚSQUEDA DUAL: Primero por descripción, luego por prima similar
-  let match = null;
+  // 🎯 ESTRATEGIA 1: Si existe originalOptId (más confiable)
+  if (cotizacionOpcional.originalOptId) {
+    const matchByOriginalId = catalogoOpciones.find(opt => opt.opt_id === cotizacionOpcional.originalOptId);
+    if (matchByOriginalId) {
+      console.log(`✅ MAPEO por originalOptId: ${cotizacionOpcional.originalOptId}`);
+      return matchByOriginalId.opt_id.toString();
+    } else {
+      console.warn(`⚠️ originalOptId ${cotizacionOpcional.originalOptId} no existe en catálogo actual`);
+    }
+  }
   
-  // Método 1: Buscar coincidencia exacta por descripción
-  if (monto && porcentaje) {
-    match = catalogoOpciones.find(option => {
-      const limitMatch = option.limit_price === monto;
-      const percentageMatch = option.opt_percentage === porcentaje;
+  // 🎯 ESTRATEGIA 2: Buscar por ID directo si existe en catálogo
+  if (cotizacionOpcional.id) {
+    const matchByDirectId = catalogoOpciones.find(opt => opt.opt_id === cotizacionOpcional.id);
+    if (matchByDirectId) {
+      console.log(`✅ MAPEO por ID directo: ${cotizacionOpcional.id}`);
+      return matchByDirectId.opt_id.toString();
+    }
+  }
+  
+  // 🎯 ESTRATEGIA 3: Buscar por tipoOpcionalId si está disponible
+  if (cotizacionOpcional.tipoOpcionalId) {
+    const matchByType = catalogoOpciones.find(opt => opt.tipoOpcionalId === cotizacionOpcional.tipoOpcionalId);
+    if (matchByType) {
+      console.log(`✅ MAPEO por tipoOpcionalId: ${cotizacionOpcional.tipoOpcionalId} → opt_id=${matchByType.opt_id}`);
+      return matchByType.opt_id.toString();
+    }
+  }
+  
+  // 🎯 ESTRATEGIA 4: Buscar por descripción (más preciso)
+  if (cotizacionOpcional.descripcion) {
+    const extractInfoFromDescription = (descripcion: string) => {
+      const montoMatch = descripcion.match(/RD\$?([\d,]+(?:\.\d{2})?)/);
+      const monto = montoMatch ? montoMatch[1].replace(/,/g, '').replace(/\.00$/, '') : null;
       
-      console.log(`  Comparando opt_id ${option.opt_id} (método descripción):`, {
-        limit_price: option.limit_price,
-        opt_percentage: option.opt_percentage,
-        limitMatch,
-        percentageMatch,
-        isMatch: limitMatch && percentageMatch
+      const porcentajeMatch = descripcion.match(/al (\d+)%/);
+      const porcentaje = porcentajeMatch ? (parseInt(porcentajeMatch[1]) / 100).toString() : null;
+      
+      return { monto, porcentaje };
+    };
+    
+    const { monto, porcentaje } = extractInfoFromDescription(cotizacionOpcional.descripcion);
+    
+    if (monto && porcentaje) {
+      const matchByDescription = catalogoOpciones.find(option => {
+        const limitMatch = option.limit_price === monto;
+        const percentageMatch = option.opt_percentage === porcentaje;
+        return limitMatch && percentageMatch;
       });
       
-      return limitMatch && percentageMatch;
+      if (matchByDescription) {
+        console.log(`✅ MAPEO por descripción: monto=${monto}, porcentaje=${porcentaje} → opt_id=${matchByDescription.opt_id}`);
+        return matchByDescription.opt_id.toString();
+      }
+    }
+    
+    // 🎯 ESTRATEGIA 4B: Buscar por descripción similar (fuzzy matching)
+    const matchByFuzzyDescription = catalogoOpciones.find(option => {
+      const similarity = calculateDescriptionSimilarity(cotizacionOpcional.descripcion || '', option.descripcion || '');
+      return similarity > 0.8; // 80% de similitud
     });
+    
+    if (matchByFuzzyDescription) {
+      console.log(`✅ MAPEO por descripción similar: → opt_id=${matchByFuzzyDescription.opt_id}`);
+      return matchByFuzzyDescription.opt_id.toString();
+    }
   }
   
-  // Método 2: Si no encontró por descripción, buscar por prima similar
-  if (!match) {
-    match = catalogoOpciones.find(option => {
-      const primaAPI = parseFloat(option.opt_prima || "0");
-      const diferencia = Math.abs(primaAPI - primaUnitaria);
-      const tolerancia = 1; // Tolerancia de 1 peso
-      const esSimilar = diferencia < tolerancia;
-      
-      console.log(`  Comparando opt_id ${option.opt_id} (método prima):`, {
-        opt_prima: primaAPI,
-        primaUnitariaCotizacion: primaUnitaria,
-        diferencia,
-        tolerancia,
-        esSimilar
-      });
-      
-      return esSimilar;
-    });
+  // 🎯 ESTRATEGIA 5: Como último recurso, buscar por prima similar (menos confiable)
+  const primaUnitaria = (cotizacionOpcional.prima || 0) / cantidadAfiliados;
+  const matchByPrima = catalogoOpciones.find(option => {
+    const primaAPI = parseFloat(option.opt_prima || "0");
+    const diferencia = Math.abs(primaAPI - primaUnitaria);
+    return diferencia < 1; // Tolerancia de 1 peso
+  });
+  
+  if (matchByPrima) {
+    console.log(`⚠️ MAPEO por prima (menos confiable): primaUnitaria=${primaUnitaria} → opt_id=${matchByPrima.opt_id}`);
+    return matchByPrima.opt_id.toString();
   }
   
-  if (match) {
-    console.log(`✅ MAPEO EXITOSO: Cotización ID ${cotizacionOpcional.id} → opt_id ${match.opt_id}`);
-    return match.opt_id.toString();
-  } else {
-    console.warn(`⚠️ NO SE ENCONTRÓ MAPEO para cotización ID ${cotizacionOpcional.id}`, {
-      descripcion: cotizacionOpcional.descripcion,
-      primaUnitaria,
-      buscando: { monto, porcentaje }
-    });
-    return null;
-  }
+  console.error(`❌ NO SE PUDO MAPEAR cotización:`, {
+    id: cotizacionOpcional.id,
+    tipoOpcionalId: cotizacionOpcional.tipoOpcionalId,
+    descripcion: cotizacionOpcional.descripcion,
+    primaUnitaria,
+    catalogoDisponible: catalogoOpciones.map(opt => ({
+      opt_id: opt.opt_id,
+      descripcion: opt.descripcion,
+      prima: opt.opt_prima
+    }))
+  });
+  
+  return null;
+};
+
+// Función auxiliar para calcular similitud entre descripciones
+const calculateDescriptionSimilarity = (desc1: string, desc2: string): number => {
+  if (!desc1 || !desc2) return 0;
+  
+  const normalize = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+  const a = normalize(desc1);
+  const b = normalize(desc2);
+  
+  if (a === b) return 1;
+  
+  // Calcular similitud por palabras comunes
+  const wordsA = a.split(/\s+/);
+  const wordsB = b.split(/\s+/);
+  const commonWords = wordsA.filter(word => wordsB.includes(word));
+  
+  return (commonWords.length * 2) / (wordsA.length + wordsB.length);
 };
 
 // 🆕 FUNCIÓN SIMPLIFICADA: Ya no necesitamos preservar IDs, solo mapear para UI
@@ -1754,6 +1794,7 @@ export const useCoberturasOpcionales = () => {
             // Agregar la cobertura base
             opcionales.push({
               id: finalId, // ✅ opt_id del catálogo (intención del usuario)
+              originalOptId: selectedOption.opt_id, // 🆕 Persistir ID original para mapeo futuro
               idCopago: currentDynamicCopagos.altoCosto ? parseInt(currentDynamicCopagos.altoCosto) : undefined,
               nombre: "ALTO COSTO",
               descripcion: selectedOption.descripcion,
@@ -1812,6 +1853,7 @@ export const useCoberturasOpcionales = () => {
             // Agregar la cobertura base
             opcionales.push({
               id: finalId, // ✅ opt_id del catálogo (intención del usuario)
+              originalOptId: selectedOption.opt_id, // 🆕 Persistir ID original para mapeo futuro
               idCopago: currentDynamicCopagos.medicamentos ? parseInt(currentDynamicCopagos.medicamentos) : undefined,
               nombre: "MEDICAMENTOS",
               descripcion: selectedOption.descripcion,
@@ -1878,6 +1920,7 @@ export const useCoberturasOpcionales = () => {
             // Agregar la cobertura base
             opcionales.push({
               id: finalId, // ✅ opt_id del catálogo (intención del usuario)
+              originalOptId: selectedOption.opt_id, // 🆕 Persistir ID original para mapeo futuro
               idCopago: currentDynamicCopagos.habitacion ? parseInt(currentDynamicCopagos.habitacion) : undefined,
               nombre: "HABITACION",
               descripcion: selectedOption.descripcion,
