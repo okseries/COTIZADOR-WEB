@@ -1,22 +1,11 @@
 /**
- * 🎯 HOOK MEJORADO: useCoberturasOpcionales v4.0
+ * Hook para manejar coberturas opcionales
  * 
- * SOLUCIÓN CRÍTICA - MAPEO CORRECTO DE INTENCIONES:
- * ✅ opt_id = ID del catálogo que enviamos (intención del usuario)
- * ✅ Backend re-mapea internamente a sus propios IDs
- * ✅ MAPEO POR COINCIDENCIA: limit_price + opt_percentage → opt_id (solo para UI)
- * ✅ ENVIAR INTENCIONES: Siempre enviar opt_ids del catálogo, no IDs guardados
- * 
- * FLUJO CORRECTO DESCUBIERTO:
- * 1. CREAR: Usuario selecciona → enviamos opt_id → backend calcula y asigna su ID
- * 2. EDITAR: Cotización tiene ID=39 → mapeamos a opt_id para mostrar → usuario cambia → enviamos nuevo opt_id
- * 3. BACKEND: Recibe opt_id → aplica lógica de negocio → asigna nuevo ID/prima/descripción
- * 4. RESULTADO: Backend NUNCA preserva nuestros IDs, siempre hace re-mapeo interno
- * 
- * 🚨 INSIGHT CLAVE: 
- * - Frontend envía INTENCIONES (opt_ids)
- * - Backend devuelve DECISIONES (IDs finales, primas reales, descripciones oficiales)
- * - NO intentar preservar IDs, solo comunicar lo que el usuario quiere
+ * Funcionalidades principales:
+ * - Gestión de selecciones de cobertura por plan
+ * - Mapeo correcto entre frontend (opt_id) y backend 
+ * - Soporte para modos crear/editar
+ * - Manejo diferenciado entre individuales y colectivos
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -26,20 +15,33 @@ import { CoberturasOpcional, CoberturasOpcionaleColectivo, Copago } from '../../
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { OdontologiaOption } from '../components/OdontologiaSelect';
 
-// Definir el tipo para las selecciones de cobertura
-interface CoberturaSelections {
-  altoCosto: string;
-  medicamentos: string;
-  habitacion: string;
-  odontologia: string;
-}
+// Importar constantes y utilidades
+import { 
+  COVERAGE_TYPES, 
+  OPTIONAL_TYPE_IDS, 
+  DEFAULT_SELECTION_VALUE, 
+  ODONTOLOGIA_OPTIONS 
+} from '../../constants/coverage.constants';
+import { 
+  CoberturaSelections, 
+  DynamicCopagoSelections, 
+  GlobalFilters,
+  PlanSelections,
+  PlanesData,
+  DynamicCoberturaSelections,
+  DynamicCopagoSelectionsMap
+} from '../../types/coverage.types';
+import { detectOptionalType, mapQuotationToOptId } from '../../utils/coverage.utils';
+import { createCoverageOptional, createCopagoOptional, createStaticOptional } from '../../utils/optional.helpers';
+import { useCoverageHandlers } from './useCoverageHandlers';
+import { updateSelectionsForClientType, updatePlansInStore } from '../../utils/handler.utils';
 
-// Valores por defecto para las selecciones de cobertura
+// Valores por defecto
 const defaultCoberturaSelections: CoberturaSelections = {
-  altoCosto: "0",
-  medicamentos: "0", 
-  habitacion: "0",
-  odontologia: "0"
+  altoCosto: DEFAULT_SELECTION_VALUE,
+  medicamentos: DEFAULT_SELECTION_VALUE, 
+  habitacion: DEFAULT_SELECTION_VALUE,
+  odontologia: DEFAULT_SELECTION_VALUE
 };
 
 
@@ -115,45 +117,6 @@ const mapCotizacionToOptId = (
   return null;
 };
 
-// Función auxiliar para calcular similitud entre descripciones
-const calculateDescriptionSimilarity = (desc1: string, desc2: string): number => {
-  if (!desc1 || !desc2) return 0;
-  
-  const normalize = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
-  const a = normalize(desc1);
-  const b = normalize(desc2);
-  
-  if (a === b) return 1;
-  
-  // Calcular similitud por palabras comunes
-  const wordsA = a.split(/\s+/);
-  const wordsB = b.split(/\s+/);
-  const commonWords = wordsA.filter(word => wordsB.includes(word));
-  
-  return (commonWords.length * 2) / (wordsA.length + wordsB.length);
-};
-
-// 🆕 FUNCIÓN SIMPLIFICADA: Ya no necesitamos preservar IDs, solo mapear para UI
-// Esta función queda por compatibilidad pero no se usa en el flujo principal
-const mapOptIdToCotizacion = (
-  optId: string,
-  catalogoOpciones: CoberturasOpcionaleColectivo[],
-  cotizacionOriginal: Opcional
-): Partial<Opcional> => {
-  const selectedOption = catalogoOpciones.find(opt => opt.opt_id.toString() === optId);
-  
-  if (!selectedOption) {
-    console.warn(`⚠️ No se encontró opt_id ${optId} en catálogo`);
-    return {};
-  }
-  
-  // 🔄 SOLO retornar datos del catálogo, NO preservar IDs
-  return {
-    descripcion: selectedOption.descripcion,
-    prima: parseFloat(selectedOption.opt_prima)
-  };
-};
-
 export const useCoberturasOpcionales = () => {
   // Acceder directamente a los datos del store sin usar getFinalObject en cada render
   const { cliente, planes, updatePlanByName, mode } = useUnifiedQuotationStore();
@@ -161,11 +124,10 @@ export const useCoberturasOpcionales = () => {
   // Obtener el mode para detectar si estamos editando
   const isEditMode = mode !== "create";
   
-  // Refs para controlar inicializaciones y evitar bucles
+  // Refs para controlar inicializaciones
   const initializedRef = useRef(false);
   const editModeInitializedRef = useRef(false);
   const previousModeRef = useRef<number | "create" | undefined>(undefined);
-  const odontologiaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigationLoadedRef = useRef(false);
   
   // Resetear refs SOLO cuando cambia el modo (create <-> edit)
@@ -179,37 +141,23 @@ export const useCoberturasOpcionales = () => {
     previousModeRef.current = mode;
   }, [mode]);
   
-  // Estados locales
+  // Estados locales con tipado mejorado
   const [userHasModifiedFilters, setUserHasModifiedFilters] = useState(false);
-  const [globalFilters, setGlobalFilters] = useState({
+  const [globalFilters, setGlobalFilters] = useState<GlobalFilters>({
     altoCosto: false,
     medicamentos: false,
     habitacion: false,
     odontologia: false
   });
   
-  const [planSelections, setPlanSelections] = useState<{[planName: string]: {[key: string]: string}}>({});
-  const [coberturaSelections, setCoberturaSelections] = useState<{[planName: string]: CoberturaSelections}>({});
-  const [planesData, setPlanesData] = useState<{[planName: string]: CoberturasOpcional[]}>({});
-  const [copagoSelections, setCopagoSelections] = useState<{[planName: string]: string}>({});
-  const [copagoHabitacionSelections, setCopagoHabitacionSelections] = useState<{[planName: string]: string}>({});
-  
-  // Nuevos estados para selecciones dinámicas desde la API
-  const [dynamicCoberturaSelections, setDynamicCoberturaSelections] = useState<{
-    [planName: string]: {
-      altoCosto: string;
-      medicamentos: string;
-      habitacion: string;
-      odontologia: string;
-    }
-  }>({});
-  const [dynamicCopagoSelections, setDynamicCopagoSelections] = useState<{
-    [planName: string]: {
-      altoCosto: string;
-      medicamentos: string;
-      habitacion: string;
-    }
-  }>({});
+  const [planSelections, setPlanSelections] = useState<PlanSelections>({});
+  const [coberturaSelections, setCoberturaSelections] = useState<Record<string, CoberturaSelections>>({});
+  const [planesData, setPlanesData] = useState<PlanesData>({});
+  const [copagoSelections, setCopagoSelections] = useState<Record<string, string>>({});
+  const [copagoHabitacionSelections, setCopagoHabitacionSelections] = useState<Record<string, string>>({});
+  const [dynamicCoberturaSelections, setDynamicCoberturaSelections] = useState<DynamicCoberturaSelections>({});
+  const [dynamicCopagoSelections, setDynamicCopagoSelections] = useState<DynamicCopagoSelectionsMap>({});
+  const [isUpdating, setIsUpdating] = useState(false);
   const handleCopagoHabitacionChange = (planName: string, value: string) => {
     if (isUpdating) return;
     
@@ -238,9 +186,8 @@ export const useCoberturasOpcionales = () => {
       });
     }
   };
-  const [isUpdating, setIsUpdating] = useState(false);
   
-  // 🚨 DEBUG CRÍTICO: Verificar parámetros de API antes de las consultas
+  // API parameters
   const tipoPlanParaAPI = cliente?.tipoPlan || 1;
   
   const handleCopagoChange = (planName: string, value: string) => {
@@ -498,13 +445,13 @@ export const useCoberturasOpcionales = () => {
       };
       
       plan.opcionales.forEach(opcional => {
-        // 🆕 DETECCIÓN AUTOMÁTICA: Si no hay tipoOpcionalId, detectarlo por nombre
-        const tipoDetectado = opcional.tipoOpcionalId || detectTipoOpcionalId(opcional.nombre);
+        // Detectar tipo automáticamente si no existe
+        const tipoDetectado = opcional.tipoOpcionalId || detectOptionalType(opcional.nombre);
         
         switch (tipoDetectado) {
           case 3: // Alto Costo
             if (opcional.nombre === "ALTO COSTO" && altoCostoOptionsQuery.data) {
-              const optId = mapCotizacionToOptId(opcional, altoCostoOptionsQuery.data, plan.cantidadAfiliados || 1);
+              const optId = mapQuotationToOptId(opcional, altoCostoOptionsQuery.data || []);
               if (optId) {
                 initialSelections[plan.plan].altoCosto = optId;
               }
@@ -532,7 +479,7 @@ export const useCoberturasOpcionales = () => {
             
           case 1: // Medicamentos
             if (opcional.nombre === "MEDICAMENTOS" && medicamentosOptionsQuery.data) {
-              const optId = mapCotizacionToOptId(opcional, medicamentosOptionsQuery.data, plan.cantidadAfiliados || 1);
+              const optId = mapQuotationToOptId(opcional, medicamentosOptionsQuery.data || []);
               if (optId) {
                 initialSelections[plan.plan].medicamentos = optId;
               }
@@ -560,7 +507,7 @@ export const useCoberturasOpcionales = () => {
             
           case 2: // Habitación
             if (opcional.nombre === "HABITACION" && habitacionOptionsQuery.data) {
-              const optId = mapCotizacionToOptId(opcional, habitacionOptionsQuery.data, plan.cantidadAfiliados || 1);
+              const optId = mapQuotationToOptId(opcional, habitacionOptionsQuery.data || []);
               if (optId) {
                 initialSelections[plan.plan].habitacion = optId;
               }
@@ -753,16 +700,14 @@ export const useCoberturasOpcionales = () => {
     }
   }, [cliente?.clientChoosen, planes.length, isEditMode]); // ✅ Agregar isEditMode como dependencia
   
-  // 🆕 EFECTO PARA NAVEGACIÓN ENTRE STEPS: Detectar y persistir/cargar TODAS las selecciones
+  // Efecto para navegación entre steps
   useEffect(() => {
-    // 🔧 FIX NAVEGACIÓN: Detectar navegación de vuelta al Step 3 con lógica mejorada
-    // Condición más específica: hay planes, pero estados vacíos Y hay datos en el store
+    // Detectar navegación de vuelta al Step 3
     const isReturningToStep3 = planes.length > 0 && 
                                Object.keys(planSelections).length < planes.length &&
                                Object.keys(dynamicCoberturaSelections).length < planes.length &&
                                planes.some(plan => plan.opcionales.length > 0);
     
-    // 🔍 DEBUG NAVEGACIÓN
     if (isReturningToStep3) {
       const hasOpcionalesInStore = planes.some(plan => plan.opcionales.length > 0);
       
@@ -772,7 +717,7 @@ export const useCoberturasOpcionales = () => {
         initializedRef.current = false;
         editModeInitializedRef.current = false;
         
-        // 🆕 CARGAR TODOS LOS ESTADOS desde el store
+        // Cargar todos los estados desde el store
         const initialPlanSelections: {[planName: string]: {[key: string]: string}} = {};
         const initialCopagoSelections: {[planName: string]: string} = {};
         const initialCopagoHabitacionSelections: {[planName: string]: string} = {};
@@ -1281,7 +1226,7 @@ export const useCoberturasOpcionales = () => {
       }
 
       // Odontología - es opcional para ambos tipos de cliente
-      const odontologiaSelected = odontologiaOptions.find(opt => opt.value === odontologiaValue);
+      const odontologiaSelected = ODONTOLOGIA_OPTIONS.find(opt => opt.value === odontologiaValue);
       
       if (odontologiaSelected && odontologiaSelected.value !== "0") {
         // NUEVA LÓGICA SIMPLIFICADA: 
@@ -1438,49 +1383,19 @@ export const useCoberturasOpcionales = () => {
     }
   };
 
-  const handleOdontologiaChange = (planName: string, value: string) => {
-    if (isUpdating) {
-      return;
-    }
-    
-    setIsUpdating(true);
-    
-    setPlanSelections(prev => {
-      const newSelections = { ...prev };
-      
-      if (cliente?.clientChoosen === 2) {
-        // COLECTIVO: Solo actualizar el plan específico
-        newSelections[planName] = {
-          ...newSelections[planName],
-          odontologia: value
-        };
-      } else {
-        // INDIVIDUAL: Aplicar el cambio a todos los planes
-        planes.forEach(plan => {
-          newSelections[plan.plan] = {
-            ...newSelections[plan.plan],
-            odontologia: value
-          };
-        });
-      }
-      
-      return newSelections;
-    });
-    
-    // Actualizar el store inmediatamente
-    if (cliente?.clientChoosen === 2) {
-      updatePlanOpcionales(planName, value);
-    } else {
-      planes.forEach(plan => {
-        updatePlanOpcionales(plan.plan, value);
-      });
-    }
-    
-    // Liberar el flag
-    setTimeout(() => {
-      setIsUpdating(false);
-    }, 100);
-  };
+  // Usar hook personalizado para handlers
+  const { handleOdontologiaChange, handleDynamicCoberturaChange } = useCoverageHandlers({
+    isUpdating,
+    setIsUpdating,
+    cliente,
+    planes,
+    planSelections,
+    updatePlanOpcionales,
+    setPlanSelections,
+    setDynamicCoberturaSelections,
+    setDynamicCopagoSelections,
+    navigationLoadedRef
+  });
 
   const handleCoberturaChange = (planName: string, coberturaType: keyof CoberturaSelections, value: string) => {
     if (isUpdating) return;
@@ -1506,68 +1421,6 @@ export const useCoberturasOpcionales = () => {
     });
     
     // Actualizar inmediatamente
-    if (cliente?.clientChoosen === 2) {
-      const odontologiaValue = planSelections[planName]?.odontologia || "0";
-      updatePlanOpcionales(planName, odontologiaValue);
-    } else {
-      planes.forEach(plan => {
-        const odontologiaValue = planSelections[plan.plan]?.odontologia || "0";
-        updatePlanOpcionales(plan.plan, odontologiaValue);
-      });
-    }
-  };
-
-  const handleDynamicCoberturaChange = (planName: string, coberturaType: string, value: string) => {
-    if (isUpdating) return;
-    
-    // Reset navegación al hacer selección manual
-    navigationLoadedRef.current = false;
-    
-    setDynamicCoberturaSelections(prev => {
-      const newSelections = { ...prev };
-      
-      if (cliente?.clientChoosen === 2) {
-        const currentPlanSelections = newSelections[planName] || {};
-        newSelections[planName] = {
-          ...currentPlanSelections,
-          [coberturaType]: value
-        };
-      } else {
-        planes.forEach(plan => {
-          newSelections[plan.plan] = {
-            ...newSelections[plan.plan],
-            [coberturaType]: value
-          };
-        });
-      }
-      
-      return newSelections;
-    });
-    
-    // Limpiar copago si se selecciona "Ninguna"
-    if (value === "0") {
-      setDynamicCopagoSelections(prev => {
-        const newSelections = { ...prev };
-        
-        if (cliente?.clientChoosen === 2) {
-          newSelections[planName] = {
-            ...newSelections[planName],
-            [coberturaType]: "0"
-          };
-        } else {
-          planes.forEach(plan => {
-            newSelections[plan.plan] = {
-              ...newSelections[plan.plan],
-              [coberturaType]: "0"
-            };
-          });
-        }
-        
-        return newSelections;
-      });
-    }
-    
-    // Actualizar el store inmediatamente
     if (cliente?.clientChoosen === 2) {
       const odontologiaValue = planSelections[planName]?.odontologia || "0";
       updatePlanOpcionales(planName, odontologiaValue);
@@ -1624,24 +1477,10 @@ export const useCoberturasOpcionales = () => {
     }
   };
 
-  /**
-   * LÓGICA DIFERENCIADA PARA COBERTURAS OPCIONALES:
-   * 
-   * COLECTIVOS (clientChoosen === 2): Selecciones independientes por plan
-   * INDIVIDUALES (clientChoosen === 1): Selecciones se aplican a todos los planes
-   * 
-   * NAVEGACIÓN: Las selecciones específicas por plan se preservan al navegar
-   */
-
-  // Estados para filtros globales y selecciones de planes
+  // Estados derivados
   const isLoading = planQueriesData.some(q => q.isLoading);
   const hasError = planQueriesData.some(q => q.error);
   const isEmpty = !cliente || planes.length === 0;
-
-  
-
-  // 🔍 DEBUG CRÍTICO: Verificar valores que se retornan a la UI
- 
 
   const validateAndSaveToStore = useCallback(async (): Promise<boolean> => {
     try {
@@ -1670,7 +1509,7 @@ export const useCoberturasOpcionales = () => {
     planesData,
     cliente,
     planes,
-    odontologiaOptions,
+    odontologiaOptions: ODONTOLOGIA_OPTIONS,
     
     // Opciones dinámicas desde API
     dynamicAltoCostoOptions: altoCostoOptionsQuery.data || [],
@@ -1693,12 +1532,10 @@ export const useCoberturasOpcionales = () => {
     handleCopagoChange,
     handleCopagoHabitacionChange,
     handleDynamicCoberturaChange,
-    handleDynamicCopagoChange, // 🆕 FUNCIÓN FALTANTE AGREGADA
+    handleDynamicCopagoChange,
     
-    // 🆕 FUNCIÓN PARA NAVEGACIÓN
+    // Navegación
     validateAndSaveToStore
   };
-
-  
 };
 
