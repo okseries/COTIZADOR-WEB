@@ -4,13 +4,14 @@ import { useCoberturasOpcionales } from './hooks/useCoberturasOpcionales';
 import GlobalFilters from './components/GlobalFilters';
 import PlanTable from './components/PlanTable';
 import LoadingState from './components/LoadingState';
+import { Plan } from '@/core/types/quotation';
 
 // 🆕 INTERFACE PARA REF
 export interface CoberturasOpcionalesRef {
   validateAndSave: () => Promise<boolean>;
 }
 
-const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, ref) => {
+const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, object>((_props, ref) => {
   const {
     globalFilters,
     planSelections,
@@ -84,7 +85,7 @@ const CoberturasOpcionales = forwardRef<CoberturasOpcionalesRef, {}>((_props, re
       />
 
       {/* Tablas por plan */}
-      {planes.map((plan: any) => {
+      {planes.map((plan: Plan) => {
         const planData = planesData[plan.plan];
         const odontologiaSelection = planSelections[plan.plan]?.odontologia || "0";
         const coberturaSelection = coberturaSelections[plan.plan];

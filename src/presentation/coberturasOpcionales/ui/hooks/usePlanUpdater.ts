@@ -5,9 +5,9 @@
 
 import { useCallback } from 'react';
 import { useUnifiedQuotationStore } from '@/core';
-import { CoberturasOpcional, CoberturasOpcionaleColectivo, Copago } from '../../interface/Coberturaopcional.interface';
+import { CoberturasOpcionaleColectivo, Copago } from '../../interface/Coberturaopcional.interface';
 import { ODONTOLOGIA_OPTIONS } from '../../constants/coverage.constants';
-import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
+import { Plan, Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { Cliente } from '@/presentation/quotations/interface/quotation.interface';
 import { UseQueryResult } from '@tanstack/react-query';
 import { 
@@ -70,7 +70,7 @@ export const usePlanUpdater = ({
       return;
     }
 
-    const opcionales: any[] = [];
+    const opcionales: Opcional[] = [];
     const data = planDataCurrent[0];
     const plan = planes.find(p => p.plan === planName);
     if (!plan) {

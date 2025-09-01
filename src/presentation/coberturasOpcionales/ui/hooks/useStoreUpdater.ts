@@ -12,8 +12,41 @@ import {
 } from '../../utils/optional.helpers';
 import { OPTIONAL_TYPE_IDS } from '../../constants/coverage.constants';
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
+import { 
+  CoberturasOpcionaleColectivo, 
+  Copago 
+} from '../../interface/Coberturaopcional.interface';
+import { 
+  GlobalFilters, 
+  DynamicCoberturaSelections, 
+  DynamicCopagoSelectionsMap,
+  PlanesData 
+} from '../../types/coverage.types';
+import { Cliente, Plan } from '@/core/types/quotation';
+import { OdontologiaOption } from '../components/OdontologiaSelect';
 
-export const useStoreUpdater = (state: any, queries: any) => {
+interface StoreUpdaterState {
+  isUpdating: boolean;
+  planesData: PlanesData;
+  planes: Plan[];
+  isCollective: boolean;
+  cliente: Cliente | null;
+  globalFilters: GlobalFilters;
+  dynamicCoberturaSelections: DynamicCoberturaSelections;
+  dynamicCopagoSelections: DynamicCopagoSelectionsMap;
+}
+
+interface StoreUpdaterQueries {
+  altoCostoOptions?: CoberturasOpcionaleColectivo[];
+  medicamentosOptions?: CoberturasOpcionaleColectivo[];
+  habitacionOptions?: CoberturasOpcionaleColectivo[];
+  odontologiaOptions?: OdontologiaOption[];
+  copagosOptions?: Copago[];
+  copagosAltoCostoOptions?: Copago[];
+  copagosHabitacionOptions?: Copago[];
+}
+
+export const useStoreUpdater = (state: StoreUpdaterState, queries: StoreUpdaterQueries) => {
   const { updatePlanByName } = useUnifiedQuotationStore();
 
   const updatePlanOpcionales = useCallback((planName: string, odontologiaValue: string) => {
@@ -22,7 +55,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
     const planDataCurrent = state.planesData[planName];
     if (!planDataCurrent?.[0]) return;
 
-    const plan = state.planes.find((p: any) => p.plan === planName);
+    const plan = state.planes.find((p: Plan) => p.plan === planName);
     if (!plan) return;
 
     const opcionales: Opcional[] = [];
@@ -41,7 +74,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
     // Procesar Alto Costo
     if (state.cliente?.clientChoosen === 1 || (state.isCollective && state.globalFilters.altoCosto)) {
       if (state.isCollective && currentDynamicSelections.altoCosto && currentDynamicSelections.altoCosto !== "0") {
-        const selectedOption = queries.altoCostoOptions?.find((opt: any) => 
+        const selectedOption = queries.altoCostoOptions?.find((opt: CoberturasOpcionaleColectivo) => 
           opt.opt_id.toString() === currentDynamicSelections.altoCosto
         );
         
@@ -57,7 +90,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
 
           // Agregar copago si existe
           if (currentDynamicCopagos.altoCosto && currentDynamicCopagos.altoCosto !== "0") {
-            const copagoOpt = queries.copagosAltoCostoOptions?.find((opt: any) => 
+            const copagoOpt = queries.copagosAltoCostoOptions?.find((opt: Copago) => 
               opt.id.toString() === currentDynamicCopagos.altoCosto
             );
             
@@ -87,7 +120,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
     // Procesar Medicamentos (similar estructura)
     if (state.cliente?.clientChoosen === 1 || (state.isCollective && state.globalFilters.medicamentos)) {
       if (state.isCollective && currentDynamicSelections.medicamentos && currentDynamicSelections.medicamentos !== "0") {
-        const selectedOption = queries.medicamentosOptions?.find((opt: any) => 
+        const selectedOption = queries.medicamentosOptions?.find((opt: CoberturasOpcionaleColectivo) => 
           opt.opt_id.toString() === currentDynamicSelections.medicamentos
         );
         
@@ -102,7 +135,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
           subTotalOpcional += cobertura.prima;
 
           if (currentDynamicCopagos.medicamentos && currentDynamicCopagos.medicamentos !== "0") {
-            const copagoOpt = queries.copagosOptions?.find((opt: any) => 
+            const copagoOpt = queries.copagosOptions?.find((opt: Copago) => 
               opt.id.toString() === currentDynamicCopagos.medicamentos
             );
             
@@ -114,11 +147,11 @@ export const useStoreUpdater = (state: any, queries: any) => {
           }
         }
       } else if (!state.isCollective) {
-        const prima = parseFloat(data.primaMedicamentos) || 0;
+        const prima = parseFloat(data.medicamentoCosto) || 0;
         const opcional = createStaticOptional(
           1, 
           "MEDICAMENTOS", 
-          data.medicamentos, 
+          data.medicamento, 
           prima, 
           cantidadAfiliados, 
           OPTIONAL_TYPE_IDS.MEDICAMENTOS
@@ -131,7 +164,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
     // Procesar Habitación (similar estructura)
     if (state.cliente?.clientChoosen === 1 || (state.isCollective && state.globalFilters.habitacion)) {
       if (state.isCollective && currentDynamicSelections.habitacion && currentDynamicSelections.habitacion !== "0") {
-        const selectedOption = queries.habitacionOptions?.find((opt: any) => 
+        const selectedOption = queries.habitacionOptions?.find((opt: CoberturasOpcionaleColectivo) => 
           opt.opt_id.toString() === currentDynamicSelections.habitacion
         );
         
@@ -146,7 +179,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
           subTotalOpcional += cobertura.prima;
 
           if (currentDynamicCopagos.habitacion && currentDynamicCopagos.habitacion !== "0") {
-            const copagoOpt = queries.copagosHabitacionOptions?.find((opt: any) => 
+            const copagoOpt = queries.copagosHabitacionOptions?.find((opt: Copago) => 
               opt.id.toString() === currentDynamicCopagos.habitacion
             );
             
@@ -158,7 +191,7 @@ export const useStoreUpdater = (state: any, queries: any) => {
           }
         }
       } else if (!state.isCollective) {
-        const prima = parseFloat(data.primaHabitacion) || 0;
+        const prima = parseFloat(data.habitacionCosto) || 0;
         const opcional = createStaticOptional(
           3, 
           "HABITACION", 
@@ -174,15 +207,17 @@ export const useStoreUpdater = (state: any, queries: any) => {
 
     // Procesar Odontología
     if (odontologiaValue !== "0") {
-      const odontologiaOption = queries.odontologiaOptions?.find((opt: any) => 
-        opt.opt_id.toString() === odontologiaValue
+      const odontologiaOption = queries.odontologiaOptions?.find((opt: OdontologiaOption) => 
+        opt.value === odontologiaValue
       );
       
       if (odontologiaOption) {
-        const opcional = createCoverageOptional(
-          odontologiaOption, 
-          cantidadAfiliados, 
-          undefined,
+        const opcional = createStaticOptional(
+          4, 
+          "ODONTOLOGIA", 
+          odontologiaOption.label, 
+          odontologiaOption.prima, 
+          cantidadAfiliados,
           OPTIONAL_TYPE_IDS.ODONTOLOGIA
         );
         opcionales.push(opcional);
@@ -190,8 +225,9 @@ export const useStoreUpdater = (state: any, queries: any) => {
       }
     }
 
-    // Calcular subtotal de afiliados
-    const subTotalAfiliado = parseFloat(data.valor) * cantidadAfiliados;
+    // Calcular subtotal de afiliados - obteniendo del plan actual en el store
+    const currentPlan = state.planes.find((p: Plan) => p.plan === planName);
+    const subTotalAfiliado = currentPlan?.resumenPago?.subTotalAfiliado || 0;
 
     // Actualizar el plan en el store
     updatePlanByName(planName, {

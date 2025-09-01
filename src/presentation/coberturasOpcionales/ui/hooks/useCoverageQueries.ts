@@ -4,11 +4,13 @@
 
 import { useMemo } from 'react';
 import { usePlanesOpcionales, useCoberturasOpcionalesByType, useCopagos } from '../../hooks/usePlanesOpcionales';
+import { Cliente, Plan } from '@/core/types/quotation';
+import { GlobalFilters } from '../../types/coverage.types';
 
 interface UseQueriesConfig {
-  cliente: any;
-  planes: any[];
-  globalFilters: any;
+  cliente: Cliente | null;
+  planes: Plan[];
+  globalFilters: GlobalFilters;
   isEditMode: boolean;
   isCollective: boolean;
   tipoPlanParaAPI: number;

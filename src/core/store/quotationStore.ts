@@ -238,7 +238,7 @@ export const useQuotationStore = create<QuotationStore>()(
       
   // Utilidades
   clearQuotation: () => set({ ...initialState }),
-  clearCurrentForm: () => set((state) => ({ 
+  clearCurrentForm: () => set(() => ({ 
     cliente: null,
     filterData: null,
     searchData: null,

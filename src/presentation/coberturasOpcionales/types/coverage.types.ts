@@ -1,6 +1,4 @@
-/**
- * Tipos para el manejo de coberturas opcionales
- */
+import { CoberturasOpcional } from '../interface/Coberturaopcional.interface';
 
 // Tipos de selecciones de cobertura
 export interface CoberturaSelections {
@@ -28,8 +26,8 @@ export interface GlobalFilters {
 // Tipo para selecciones por plan
 export type PlanSelections = Record<string, Record<string, string>>;
 
-// Tipo para datos de planes
-export type PlanesData = Record<string, any[]>;
+// Tipo para datos de planes - más específico que any[]
+export type PlanesData = Record<string, CoberturasOpcional[]>;
 
 // Tipo consolidado para selecciones dinámicas de cobertura
 export type DynamicCoberturaSelections = Record<string, CoberturaSelections>;

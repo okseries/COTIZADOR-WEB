@@ -3,7 +3,6 @@
  */
 
 import { OPTIONAL_TYPE_IDS } from '../constants/coverage.constants';
-import { detectOptionalType } from './coverage.utils';
 import { Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { CoberturasOpcionaleColectivo, Copago } from '../interface/Coberturaopcional.interface';
 

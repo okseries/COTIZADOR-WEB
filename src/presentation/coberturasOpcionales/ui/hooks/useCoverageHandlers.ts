@@ -6,7 +6,6 @@ import { useCallback } from 'react';
 import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
 import { Cliente } from '@/presentation/quotations/interface/quotation.interface';
 import { 
-  CoberturaSelections, 
   PlanSelections,
   DynamicCoberturaSelections,
   DynamicCopagoSelectionsMap
@@ -27,7 +26,6 @@ interface UseCoverageHandlersProps {
 
 export const useCoverageHandlers = ({
   isUpdating,
-  setIsUpdating,
   cliente,
   planes,
   planSelections,
