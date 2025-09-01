@@ -42,8 +42,6 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.* ./
 
 ENV NODE_ENV=production
-ENV PORT=3000
-EXPOSE 3000
-ENV NEXT_PUBLIC_API_BASE_URL=http://172.25.8.241:3000
+
 
 CMD ["npm", "start"]
