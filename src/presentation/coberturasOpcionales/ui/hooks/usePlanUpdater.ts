@@ -329,7 +329,6 @@ export const usePlanUpdater = ({
     copagosHabitacionQuery.data,
     updatePlanByName,
     coberturaSelections,
-    planSelections,
     isUpdating,
     setIsUpdating
   ]);

@@ -326,7 +326,8 @@ export const useCoberturasOpcionales = () => {
     cliente?.clientChoosen,
     altoCostoOptionsQuery.data?.length,
     medicamentosOptionsQuery.data?.length,
-    habitacionOptionsQuery.data?.length
+    habitacionOptionsQuery.data?.length,
+    editModeInitializedRef
   ]);
 
   // Cargar datos de las peticiones
