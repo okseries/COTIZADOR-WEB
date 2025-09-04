@@ -441,7 +441,7 @@ const ClientInformation = forwardRef<
                   )}
                 />
                 {errors.office && (
-                  <p className="text-sm ">
+                  <p className="text-sm text-red-500">
                     {errors.office.message}
                   </p>
                 )}
