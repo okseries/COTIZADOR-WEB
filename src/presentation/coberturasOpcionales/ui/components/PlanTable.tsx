@@ -15,6 +15,7 @@ import DynamicCopagoSelect from "./DynamicCopagoSelect";
 import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
 import { useUnifiedQuotationStore } from "@/core";
 import { Cliente } from "@/presentation/quotations/interface/quotation.interface";
+import { Badge } from "@/components/ui/badge";
 
 // Tipo para las selecciones de cobertura
 type CoberturaSelections = {
@@ -134,7 +135,9 @@ const PlanTable = ({
     <Card className="mb-6">
       <CardHeader>
         <CardTitle>
-          {planName}
+         <Badge className=" bg-gradient-to-b from-[#009590] to-[#0269aa] text-white mr-2">
+            {planName}
+          </Badge>
         </CardTitle>
         
       </CardHeader>

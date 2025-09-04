@@ -13,9 +13,24 @@ import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
 import { useDynamicSelectOptions } from "@/presentation/client/hooks/useDynamicSelectOptions";
 import { useUnifiedQuotationStore } from "@/core";
 import { ClienteFormValues, clienteSchema } from "../schema/ClientInfo.schema";
+import { Cliente } from "@/core/types";
 import { useClientSearchAdapter } from "../hooks/useClientSearchAdapter";
 import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
 import { formatPhone } from "../helpers/formatPhone";
+
+// Tipo específico para el formulario que matchea exactamente con el esquema
+interface FormClienteValues {
+  clientChoosen: number;
+  identification: string;
+  name: string;
+  contact?: string;
+  email?: string;
+  address: string;
+  office: string;
+  agent: string;
+  agentId: number;
+  tipoPlan: number;
+}
 
 interface ClientInformationProps {
   onFormChange?: () => void;
@@ -53,15 +68,15 @@ const ClientInformation = forwardRef<
     watch,
     setError,
     clearErrors,
-  } = useForm<ClienteFormValues>({
+  } = useForm<FormClienteValues>({
     resolver: zodResolver(clienteSchema),
     mode: "onChange", // Habilitar validación en tiempo real
     defaultValues: {
       clientChoosen: cliente?.clientChoosen || 0,
       identification: cliente?.identification || "",
       name: cliente?.name || "",
-      contact: cliente?.contact || "",
-      email: cliente?.email || "",
+      contact: cliente?.contact || undefined,
+      email: cliente?.email || undefined,
       address: cliente?.address || "",
       office: cliente?.office || "",
       agent: cliente?.agent || "",
@@ -73,7 +88,13 @@ const ClientInformation = forwardRef<
   // Función para guardar datos en el store (memoizada para evitar ciclos)
   const saveToStore = React.useCallback(() => {
     const formData = getValues();
-    setCliente(formData);
+    // Limpiar campos opcionales vacíos antes de guardar
+    const cleanedData = {
+      ...formData,
+      contact: formData.contact?.trim() || undefined,
+      email: formData.email?.trim() || undefined,
+    };
+    setCliente(cleanedData);
   }, [getValues, setCliente]);
 
   // Efecto para resetear el formulario cuando cambien los datos del store
@@ -85,8 +106,8 @@ const ClientInformation = forwardRef<
         clientChoosen: cliente.clientChoosen,
         identification: cliente.identification,
         name: nameToUse,
-        contact: cliente.contact,
-        email: cliente.email,
+        contact: cliente.contact || undefined,
+        email: cliente.email || undefined,
         address: cliente.address,
         office: cliente.office,
         agent: cliente.agent,
@@ -103,8 +124,8 @@ const ClientInformation = forwardRef<
         clientChoosen: 0,
         identification: "",
         name: "",
-        contact: "",
-        email: "",
+        contact: undefined,
+        email: undefined,
         address: "",
         office: "",
         agent: "",
@@ -185,8 +206,14 @@ const ClientInformation = forwardRef<
     validateAndSave,
   }));
 
-  const onSubmit = (data: ClienteFormValues) => {
-    setCliente(data);
+  const onSubmit = (data: FormClienteValues) => {
+    // Limpiar campos opcionales vacíos antes de guardar
+    const cleanedData: Cliente = {
+      ...data,
+      contact: data.contact?.trim() || undefined,
+      email: data.email?.trim() || undefined,
+    };
+    setCliente(cleanedData);
   };
 
   return (
@@ -195,8 +222,8 @@ const ClientInformation = forwardRef<
         clientChoosen: 0,
         identification: "",
         name: "",
-        contact: "",
-        email: "",
+        contact: undefined,
+        email: undefined,
         address: "",
         office: "",
         agent: "",
@@ -231,7 +258,7 @@ const ClientInformation = forwardRef<
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="contact">Teléfono de contacto *</Label>
+                <Label htmlFor="contact">Teléfono de contacto</Label>
                 <Controller
                   name="contact"
                   control={control}
@@ -242,26 +269,26 @@ const ClientInformation = forwardRef<
                       value={field.value || ""}
                       onChange={(e) => {
                         const formatted = formatPhone(e.target.value);
-                        field.onChange(formatted);
+                        field.onChange(formatted || undefined);
                         
-                        // Validación en tiempo real
-                        if (formatted && formatted.length >= 12) {
+                        // Validación en tiempo real solo si hay contenido
+                        if (formatted && formatted.trim() !== "") {
                           const phoneWithoutFormat = formatted.replace(/\D/g, '');
-                          const prefix = phoneWithoutFormat.slice(0, 3);
                           
-                          if (!['849', '829', '809'].includes(prefix)) {
+                          // Validar longitud (7-15 dígitos para teléfonos internacionales)
+                          if (phoneWithoutFormat.length < 7 || phoneWithoutFormat.length > 15) {
                             setError('contact', {
                               type: 'manual',
-                              message: 'El teléfono debe comenzar con 849, 829 u 809'
+                              message: 'El teléfono debe tener entre 7 y 15 dígitos'
                             });
                           } else {
                             clearErrors('contact');
                           }
-                        } else if (formatted && formatted.length > 0) {
+                        } else {
                           clearErrors('contact');
                         }
                       }}
-                      placeholder="Ingrese el número de teléfono"
+                      placeholder="Ejemplo: +1 555 123 4567 o (809) 555-1234"
                       className={`h-11 ${
                         errors.contact ? "border-red-500" : ""
                       }`}
@@ -278,7 +305,7 @@ const ClientInformation = forwardRef<
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico *</Label>
+                <Label htmlFor="email">Correo electrónico</Label>
                 <Controller
                   name="email"
                   control={control}
@@ -287,6 +314,11 @@ const ClientInformation = forwardRef<
                       type="email"
                       {...field}
                       id="email"
+                      value={field.value || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value || undefined);
+                      }}
                       placeholder="ejemplo@correo.com"
                       className={`h-11 ${errors.email ? "border-red-500" : ""}`}
                     />

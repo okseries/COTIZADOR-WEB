@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import React from 'react'
 import { Plan } from '@/presentation/quotations/interface/createQuotation.interface'
 import { formatCurrency } from '@/presentation/helpers/FormattCurrency'
+import { Badge } from '@/components/ui/badge'
 
 interface Props {
   planes: Plan[]
@@ -56,7 +57,15 @@ const PlanesResumen = ({ planes, clienteChousen = 1 }: Props) => {
             const planTotal = getPlanTotal(plan);
             return (
               <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b last:border-b-0">
-                <div className="text-sm font-medium">{plan.plan}</div>
+                <div className="text-sm font-medium">
+
+                  <Badge className=" bg-gradient-to-b from-[#009590] to-[#0269aa] text-white mr-2">
+            {plan.plan}
+          </Badge>
+                  
+                  
+                  
+                  </div>
                 <div className="text-sm">{cantidad}</div>
                 <div className="text-sm font-medium">{formatCurrency(planTotal)}</div>
               </div>

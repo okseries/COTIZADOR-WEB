@@ -16,8 +16,8 @@ export interface Cliente {
     clientChoosen:  number;
     identification: string;
     name:           string;
-    contact:        string;
-    email:          string;
+    contact?:       string;
+    email?:         string;
     address:        string;
     office:         string;
     agent:          string;

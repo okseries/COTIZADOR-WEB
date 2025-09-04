@@ -3,17 +3,59 @@ import z from "zod";
 
 const phoneSchema = z
   .string()
-  .transform((val) => val.replace(/\D/g, "")) // Quita todo lo que no sea dígito
-  .refine((val) => val.length === 10, {
-    message: "El número debe tener 10 dígitos",
-  })
+  .optional()
   .refine((val) => {
-    const prefix = val.slice(0, 3);
-    return prefix === "849" || prefix === "829" || prefix === "809";
+    if (!val || val.trim() === "") return true; // Permitir vacío (opcional)
+    
+    const digits = val.replace(/\D/g, "");
+    
+    // Validar teléfonos internacionales (mínimo 7 dígitos, máximo 15)
+    if (digits.length < 7 || digits.length > 15) {
+      return false;
+    }
+    
+    return true;
   }, {
-    message: "El número debe comenzar con 849, 829 u 809",
+    message: "El teléfono debe tener entre 7 y 15 dígitos",
   })
-  .transform((val) => `(${val.slice(0, 3)}) ${val.slice(3, 6)}-${val.slice(6)}`)
+  .transform((val) => {
+    if (!val || val.trim() === "") return undefined;
+    
+    const digits = val.replace(/\D/g, "");
+    
+    // Para números dominicanos (10 dígitos que empiezan con 809, 829, 849)
+    if (digits.length === 10 && (digits.startsWith("809") || digits.startsWith("829") || digits.startsWith("849"))) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    
+    // Para números internacionales, formato simple con espacios
+    if (digits.length > 10) {
+      return `+${digits.slice(0, digits.length - 10)} ${digits.slice(-10, -7)} ${digits.slice(-7, -4)} ${digits.slice(-4)}`;
+    }
+    
+    // Para otros números nacionales
+    if (digits.length <= 10) {
+      if (digits.length < 4) return digits;
+      if (digits.length < 7) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+      return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+    }
+    
+    return val;
+  })
+
+const emailSchema = z
+  .string()
+  .optional()
+  .refine((val) => {
+    if (!val || val.trim() === "") return true; // Permitir vacío (opcional)
+    return z.string().email().safeParse(val).success;
+  }, {
+    message: "Debe ser un email válido"
+  })
+  .transform((val) => {
+    if (!val || val.trim() === "") return undefined;
+    return val;
+  })
 
 // Schema para cliente
 export const clienteSchema = z.object({
@@ -21,7 +63,7 @@ export const clienteSchema = z.object({
   identification: z.string().min(1, "La identificación es requerida").max(11, "La identificación debe tener 11 dígitos"),
   name: z.string().min(1, "El nombre es requerido"),
   contact: phoneSchema,
-  email: z.email("Debe ser un email válido"),
+  email: emailSchema,
   address: z.string(),
   office: z.string().min(1, "La oficina es requerida"),
   agent: z.string().min(1, "El agente es requerido"),

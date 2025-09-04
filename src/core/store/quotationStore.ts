@@ -112,12 +112,11 @@ export const isStepValid = (step: string, state: UnifiedQuotationState): boolean
   switch (step) {
     case 'step1':
       // Usar los datos del cliente (que se actualizan en tiempo real)
+      // email y contact son opcionales ahora
       return !!(
         state.cliente?.clientChoosen &&
         state.cliente?.identification &&
         state.cliente?.name &&
-        state.cliente?.contact &&
-        state.cliente?.email &&
         state.cliente?.office &&
         state.cliente?.agent &&
         state.cliente?.tipoPlan
