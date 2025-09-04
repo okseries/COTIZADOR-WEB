@@ -45,7 +45,6 @@ export const usePlanUpdater = ({
   globalFilters,
   dynamicCoberturaSelections,
   dynamicCopagoSelections,
-  planSelections,
   coberturaSelections,
   altoCostoOptionsQuery,
   medicamentosOptionsQuery,

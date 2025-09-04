@@ -12,7 +12,7 @@ import FilterClient from "./FilterClient";
 import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
 import { useDynamicSelectOptions } from "@/presentation/client/hooks/useDynamicSelectOptions";
 import { useUnifiedQuotationStore } from "@/core";
-import { ClienteFormValues, clienteSchema } from "../schema/ClientInfo.schema";
+import { clienteSchema } from "../schema/ClientInfo.schema";
 import { Cliente } from "@/core/types";
 import { useClientSearchAdapter } from "../hooks/useClientSearchAdapter";
 import { usePlans, useSubPlansType } from "@/presentation/plans/hooks/usePlans";
@@ -159,7 +159,7 @@ const ClientInformation = forwardRef<
       setValue("name", clientData.NOMBRE_COMPLETO);
       saveToStore(); // Llamar directamente sin setTimeout
     }
-  }, [clientData, setValue]); // Removido saveToStore de las dependencias
+  }, [clientData, setValue, saveToStore]);
 
   const canal = watch("office");
   const { data: dynamicOptions = [] } = useDynamicSelectOptions(canal);
@@ -196,7 +196,7 @@ const ClientInformation = forwardRef<
       return true;
     }
     return false;
-  }, [trigger]); // Removido saveToStore de las dependencias ya que está memoizado
+  }, [trigger, saveToStore]);
 
   // Exponer las funciones al padre
   // ejemplo de uso: <ClientInformation ref={clientInfoRef} /> , lo cual sirve para que el componente padre pueda llamar a estas funciones
