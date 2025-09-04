@@ -116,3 +116,7 @@ export enum TipoNombre {
 
 
 solo los complementarios colectivos llevan copagos   y son todos 
+
+
+
+docker compose up -d

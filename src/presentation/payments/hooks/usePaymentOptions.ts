@@ -132,7 +132,7 @@ export const usePaymentOptions = () => {
 
   // Manejar cambio de período de pago
   const handlePeriodChange = useCallback(
-    (planName: string, periodo: PeriodoPago | undefined) => {
+    (_planName: string, periodo: PeriodoPago | undefined) => {
       setPaymentPlans((prev) =>
         prev.map((plan) => {
           // 🆕 SINCRONIZACIÓN: Aplicar el cambio a TODOS los planes, no solo al seleccionado
@@ -208,7 +208,6 @@ export const usePaymentOptions = () => {
     const total = paymentPlans.reduce((total, plan) => {
       // Si no hay período seleccionado, no sumar nada
       if (!plan.selectedPeriod || plan.selectedPeriod === "seleccionar") {
-        console.log(`⚠️ Plan ${plan.plan} no tiene período seleccionado`);
         return total;
       }
 
@@ -227,18 +226,9 @@ export const usePaymentOptions = () => {
       const multiplier = MULTIPLICADORES[plan.selectedPeriod];
       const totalPlanConPeriodo = baseTotal * multiplier;
 
-      console.log(`📊 Plan: ${plan.plan}`);
-      console.log(`   Subtotal Afiliado: ${subTotalAfiliado}`);
-      console.log(`   Subtotal Opcional: ${subTotalOpcional}`);
-      console.log(`   Base Total: ${baseTotal}`);
-      console.log(`   Período: ${plan.selectedPeriod} (x${multiplier})`);
-      console.log(`   Total con período: ${totalPlanConPeriodo}`);
-      console.log(`   ResumenPago.totalPagar: ${plan.resumenPago?.totalPagar || 'N/A'}`);
-
       return total + totalPlanConPeriodo;
     }, 0);
 
-    console.log(`💰 TOTAL GENERAL CALCULADO: ${total}`);
     return total;
   }, [paymentPlans]); // Recalcular cuando cambien los paymentPlans
 

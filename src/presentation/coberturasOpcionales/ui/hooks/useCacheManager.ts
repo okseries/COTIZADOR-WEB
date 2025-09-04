@@ -14,7 +14,6 @@ export const useCacheManager = () => {
    * Úsalo cuando necesites asegurar datos completamente frescos
    */
   const clearAllCache = useCallback(() => {
-    console.log('🔥 CLEARING ALL REACT QUERY CACHE...');
     queryClient.clear();
   }, [queryClient]);
 
@@ -42,8 +41,7 @@ export const useCacheManager = () => {
    * Función para llamar antes de editar una cotización
    * Garantiza que no haya datos cacheados que interfieran
    */
-  const prepareForEdit = useCallback(async (quotationId: number) => {
-    console.log(`🚨 PREPARING FOR EDIT MODE - Quotation ID: ${quotationId}`);
+  const prepareForEdit = useCallback(async (_quotationId: number) => {
     
     // Limpiar completamente el caché
     clearAllCache();
@@ -51,7 +49,6 @@ export const useCacheManager = () => {
     // Esperar un poco para asegurar que se limpie
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    console.log(`✅ CACHE CLEARED - Ready for edit mode`);
   }, [clearAllCache]);
 
   /**

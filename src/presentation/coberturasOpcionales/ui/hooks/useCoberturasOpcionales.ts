@@ -93,8 +93,6 @@ export const useCoberturasOpcionales = () => {
   // 🔥 LIMPIEZA COMPLETA AL CAMBIAR A MODO EDICIÓN
   useEffect(() => {
     if (typeof mode === "number" && mode > 0) {
-      console.log(`🚨 EDIT MODE DETECTED - CLEARING ALL CACHE for quotation ID: ${mode}`);
-      
       // Usar el cache manager para limpiar
       prepareForEdit(mode);
     }
