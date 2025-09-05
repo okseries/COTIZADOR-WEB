@@ -100,7 +100,7 @@ const CategoryPlan = () => {
           totalPagar: 0
         },
         cantidadAfiliados: 0,
-        tipo: "VOLUNTARIO"
+        tipo: tipoPoliza === 2 ? "COMPLEMENTARIO" : "VOLUNTARIO"
       };
       addPlan(newQuotationPlan);
     } else {
@@ -132,7 +132,7 @@ const CategoryPlan = () => {
               totalPagar: 0
             },
             cantidadAfiliados: 0,
-            tipo: "VOLUNTARIO"
+            tipo: tipoPoliza === 2 ? "COMPLEMENTARIO" : "VOLUNTARIO"
           };
           addPlan(newQuotationPlan);
         }
