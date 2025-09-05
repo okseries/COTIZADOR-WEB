@@ -36,8 +36,11 @@ export const validateIdentification = (
     case "1": // Cédula dominicana (11 dígitos)
       return cleanValue.length === 11 && /^\d{11}$/.test(cleanValue)
     
-    case "2": // Pasaporte (6-20 caracteres alfanuméricos)
-      return value.length >= 6 && value.length <= 20 && /^[A-Z0-9]+$/.test(value.toUpperCase())
+    case "2": // Pasaporte (6-20 caracteres alfanuméricos, permitir guiones y espacios)
+      const trimmedValue = value.trim();
+      return trimmedValue.length >= 6 && 
+             trimmedValue.length <= 20 && 
+             /^[A-Z0-9\-\s]+$/.test(trimmedValue.toUpperCase())
 
     case "3": // RNC (9 dígitos)
       return cleanValue.length === 9 && /^\d{9}$/.test(cleanValue)
@@ -58,8 +61,8 @@ export const getCleanIdentification = (
     case "1": // Cédula (solo números)
     case "3": // RNC (solo números)
       return value.replace(/\D/g, "")
-    case "2": // Pasaporte (alfanumérico)
-      return value.toUpperCase()
+    case "2": // Pasaporte (alfanumérico, permitir guiones)
+      return value.replace(/[^A-Z0-9\-]/g, "").toUpperCase()
     default:
       return value
   }

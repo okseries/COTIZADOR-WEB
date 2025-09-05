@@ -66,9 +66,9 @@ export const IdentificationInput = forwardRef<
         case "1": // Cédula
           rawValue = rawValue.replace(/\D/g, "").slice(0, 11);
           break;
-        case "2": // Pasaporte
+        case "2": // Pasaporte - permitir letras, números, guiones y espacios
           rawValue = rawValue
-            .replace(/[^a-zA-Z0-9]/g, "")
+            .replace(/[^a-zA-Z0-9\-\s]/g, "")
             .toUpperCase()
             .slice(0, 20);
           break;
@@ -89,7 +89,7 @@ export const IdentificationInput = forwardRef<
         case "1":
           return "La cédula debe tener exactamente 11 dígitos";
         case "2":
-          return "El pasaporte debe tener entre 6 y 20 caracteres";
+          return "El pasaporte debe tener entre 6 y 20 caracteres (letras, números, guiones)";
         case "3":
           return "El RNC debe tener exactamente 9 dígitos";
         default:

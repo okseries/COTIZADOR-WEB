@@ -114,6 +114,16 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
     };
   }, [openAlertDialog]);
 
+  // Efecto para cargar datos iniciales del store al montar el componente
+  React.useEffect(() => {
+    if (filterData) {
+      reset({
+        tipoDocumento: filterData.tipoDocumento,
+        identificacion: filterData.identificacion,
+      });
+    }
+  }, [filterData, reset]); // Cargar cuando filterData esté disponible
+
   // Efecto para cargar datos del store en el formulario (solo campos del filtro real)
   React.useEffect(() => {
     if (filterData) {
@@ -130,7 +140,7 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
         });
       }
     }
-  }, [filterData, reset]); // Removido getValues de las dependencias
+  }, [filterData, reset, getValues]); // Agregado getValues de vuelta
 
   // Efecto adicional para sincronizar identificación desde el cliente cuando no hay filterData
   React.useEffect(() => {
@@ -139,20 +149,29 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
       
       // Solo actualizar si la identificación es diferente
       if (currentValues.identificacion !== cliente.identification) {
-        // Asumir tipo de documento "1" (cédula) por defecto si no está especificado
+        // Mantener el tipo de documento actual del formulario en lugar de forzar "1"
         const syncData = {
-          tipoDocumento: "1" as const, 
+          tipoDocumento: currentValues.tipoDocumento || "1", // Usar el tipo actual, no forzar cédula
           identificacion: cliente.identification,
         };
         
-        // Actualizar tanto el formulario como el store
-        reset(syncData);
+        // Solo actualizar la identificación, mantener el tipo seleccionado
+        reset({
+          tipoDocumento: currentValues.tipoDocumento || "1",
+          identificacion: cliente.identification,
+        });
         setFilterData(syncData);
       }
     }
   }, [cliente, filterData, reset, getValues, setFilterData]);
 
   const onSubmit = React.useCallback(async (data: FiltrarClientFormValues) => {
+    console.log('🔍 [FilterClient] onSubmit called with:', {
+      tipoDocumento: data.tipoDocumento,
+      identificacion: data.identificacion,
+      tipoDocumentoText: data.tipoDocumento === "1" ? "Cédula" : data.tipoDocumento === "2" ? "Pasaporte" : "RNC"
+    });
+
     setIsLoading(true);
     try {
       // Convertir el tipo de documento a número para la API
@@ -164,13 +183,19 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
         data.identificacion
       );
 
+      console.log('🌐 [FilterClient] API call params:', {
+        cleanIdentification,
+        tipoDocumentoNumber,
+        apiUrl: `/users/${cleanIdentification}/${tipoDocumentoNumber}`
+      });
+
       // Guardar los datos de búsqueda para que los use ClientInformation
       const response = await ClientByIdentification(
         cleanIdentification,
         tipoDocumentoNumber
       );
 
-      console.log("Respuesta de la API:", response);
+      console.log("✅ [FilterClient] API Response:", response);
       setSearchData(data);
 
       // Guardar la información del cliente encontrado

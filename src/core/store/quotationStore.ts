@@ -237,9 +237,10 @@ export const useQuotationStore = create<QuotationStore>()(
       
   // Utilidades
   clearQuotation: () => set({ ...initialState }),
-  clearCurrentForm: () => set(() => ({ 
+  clearCurrentForm: () => set((state) => ({ 
     cliente: null,
-    filterData: null,
+    // Mantener filterData para preservar el tipo de documento seleccionado
+    filterData: state.filterData,
     searchData: null,
     clientSearchResult: null,
     clientData: { ...initialState.clientData }
@@ -247,8 +248,33 @@ export const useQuotationStore = create<QuotationStore>()(
         const cliente = quotationRequest.cliente;
         
         if (cliente) {
+          // Detectar tipo de documento basado en la identificación
+          const detectDocumentType = (identification: string): "1" | "2" | "3" => {
+            if (!identification) return "1";
+            
+            const cleanId = identification.replace(/\D/g, "");
+            
+            // Si tiene exactamente 11 dígitos numéricos, es cédula
+            if (cleanId.length === 11 && /^\d{11}$/.test(cleanId)) {
+              return "1";
+            }
+            
+            // Si tiene exactamente 9 dígitos numéricos, es RNC
+            if (cleanId.length === 9 && /^\d{9}$/.test(cleanId)) {
+              return "3";
+            }
+            
+            // Si contiene letras o no coincide con los formatos anteriores, es pasaporte
+            if (/[A-Za-z]/.test(identification) || cleanId.length !== 11) {
+              return "2";
+            }
+            
+            // Por defecto, asumir cédula
+            return "1";
+          };
+
           const filterData: FilterData = {
-            tipoDocumento: "1",
+            tipoDocumento: detectDocumentType(cliente.identification),
             identificacion: cliente.identification
           };
           
