@@ -70,7 +70,8 @@ const ClientInformation = forwardRef<
     clearErrors,
   } = useForm<FormClienteValues>({
     resolver: zodResolver(clienteSchema),
-    mode: "onChange", // Habilitar validación en tiempo real
+    mode: "onSubmit", // Cambiar de onChange a onSubmit para evitar revalidaciones constantes
+    reValidateMode: "onSubmit", // Solo revalidar en submit
     defaultValues: {
       clientChoosen: cliente?.clientChoosen || 0,
       identification: cliente?.identification || "",
@@ -85,22 +86,107 @@ const ClientInformation = forwardRef<
     },
   });
 
+  // Estados locales para los campos problemáticos (email y teléfono)
+  const [localContact, setLocalContact] = React.useState<string>("");
+  const [localEmail, setLocalEmail] = React.useState<string>("");
+  const [emailError, setEmailError] = React.useState<string>("");
+  const [phoneError, setPhoneError] = React.useState<string>("");
+
+  // Función para validar email
+  const validateEmail = React.useCallback((email: string) => {
+    if (!email || email.trim() === "") {
+      setEmailError("");
+      return true; // Email vacío es válido (opcional)
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("Debe ser un email válido");
+      return false;
+    }
+    
+    setEmailError("");
+    return true;
+  }, []);
+
+  // Función para validar teléfono
+  const validatePhone = React.useCallback((phone: string) => {
+    if (!phone || phone.trim() === "") {
+      setPhoneError("");
+      return true; // Teléfono vacío es válido (opcional)
+    }
+    
+    const digits = phone.replace(/\D/g, "");
+    
+    // Validar longitud mínima y máxima
+    if (digits.length < 10) {
+      setPhoneError("El teléfono debe tener al menos 10 dígitos");
+      return false;
+    }
+    
+    if (digits.length > 15) {
+      setPhoneError("El teléfono no puede tener más de 15 dígitos");
+      return false;
+    }
+    
+    // Validar formato dominicano específico
+    if (digits.length === 10) {
+      if (!digits.startsWith("809") && !digits.startsWith("829") && !digits.startsWith("849")) {
+        setPhoneError("Número dominicano debe empezar con 809, 829 o 849");
+        return false;
+      }
+    }
+    
+    setPhoneError("");
+    return true;
+  }, []);
+
   // Función para guardar datos en el store (memoizada para evitar ciclos)
   const saveToStore = React.useCallback(() => {
     const formData = getValues();
-    // Limpiar campos opcionales vacíos antes de guardar
+    // Usar los estados locales para email y teléfono en lugar de los datos del formulario
     const cleanedData = {
       ...formData,
-      contact: formData.contact?.trim() || undefined,
-      email: formData.email?.trim() || undefined,
+      contact: localContact?.trim() || undefined,
+      email: localEmail?.trim() || undefined,
     };
+    
+    console.log('💾 [ClientInformation] Saving to store:', {
+      original: formData,
+      cleaned: cleanedData,
+      localContact,
+      localEmail
+    });
+    
     setCliente(cleanedData);
-  }, [getValues, setCliente]);
+  }, [getValues, setCliente, localContact, localEmail]);
 
-  // Efecto para resetear el formulario cuando cambien los datos del store
+  // Estado para controlar si el formulario fue inicializado
+  const [isFormInitialized, setIsFormInitialized] = React.useState(false);
+
+  // Efecto para resetear el formulario cuando cambien los datos del store SOLO al cargar inicial
   React.useEffect(() => {
-    if (cliente) {
+    console.log('🔄 [ClientInformation] Effect - cliente reset:', {
+      hasCliente: !!cliente,
+      isFormInitialized,
+      clienteContact: cliente?.contact,
+      clienteEmail: cliente?.email,
+      clientDataName: clientData?.NOMBRE_COMPLETO
+    });
+    
+    if (cliente && !isFormInitialized) {
+      console.log('✅ [ClientInformation] Resetting form with cliente data:', {
+        contact: cliente.contact,
+        email: cliente.email
+      });
+      
       const nameToUse = clientData?.NOMBRE_COMPLETO || cliente.name;
+
+      // Inicializar estados locales
+      setLocalContact(cliente.contact || "");
+      setLocalEmail(cliente.email || "");
+      setEmailError(""); // Limpiar cualquier error al cargar datos válidos
+      setPhoneError(""); // Limpiar cualquier error de teléfono
 
       reset({
         clientChoosen: cliente.clientChoosen,
@@ -114,12 +200,25 @@ const ClientInformation = forwardRef<
         agentId: cliente.agentId || 0,
         tipoPlan: cliente.tipoPlan,
       });
+      setIsFormInitialized(true);
     }
-  }, [cliente, reset, clientData]);
+  }, [cliente, reset, clientData, isFormInitialized]);
 
   // Efecto separado para resetear cuando se limpia el store
   React.useEffect(() => {
+    console.log('🧹 [ClientInformation] Effect - clear form:', {
+      hasCliente: !!cliente
+    });
+    
     if (!cliente) {
+      console.log('🧹 [ClientInformation] Clearing form - no cliente');
+      
+      // Limpiar estados locales
+      setLocalContact("");
+      setLocalEmail("");
+      setEmailError(""); // Limpiar error de email
+      setPhoneError(""); // Limpiar error de teléfono
+      
       reset({
         clientChoosen: 0,
         identification: "",
@@ -132,6 +231,8 @@ const ClientInformation = forwardRef<
         agentId: 0,
         tipoPlan: 0,
       });
+      setIsFormInitialized(false); // Permitir re-inicialización cuando se limpia
+      setProcessedClientData(null); // Resetear el estado de clientData procesado
     }
   }, [cliente, reset]);
 
@@ -153,13 +254,25 @@ const ClientInformation = forwardRef<
     }
   }, [searchData, setValue, setFilterData, filterData]);
 
+  // Estado para rastrear si ya se procesó el clientData
+  const [processedClientData, setProcessedClientData] = React.useState<string | null>(null);
+
   // Efecto para llenar el nombre del cliente encontrado
   React.useEffect(() => {
-    if (clientData?.NOMBRE_COMPLETO) {
+    console.log('👤 [ClientInformation] Client found effect:', {
+      hasClientData: !!clientData?.NOMBRE_COMPLETO,
+      clientDataName: clientData?.NOMBRE_COMPLETO,
+      processedClientData,
+      isNewClientData: clientData?.NOMBRE_COMPLETO !== processedClientData
+    });
+    
+    if (clientData?.NOMBRE_COMPLETO && clientData.NOMBRE_COMPLETO !== processedClientData) {
+      console.log('👤 [ClientInformation] NEW client data - Setting name and saving to store');
       setValue("name", clientData.NOMBRE_COMPLETO);
+      setProcessedClientData(clientData.NOMBRE_COMPLETO);
       saveToStore(); // Llamar directamente sin setTimeout
     }
-  }, [clientData, setValue, saveToStore]);
+  }, [clientData, setValue, saveToStore, processedClientData]);
 
   const canal = watch("office");
   const { data: dynamicOptions = [] } = useDynamicSelectOptions(canal);
@@ -207,29 +320,41 @@ const ClientInformation = forwardRef<
   }));
 
   const onSubmit = (data: FormClienteValues) => {
-    // Limpiar campos opcionales vacíos antes de guardar
+    // Usar los estados locales para email y teléfono
     const cleanedData: Cliente = {
       ...data,
-      contact: data.contact?.trim() || undefined,
-      email: data.email?.trim() || undefined,
+      contact: localContact?.trim() || undefined,
+      email: localEmail?.trim() || undefined,
     };
     setCliente(cleanedData);
   };
 
   return (
     <div className="space-y-4 lg:space-y-6">
-      <FilterClient onClearForm={() => reset({
-        clientChoosen: 0,
-        identification: "",
-        name: "",
-        contact: undefined,
-        email: undefined,
-        address: "",
-        office: "",
-        agent: "",
-        agentId: 0,
-        tipoPlan: 0,
-      })} />
+      <FilterClient onClearForm={() => {
+        console.log('🧹 [ClientInformation] Manual clear form triggered');
+        
+        // Limpiar estados locales
+        setLocalContact("");
+        setLocalEmail("");
+        setEmailError(""); // Limpiar error de email
+        setPhoneError(""); // Limpiar error de teléfono
+        
+        reset({
+          clientChoosen: 0,
+          identification: "",
+          name: "",
+          contact: undefined,
+          email: undefined,
+          address: "",
+          office: "",
+          agent: "",
+          agentId: 0,
+          tipoPlan: 0,
+        });
+        setIsFormInitialized(false); // Permitir re-inicialización después de limpiar
+        setProcessedClientData(null); // Resetear el estado de clientData procesado
+      }} />
 
       {/* Información del Cliente */}
       <Card className="shadow-sm border border-border/50">
@@ -259,74 +384,86 @@ const ClientInformation = forwardRef<
 
               <div className="space-y-2">
                 <Label htmlFor="contact">Teléfono de contacto</Label>
-                <Controller
-                  name="contact"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="contact"
-                      value={field.value || ""}
-                      onChange={(e) => {
-                        const formatted = formatPhone(e.target.value);
-                        field.onChange(formatted || undefined);
-                        
-                        // Validación en tiempo real solo si hay contenido
-                        if (formatted && formatted.trim() !== "") {
-                          const phoneWithoutFormat = formatted.replace(/\D/g, '');
-                          
-                          // Validar longitud (7-15 dígitos para teléfonos internacionales)
-                          if (phoneWithoutFormat.length < 7 || phoneWithoutFormat.length > 15) {
-                            setError('contact', {
-                              type: 'manual',
-                              message: 'El teléfono debe tener entre 7 y 15 dígitos'
-                            });
-                          } else {
-                            clearErrors('contact');
-                          }
-                        } else {
-                          clearErrors('contact');
-                        }
-                      }}
-                      placeholder="Ejemplo: +1 555 123 4567 o (809) 555-1234"
-                      className={`h-11 ${
-                        errors.contact ? "border-red-500" : ""
-                      }`}
-                    />
-                  )}
+                <Input
+                  id="contact"
+                  value={localContact}
+                  onChange={(e) => {
+                    const inputValue = e.target.value;
+                    
+                    console.log('📞 [Contact Field] onChange:', {
+                      inputValue,
+                      currentLocalContact: localContact,
+                      isEmpty: inputValue === ""
+                    });
+                    
+                    // Si el input está vacío, limpiar el campo
+                    if (inputValue === "") {
+                      console.log('📞 [Contact Field] Clearing local state');
+                      setLocalContact("");
+                      setPhoneError("");
+                      return;
+                    }
+                    
+                    // Verificar longitud máxima antes del formateo
+                    const digits = inputValue.replace(/\D/g, "");
+                    if (digits.length > 15) {
+                      setPhoneError("El teléfono no puede tener más de 15 dígitos");
+                      return; // No actualizar el estado si excede el límite
+                    }
+                    
+                    const formatted = formatPhone(inputValue);
+                    console.log('📞 [Contact Field] Formatted:', formatted);
+                    setLocalContact(formatted || "");
+                    validatePhone(formatted || "");
+                    
+                    // Actualizar el store con el nuevo teléfono
+                    const formData = getValues();
+                    const cleanedData = {
+                      ...formData,
+                      contact: formatted?.trim() || undefined,
+                      email: localEmail?.trim() || undefined,
+                    };
+                    setCliente(cleanedData);
+                  }}
+                  placeholder="Ejemplo: +1 555 123 4567 o (809) 555-1234"
+                  className={`h-11 ${phoneError ? 'border-red-500' : ''}`}
                 />
-                {errors.contact && (
-                  <p className="text-sm text-red-500">
-                    {errors.contact.message}
-                  </p>
-                )}
+                {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
-                <Controller
-                  name="email"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      type="email"
-                      {...field}
-                      id="email"
-                      value={field.value || ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value || undefined);
-                      }}
-                      placeholder="ejemplo@correo.com"
-                      className={`h-11 ${errors.email ? "border-red-500" : ""}`}
-                    />
-                  )}
+                <Input
+                  type="email"
+                  id="email"
+                  value={localEmail}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    
+                    console.log('📧 [Email Field] onChange:', {
+                      inputValue: value,
+                      currentLocalEmail: localEmail,
+                      isEmpty: value === ""
+                    });
+                    
+                    setLocalEmail(value);
+                    validateEmail(value);
+                    
+                    // Actualizar el store con el nuevo email
+                    const formData = getValues();
+                    const cleanedData = {
+                      ...formData,
+                      email: value?.trim() || undefined,
+                      contact: localContact?.trim() || undefined,
+                    };
+                    setCliente(cleanedData);
+                  }}
+                  placeholder="ejemplo@correo.com"
+                  className={`h-11 ${emailError ? 'border-red-500' : ''}`}
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email.message}</p>
-                )}
+                {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
               </div>
 
               <div className="space-y-2">

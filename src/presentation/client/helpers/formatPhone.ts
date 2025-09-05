@@ -8,8 +8,6 @@ export const formatPhone = (val: string) => {
   
   // Para números dominicanos (10 dígitos que empiezan con 809, 829, 849)
   if (digits.length === 10 && (digits.startsWith("809") || digits.startsWith("829") || digits.startsWith("849"))) {
-    if (digits.length < 4) return digits;
-    if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
     return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
   }
   
