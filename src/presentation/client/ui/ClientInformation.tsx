@@ -151,13 +151,6 @@ const ClientInformation = forwardRef<
       email: localEmail?.trim() || undefined,
     };
     
-    console.log('💾 [ClientInformation] Saving to store:', {
-      original: formData,
-      cleaned: cleanedData,
-      localContact,
-      localEmail
-    });
-    
     setCliente(cleanedData);
   }, [getValues, setCliente, localContact, localEmail]);
 
@@ -166,20 +159,7 @@ const ClientInformation = forwardRef<
 
   // Efecto para resetear el formulario cuando cambien los datos del store SOLO al cargar inicial
   React.useEffect(() => {
-    console.log('🔄 [ClientInformation] Effect - cliente reset:', {
-      hasCliente: !!cliente,
-      isFormInitialized,
-      clienteContact: cliente?.contact,
-      clienteEmail: cliente?.email,
-      clientDataName: clientData?.NOMBRE_COMPLETO
-    });
-    
     if (cliente && !isFormInitialized) {
-      console.log('✅ [ClientInformation] Resetting form with cliente data:', {
-        contact: cliente.contact,
-        email: cliente.email
-      });
-      
       const nameToUse = clientData?.NOMBRE_COMPLETO || cliente.name;
 
       // Inicializar estados locales
@@ -206,13 +186,7 @@ const ClientInformation = forwardRef<
 
   // Efecto separado para resetear cuando se limpia el store
   React.useEffect(() => {
-    console.log('🧹 [ClientInformation] Effect - clear form:', {
-      hasCliente: !!cliente
-    });
-    
     if (!cliente) {
-      console.log('🧹 [ClientInformation] Clearing form - no cliente');
-      
       // Limpiar estados locales
       setLocalContact("");
       setLocalEmail("");
@@ -259,15 +233,7 @@ const ClientInformation = forwardRef<
 
   // Efecto para llenar el nombre del cliente encontrado
   React.useEffect(() => {
-    console.log('👤 [ClientInformation] Client found effect:', {
-      hasClientData: !!clientData?.NOMBRE_COMPLETO,
-      clientDataName: clientData?.NOMBRE_COMPLETO,
-      processedClientData,
-      isNewClientData: clientData?.NOMBRE_COMPLETO !== processedClientData
-    });
-    
     if (clientData?.NOMBRE_COMPLETO && clientData.NOMBRE_COMPLETO !== processedClientData) {
-      console.log('👤 [ClientInformation] NEW client data - Setting name and saving to store');
       setValue("name", clientData.NOMBRE_COMPLETO);
       setProcessedClientData(clientData.NOMBRE_COMPLETO);
       saveToStore(); // Llamar directamente sin setTimeout
@@ -332,8 +298,6 @@ const ClientInformation = forwardRef<
   return (
     <div className="space-y-4 lg:space-y-6">
       <FilterClient onClearForm={() => {
-        console.log('🧹 [ClientInformation] Manual clear form triggered');
-        
         // Limpiar estados locales
         setLocalContact("");
         setLocalEmail("");
@@ -390,15 +354,8 @@ const ClientInformation = forwardRef<
                   onChange={(e) => {
                     const inputValue = e.target.value;
                     
-                    console.log('📞 [Contact Field] onChange:', {
-                      inputValue,
-                      currentLocalContact: localContact,
-                      isEmpty: inputValue === ""
-                    });
-                    
                     // Si el input está vacío, limpiar el campo
                     if (inputValue === "") {
-                      console.log('📞 [Contact Field] Clearing local state');
                       setLocalContact("");
                       setPhoneError("");
                       return;
@@ -412,7 +369,6 @@ const ClientInformation = forwardRef<
                     }
                     
                     const formatted = formatPhone(inputValue);
-                    console.log('📞 [Contact Field] Formatted:', formatted);
                     setLocalContact(formatted || "");
                     validatePhone(formatted || "");
                     
@@ -441,12 +397,6 @@ const ClientInformation = forwardRef<
                   value={localEmail}
                   onChange={(e) => {
                     const value = e.target.value;
-                    
-                    console.log('📧 [Email Field] onChange:', {
-                      inputValue: value,
-                      currentLocalEmail: localEmail,
-                      isEmpty: value === ""
-                    });
                     
                     setLocalEmail(value);
                     validateEmail(value);
