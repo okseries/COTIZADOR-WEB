@@ -265,7 +265,7 @@ export const useQuotationStore = create<QuotationStore>()(
             }
             
             // Si contiene letras o no coincide con los formatos anteriores, es pasaporte
-            if (/[A-Za-z]/.test(identification) || cleanId.length !== 11) {
+            if (/[A-Za-z]/.test(identification) || (cleanId.length !== 11 && cleanId.length !== 9)) {
               return "2";
             }
             

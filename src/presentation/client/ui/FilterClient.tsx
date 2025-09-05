@@ -40,8 +40,8 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
   } = useForm<FiltrarClientFormValues>({
     resolver: zodResolver(filtrarClientSchema),
     defaultValues: {
-      tipoDocumento: "1",
-      identificacion: "",
+      tipoDocumento: filterData?.tipoDocumento || "1",
+      identificacion: filterData?.identificacion || "",
     },
   });
 
@@ -114,17 +114,7 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
     };
   }, [openAlertDialog]);
 
-  // Efecto para cargar datos iniciales del store al montar el componente
-  React.useEffect(() => {
-    if (filterData) {
-      reset({
-        tipoDocumento: filterData.tipoDocumento,
-        identificacion: filterData.identificacion,
-      });
-    }
-  }, [filterData, reset]); // Cargar cuando filterData esté disponible
-
-  // Efecto para cargar datos del store en el formulario (solo campos del filtro real)
+  // Efecto principal para sincronizar formulario con store
   React.useEffect(() => {
     if (filterData) {
       const currentValues = getValues();
@@ -140,7 +130,7 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
         });
       }
     }
-  }, [filterData, reset, getValues]); // Agregado getValues de vuelta
+  }, [filterData, reset, getValues]);
 
   // Efecto adicional para sincronizar identificación desde el cliente cuando no hay filterData
   React.useEffect(() => {
@@ -149,15 +139,40 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
       
       // Solo actualizar si la identificación es diferente
       if (currentValues.identificacion !== cliente.identification) {
-        // Mantener el tipo de documento actual del formulario en lugar de forzar "1"
+        // Detectar el tipo de documento correcto basado en la identificación
+        const detectDocumentType = (identification: string): "1" | "2" | "3" => {
+          if (!identification) return "1";
+          
+          const cleanId = identification.replace(/\D/g, "");
+          
+          // Si tiene exactamente 11 dígitos numéricos, es cédula
+          if (cleanId.length === 11 && /^\d{11}$/.test(cleanId)) {
+            return "1";
+          }
+          
+          // Si tiene exactamente 9 dígitos numéricos, es RNC
+          if (cleanId.length === 9 && /^\d{9}$/.test(cleanId)) {
+            return "3";
+          }
+          
+          // Si contiene letras o no coincide con los formatos anteriores, es pasaporte
+          if (/[A-Za-z]/.test(identification) || (cleanId.length !== 11 && cleanId.length !== 9)) {
+            return "2";
+          }
+          
+          // Por defecto, asumir cédula
+          return "1";
+        };
+
+        const detectedType = detectDocumentType(cliente.identification);
+        
         const syncData = {
-          tipoDocumento: currentValues.tipoDocumento || "1", // Usar el tipo actual, no forzar cédula
+          tipoDocumento: detectedType,
           identificacion: cliente.identification,
         };
         
-        // Solo actualizar la identificación, mantener el tipo seleccionado
         reset({
-          tipoDocumento: currentValues.tipoDocumento || "1",
+          tipoDocumento: detectedType,
           identificacion: cliente.identification,
         });
         setFilterData(syncData);
@@ -166,12 +181,6 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
   }, [cliente, filterData, reset, getValues, setFilterData]);
 
   const onSubmit = React.useCallback(async (data: FiltrarClientFormValues) => {
-    console.log('🔍 [FilterClient] onSubmit called with:', {
-      tipoDocumento: data.tipoDocumento,
-      identificacion: data.identificacion,
-      tipoDocumentoText: data.tipoDocumento === "1" ? "Cédula" : data.tipoDocumento === "2" ? "Pasaporte" : "RNC"
-    });
-
     setIsLoading(true);
     try {
       // Convertir el tipo de documento a número para la API
@@ -183,20 +192,19 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
         data.identificacion
       );
 
-      console.log('🌐 [FilterClient] API call params:', {
-        cleanIdentification,
-        tipoDocumentoNumber,
-        apiUrl: `/users/${cleanIdentification}/${tipoDocumentoNumber}`
-      });
-
       // Guardar los datos de búsqueda para que los use ClientInformation
       const response = await ClientByIdentification(
         cleanIdentification,
         tipoDocumentoNumber
       );
 
-      console.log("✅ [FilterClient] API Response:", response);
       setSearchData(data);
+      
+      // Asegurar que setFilterData se llame para preservar el tipo de documento
+      setFilterData({
+        tipoDocumento: data.tipoDocumento as "1" | "2" | "3",
+        identificacion: data.identificacion,
+      });
 
       // Guardar la información del cliente encontrado
       if (response) {
@@ -215,7 +223,7 @@ const FilterClient = ({ onClearForm }: FilterClientProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [setSearchData, setClientData]);
+  }, [setSearchData, setClientData, setFilterData]);
 
   return (
     <Card className="mb-2 py-4 shadow-sm border border-border/50 bg-gradient-to-r from-[#005BBB]/5 to-[#FFA500]/5">
