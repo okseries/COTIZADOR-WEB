@@ -149,10 +149,12 @@ const ClientInformation = forwardRef<
       ...formData,
       contact: localContact?.trim() || undefined,
       email: localEmail?.trim() || undefined,
+      // Incluir tipoDocumento si está disponible en filterData
+      tipoDocumento: filterData?.tipoDocumento,
     };
     
     setCliente(cleanedData);
-  }, [getValues, setCliente, localContact, localEmail]);
+  }, [getValues, setCliente, localContact, localEmail, filterData]);
 
   // Estado para controlar si el formulario fue inicializado
   const [isFormInitialized, setIsFormInitialized] = React.useState(false);
@@ -291,6 +293,8 @@ const ClientInformation = forwardRef<
       ...data,
       contact: localContact?.trim() || undefined,
       email: localEmail?.trim() || undefined,
+      // Incluir tipoDocumento si está disponible en filterData
+      tipoDocumento: filterData?.tipoDocumento,
     };
     setCliente(cleanedData);
   };

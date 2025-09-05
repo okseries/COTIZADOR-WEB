@@ -273,8 +273,11 @@ export const useQuotationStore = create<QuotationStore>()(
             return "1";
           };
 
+          // Usar tipoDocumento del cliente si está disponible, sino detectarlo automáticamente
+          const tipoDocumento = cliente.tipoDocumento || detectDocumentType(cliente.identification);
+
           const filterData: FilterData = {
-            tipoDocumento: detectDocumentType(cliente.identification),
+            tipoDocumento,
             identificacion: cliente.identification
           };
           

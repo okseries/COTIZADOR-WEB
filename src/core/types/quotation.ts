@@ -15,7 +15,7 @@ export interface QuotationRequest {
 }
 
 export interface FilterData {
-  tipoDocumento: "1" | "2" | "3"; // 1: Cédula, 2: RNC, 3: Pasaporte
+  tipoDocumento: "1" | "2" | "3"; // 1: Cédula, 2: Pasaporte, 3: RNC
   identificacion: string;
 }
 

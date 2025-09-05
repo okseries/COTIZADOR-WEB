@@ -5,6 +5,7 @@ export interface QuotationPayload {
   cliente: {
     clientChoosen: number;
     identification: string;
+    tipoDocumento?: "1" | "2" | "3"; // 1: Cédula, 2: Pasaporte, 3: RNC
     name: string;
     contact?: string;
     email?: string;

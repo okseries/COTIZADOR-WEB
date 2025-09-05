@@ -7,6 +7,7 @@ cliente: Cliente | null;
 export interface Cliente {
   clientChoosen: number;
   identification: string;
+  tipoDocumento?: "1" | "2" | "3"; // 1: Cédula, 2: Pasaporte, 3: RNC - Campo para preservar el tipo seleccionado
   name: string;
   contact?: string;
   email?: string;
