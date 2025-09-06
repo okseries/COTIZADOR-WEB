@@ -60,7 +60,7 @@ const emailSchema = z
 // Schema para cliente
 export const clienteSchema = z.object({
   clientChoosen: z.number().min(1, "El sub tipo de póliza es requerido"), 
-  identification: z.string().min(1, "La identificación es requerida").max(11, "La identificación debe tener 11 dígitos"),
+  identification: z.string().min(1, "La identificación es requerida").max(20, "La identificación debe tener máximo 20 caracteres"),
   name: z.string().min(1, "El nombre es requerido"),
   contact: phoneSchema,
   email: emailSchema,

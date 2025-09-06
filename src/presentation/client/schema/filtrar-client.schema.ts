@@ -19,21 +19,23 @@ export const filtrarClientSchema = z
       });
     }
 
-    // Validación para Pasaporte (tipo "2")
+    // Validación para Pasaporte (tipo "2") - SIMPLIFICADA
     if (tipoDocumento === "2") {
-      if (identificacion.length < 6 || identificacion.length > 20) {
+      const trimmedValue = identificacion.trim();
+      
+      if (trimmedValue.length < 6 || trimmedValue.length > 20) {
         ctx.addIssue({
           path: ["identificacion"],
           code: z.ZodIssueCode.custom,
           message: "El pasaporte debe tener entre 6 y 20 caracteres",
         });
       }
-      // Validar que contenga solo letras, números y guiones
-      if (!/^[A-Z0-9\-\s]+$/i.test(identificacion)) {
+      // Validar que contenga solo letras, números, guiones y espacios
+      if (!/^[A-Z0-9\-\s]+$/i.test(trimmedValue)) {
         ctx.addIssue({
           path: ["identificacion"],
           code: z.ZodIssueCode.custom,
-          message: "El pasaporte solo puede contener letras, números y guiones",
+          message: "El pasaporte solo puede contener letras, números, guiones y espacios",
         });
       }
     }
