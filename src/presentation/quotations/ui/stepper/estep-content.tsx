@@ -28,7 +28,7 @@ const StepContent = ({ step, setStep }: Props) => {
       if (isValid) {
         setStep(nextStep);
       } else {
-        setValidationError("Por favor complete todos los campos requeridos. Si ingresó una identificación, presione 'Buscar Cliente' para continuar.");
+        setValidationError("Por favor complete todos los campos requeridos. Si ingresó una identificación, presione 'Buscar' para continuar.");
       }
       return;
     }

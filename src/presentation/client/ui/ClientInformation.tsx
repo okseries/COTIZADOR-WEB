@@ -12,7 +12,7 @@ import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
 import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
 import { IdentificationInput } from "./IdentificationInput";
 import { Button } from "@/components/ui/button";
-import { Search, AlertCircle } from "lucide-react";
+import { Search, AlertCircle, Trash2 } from "lucide-react";
 import { Spinner } from "@/components/shared/Spinner";
 import { ClientByIdentification } from "../services/client.services";
 import { getCleanIdentification } from "../helpers/indentification-format";
@@ -367,8 +367,63 @@ const ClientInformation = forwardRef<
     setCliente(cleanedData);
   };
 
+  // Función para limpiar todo el store
+  const handleClearAll = React.useCallback(() => {
+    const { mode, clearQuotation, clearCurrentForm } = useUnifiedQuotationStore.getState();
+    
+    if (mode === "create") {
+      clearCurrentForm();
+    } else {
+      clearQuotation();
+    }
+    
+    // Limpiar estados locales
+    setLocalContact("");
+    setLocalEmail("");
+    setEmailError("");
+    setPhoneError("");
+    setClientFound(null);
+    
+    // Resetear formulario
+    reset({
+      tipoDocumento: "1",
+      clientChoosen: 0,
+      identification: "",
+      name: "",
+      contact: undefined,
+      email: undefined,
+      address: "",
+      office: "",
+      agent: "",
+      agentId: 0,
+      tipoPlan: 0,
+    });
+    
+    setIsFormInitialized(false);
+    setProcessedClientData(null);
+  }, [reset]);
+
   return (
     <div className="space-y-4 lg:space-y-6">
+      {/* Botón de limpiar datos */}
+      <Card className="mb-2 py-2 shadow-sm border border-border/50 bg-gradient-to-r from-red-500/5 to-orange-500/5">
+        <CardContent className="flex justify-between items-center p-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Acciones Rápidas</h3>
+            <p className="text-xs text-gray-500">Limpiar todos los datos del formulario</p>
+          </div>
+          <Button
+            type="button"
+            onClick={handleClearAll}
+            variant="outline"
+            size="sm"
+            className="bg-red-500 hover:bg-red-600 text-white border-red-500 hover:border-red-600"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Limpiar Datos
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Información del Cliente */}
       <Card className="shadow-sm border border-border/50">
