@@ -8,8 +8,15 @@ import React, { forwardRef, useImperativeHandle } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { Label } from "@/components/ui/label";
-import FilterClient from "./FilterClient";
 import { SelectSimple } from "@/components/shared/FormFieldSelectSimple";
+import { DocumentTypeSelect } from "@/components/shared/DocumentTypeSelect";
+import { IdentificationInput } from "./IdentificationInput";
+import { Button } from "@/components/ui/button";
+import { Search, AlertCircle } from "lucide-react";
+import { Spinner } from "@/components/shared/Spinner";
+import { ClientByIdentification } from "../services/client.services";
+import { getCleanIdentification } from "../helpers/indentification-format";
+import ThemedAlertDialog from "@/components/shared/ThemedAlertDialog";
 import { useDynamicSelectOptions } from "@/presentation/client/hooks/useDynamicSelectOptions";
 import { useUnifiedQuotationStore } from "@/core";
 import { clienteSchema } from "../schema/ClientInfo.schema";
@@ -20,6 +27,7 @@ import { formatPhone } from "../helpers/formatPhone";
 
 // Tipo específico para el formulario que matchea exactamente con el esquema
 interface FormClienteValues {
+  tipoDocumento: "1" | "2" | "3";
   clientChoosen: number;
   identification: string;
   name: string;
@@ -73,6 +81,7 @@ const ClientInformation = forwardRef<
     mode: "onSubmit", // Cambiar de onChange a onSubmit para evitar revalidaciones constantes
     reValidateMode: "onSubmit", // Solo revalidar en submit
     defaultValues: {
+      tipoDocumento: (cliente?.tipoDocumento as "1" | "2" | "3") || "1",
       clientChoosen: cliente?.clientChoosen || 0,
       identification: cliente?.identification || "",
       name: cliente?.name || "",
@@ -91,6 +100,13 @@ const ClientInformation = forwardRef<
   const [localEmail, setLocalEmail] = React.useState<string>("");
   const [emailError, setEmailError] = React.useState<string>("");
   const [phoneError, setPhoneError] = React.useState<string>("");
+
+  // Estados para búsqueda de cliente
+  const [isSearching, setIsSearching] = React.useState(false);
+  const [openAlertDialog, setOpenAlertDialog] = React.useState(false);
+  const [alertDialogMessage, setAlertDialogMessage] = React.useState("");
+  const [alertDialogTitle, setAlertDialogTitle] = React.useState("");
+  const [clientFound, setClientFound] = React.useState<any>(null);
 
   // Función para validar email
   const validateEmail = React.useCallback((email: string) => {
@@ -141,6 +157,55 @@ const ClientInformation = forwardRef<
     return true;
   }, []);
 
+  // Función para buscar cliente por identificación
+  const handleSearchClient = React.useCallback(async () => {
+    const tipoDocumento = watch("tipoDocumento");
+    const identification = watch("identification");
+
+    if (!identification?.trim()) {
+      setAlertDialogTitle("Campo Requerido");
+      setAlertDialogMessage("Por favor ingrese una identificación antes de buscar.");
+      setOpenAlertDialog(true);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const tipoDocumentoNumber = parseInt(tipoDocumento);
+      const cleanIdentification = getCleanIdentification(
+        tipoDocumento as "1" | "2" | "3",
+        identification
+      );
+
+      const response = await ClientByIdentification(
+        cleanIdentification,
+        tipoDocumentoNumber
+      );
+
+      if (response) {
+        // Pre-llenar el formulario con los datos encontrados
+        setValue("name", response.NOMBRE_COMPLETO || "");
+        setClientFound(response);
+        
+        // NO mostrar modal cuando se encuentra el cliente
+        // El campo se volverá verde y readonly automáticamente
+      } else {
+        // Limpiar cliente encontrado y mostrar modal solo cuando NO se encuentra
+        setClientFound(null);
+        setAlertDialogTitle("Sin Resultados");
+        setAlertDialogMessage("No se encontraron datos con la identificación proporcionada. Puede continuar ingresando los datos manualmente.");
+        setOpenAlertDialog(true);
+      }
+    } catch (error) {
+      console.error("Error al buscar cliente:", error);
+      setAlertDialogTitle("Error de Búsqueda");
+      setAlertDialogMessage("Ocurrió un error al buscar el cliente. Intente nuevamente.");
+      setOpenAlertDialog(true);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [watch, setValue]);
+
   // Función para guardar datos en el store (memoizada para evitar ciclos)
   const saveToStore = React.useCallback(() => {
     const formData = getValues();
@@ -149,12 +214,12 @@ const ClientInformation = forwardRef<
       ...formData,
       contact: localContact?.trim() || undefined,
       email: localEmail?.trim() || undefined,
-      // Incluir tipoDocumento si está disponible en filterData
-      tipoDocumento: filterData?.tipoDocumento,
+      // El tipoDocumento ahora viene directamente del formulario
+      tipoDocumento: formData.tipoDocumento,
     };
     
     setCliente(cleanedData);
-  }, [getValues, setCliente, localContact, localEmail, filterData]);
+  }, [getValues, setCliente, localContact, localEmail]);
 
   // Estado para controlar si el formulario fue inicializado
   const [isFormInitialized, setIsFormInitialized] = React.useState(false);
@@ -171,6 +236,7 @@ const ClientInformation = forwardRef<
       setPhoneError(""); // Limpiar cualquier error de teléfono
 
       reset({
+        tipoDocumento: (cliente.tipoDocumento as "1" | "2" | "3") || "1",
         clientChoosen: cliente.clientChoosen,
         identification: cliente.identification,
         name: nameToUse,
@@ -189,13 +255,15 @@ const ClientInformation = forwardRef<
   // Efecto separado para resetear cuando se limpia el store
   React.useEffect(() => {
     if (!cliente) {
-      // Limpiar estados locales
-      setLocalContact("");
-      setLocalEmail("");
-      setEmailError(""); // Limpiar error de email
-      setPhoneError(""); // Limpiar error de teléfono
-      
-      reset({
+        // Limpiar estados locales
+        setLocalContact("");
+        setLocalEmail("");
+        setEmailError(""); // Limpiar error de email
+        setPhoneError(""); // Limpiar error de teléfono
+        setClientFound(null); // Limpiar cliente encontrado
+        
+        reset({
+        tipoDocumento: "1",
         clientChoosen: 0,
         identification: "",
         name: "",
@@ -301,33 +369,84 @@ const ClientInformation = forwardRef<
 
   return (
     <div className="space-y-4 lg:space-y-6">
-      <FilterClient onClearForm={() => {
-        // Limpiar estados locales
-        setLocalContact("");
-        setLocalEmail("");
-        setEmailError(""); // Limpiar error de email
-        setPhoneError(""); // Limpiar error de teléfono
-        
-        reset({
-          clientChoosen: 0,
-          identification: "",
-          name: "",
-          contact: undefined,
-          email: undefined,
-          address: "",
-          office: "",
-          agent: "",
-          agentId: 0,
-          tipoPlan: 0,
-        });
-        setIsFormInitialized(false); // Permitir re-inicialización después de limpiar
-        setProcessedClientData(null); // Resetear el estado de clientData procesado
-      }} />
 
       {/* Información del Cliente */}
       <Card className="shadow-sm border border-border/50">
         <CardContent className="p-4 lg:p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 lg:space-y-4">
+            {/* Información de identificación del cliente */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 bg-blue-50/30 p-4 rounded-lg border border-blue-200/50">
+              <div className="space-y-2">
+                <Label htmlFor="tipoDocumento">Tipo de Documento *</Label>
+                <Controller
+                  name="tipoDocumento"
+                  control={control}
+                  render={({ field }) => (
+                    <DocumentTypeSelect
+                      value={field.value}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        // Limpiar cliente encontrado cuando se cambie el tipo de documento
+                        setClientFound(null);
+                      }}
+                      placeholder="Selecciona tipo"
+                      error={!!errors.tipoDocumento}
+                      className="h-11"
+                    />
+                  )}
+                />
+                {errors.tipoDocumento && (
+                  <p className="text-sm text-red-500">
+                    {errors.tipoDocumento.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="identification">Identificación *</Label>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Controller
+                      name="identification"
+                      control={control}
+                      render={({ field }) => (
+                        <IdentificationInput
+                          {...field}
+                          onChange={(value) => {
+                            field.onChange(value);
+                            // Limpiar cliente encontrado cuando se cambie la identificación
+                            setClientFound(null);
+                          }}
+                          id="identification"
+                          label="Identificación"
+                          error={!!errors.identification}
+                          required
+                          tipoDocumento={watch("tipoDocumento")}
+                        />
+                      )}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleSearchClient}
+                    disabled={isSearching || !watch("identification")?.trim()}
+                    className="h-11 px-4 bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isSearching ? (
+                      <Spinner className="w-4 h-4 text-white" />
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                {errors.identification && (
+                  <p className="text-sm text-red-500">
+                    {errors.identification.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
             {/* Información básica del cliente */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-2">
@@ -340,8 +459,8 @@ const ClientInformation = forwardRef<
                       {...field}
                       id="name"
                       placeholder="Ingrese el nombre completo"
-                      className={`h-11  ${clientData?.NOMBRE_COMPLETO ? " text-green-500" : ""} ${errors.name ? "border-red-500" : ""}`}
-                      readOnly={!!clientData?.NOMBRE_COMPLETO}
+                      className={`h-11 ${clientFound ? "text-green-600 bg-green-50 border-green-300" : ""} ${errors.name ? "border-red-500" : ""}`}
+                      readOnly={!!clientFound}
                     />
                   )}
                 />
@@ -569,7 +688,7 @@ const ClientInformation = forwardRef<
 
             {/* Campos ocultos */}
             {/*Estos campos son usados */}
-            {/* por ejemplo para guardar el agente y la identificación en el store, aunque no se muestren en el formulario */}
+            {/* por ejemplo para guardar el agente en el store, aunque no se muestren en el formulario */}
             {/* son importantes para el store */}
             <div className="hidden">
               <Controller
@@ -577,15 +696,24 @@ const ClientInformation = forwardRef<
                 control={control}
                 render={({ field }) => <input type="hidden" {...field} />}
               />
-              <Controller
-                name="identification"
-                control={control}
-                render={({ field }) => <input type="hidden" {...field} />}
-              />
             </div>
           </form>
         </CardContent>
       </Card>
+
+      {/* Diálogo de alerta para búsqueda de cliente */}
+      {openAlertDialog && (
+        <ThemedAlertDialog
+          onClose={() => setOpenAlertDialog(false)}
+          open={openAlertDialog}
+          title={alertDialogTitle}
+          message={alertDialogMessage}
+          icon={<AlertCircle className="h-6 w-6 text-[#FFA500]" />}
+          type="info"
+          actionLabel="Continuar"
+          onAction={() => setOpenAlertDialog(false)}
+        />
+      )}
     </div>
   );
 });

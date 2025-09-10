@@ -8,7 +8,7 @@ import { usePaymentOptions, PeriodoPago } from './hooks/usePaymentOptions';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-// import { useQuotationStore } from '@/core';
+import { useQuotationStore } from '@/core';
 // import { useQuotationStore } from '@/core';
 // import { useQuotationStore } from '../quotations/store/useQuotationStore';
 // import { useAuth } from '../auth/store/useAuth.store';
@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 export const PaymentOptions: React.FC = () => {
 
   // //! Eliminar
-  // const {getFinalObject} = useQuotationStore();
+  const {getFinalObject} = useQuotationStore();
   // const { user: authUser } = useAuth();
   // const router = useRouter();
   const {
@@ -34,7 +34,7 @@ export const PaymentOptions: React.FC = () => {
   // };
 
   const handleSubmit = async () => {
-    // const payload = getFinalObject();
+    const payload = getFinalObject();
     
     // console.log("🚀 PAYLOAD FINAL ANTES DEL ENVÍO:", JSON.stringify(payload, null, 2));
     // console.log("🔍 VERIFICANDO ORIGINAL_OPT_ID EN OPCIONALES:");
@@ -47,7 +47,7 @@ export const PaymentOptions: React.FC = () => {
     //   // })));
     // });
     
-    // debugger
+    debugger
     await submitQuotation();
   };
 
