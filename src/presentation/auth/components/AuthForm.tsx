@@ -45,7 +45,6 @@ const AuthForm = () => {
         errorMessage = error;
       }
       
-      console.log("Mensaje de error final:", errorMessage);
       setError("root", { 
         type: "manual",
         message: errorMessage 

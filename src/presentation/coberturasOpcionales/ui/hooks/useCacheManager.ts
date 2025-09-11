@@ -22,8 +22,6 @@ export const useCacheManager = () => {
    * Más específico que clearAllCache
    */
   const clearCoverageCache = useCallback(() => {
-    console.log('🔄 CLEARING COVERAGE CACHE...');
-    
     // Remover queries completamente
     queryClient.removeQueries({ queryKey: ["planesOpcionales"] });
     queryClient.removeQueries({ queryKey: ["coberturasOpcionalesColectivo"] });
@@ -56,8 +54,6 @@ export const useCacheManager = () => {
    * Limpia TODO el caché Y fuerza el refresco de la página si es necesario
    */
   const nuclearReset = useCallback(async (quotationId: number) => {
-    console.log(`💥 NUCLEAR RESET for quotation ID: ${quotationId}`);
-    
     // Limpiar completamente React Query
     clearAllCache();
     
@@ -73,7 +69,6 @@ export const useCacheManager = () => {
         
         storageKeys.forEach(key => {
           localStorage.removeItem(key);
-          console.log(`🗑️ Removed localStorage key: ${key}`);
         });
       }
     } catch (error) {
@@ -82,8 +77,6 @@ export const useCacheManager = () => {
     
     // Esperar más tiempo para asegurar limpieza completa
     await new Promise(resolve => setTimeout(resolve, 300));
-    
-    console.log(`💥 NUCLEAR RESET COMPLETE`);
   }, [clearAllCache]);
 
   return {

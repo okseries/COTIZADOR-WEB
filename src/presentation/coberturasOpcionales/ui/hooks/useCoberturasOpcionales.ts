@@ -87,8 +87,6 @@ export const useCoberturasOpcionales = () => {
     queryClient.invalidateQueries({ queryKey: ["coberturasOpcionalesColectivo"] });
     queryClient.invalidateQueries({ queryKey: ["coberturasOpcionalesByType"] });
     queryClient.invalidateQueries({ queryKey: ["copagos"] });
-    
-    console.log(`� CACHE COMPLETELY CLEARED for mode: ${currentMode}, quotationId: ${currentQuotationId}`);
   }, [mode, queryClient]);
 
   // 🔥 LIMPIEZA COMPLETA AL CAMBIAR A MODO EDICIÓN
@@ -211,8 +209,6 @@ export const useCoberturasOpcionales = () => {
         (hasHabitacionInStore && (!habitacionOptionsQuery.data || habitacionOptionsQuery.data.length === 0));
 
       if (hasOpcionalesInStore && hasEmptyAPIOptions && !altoCostoOptionsQuery.isLoading && !medicamentosOptionsQuery.isLoading && !habitacionOptionsQuery.isLoading) {
-        console.log(`🔄 Detected missing API data in edit mode, forcing refetch...`);
-        
         // Forzar refetch de las queries que están vacías
         if (hasAltoCostoInStore && (!altoCostoOptionsQuery.data || altoCostoOptionsQuery.data.length === 0)) {
           altoCostoOptionsQuery.refetch();
@@ -268,11 +264,6 @@ export const useCoberturasOpcionales = () => {
                                  Object.keys(dynamicCoberturaSelections).length !== planes.length;
       
       if (hasEmptySelections) {
-        console.log('🔄 Direct store sync - applying selections', {
-          planesCount: planes.length,
-          storeSelectionsCount: Object.keys(storeDynamicCoberturaSelections).length
-        });
-        
         // Aplicar selecciones directas del store
         setDynamicCoberturaSelections(storeDynamicCoberturaSelections);
         setDynamicCopagoSelections(storeDynamicCopagoSelections);

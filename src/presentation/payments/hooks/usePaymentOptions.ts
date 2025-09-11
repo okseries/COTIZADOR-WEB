@@ -162,9 +162,6 @@ export const usePaymentOptions = () => {
           // Aplicar el período seleccionado a todos los planes
           const summary = calculatePaymentSummary(plan, periodo);
           
-          console.log(`🔄 Updating plan ${plan.plan} with period ${periodo}:`);
-          console.log(`   Summary:`, summary);
-          
           const updatedPlan = {
             ...plan,
             selectedPeriod: periodo,
@@ -174,8 +171,6 @@ export const usePaymentOptions = () => {
               ...summary,
             },
           };
-
-          console.log(`   Updated plan resumenPago:`, updatedPlan.resumenPago);
 
           // Actualizar en el store de forma asíncrona para evitar el error de renderizado
           setTimeout(() => {

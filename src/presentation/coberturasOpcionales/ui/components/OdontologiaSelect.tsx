@@ -18,31 +18,9 @@ const OdontologiaSelect = ({ value, onChange, options = [] }: OdontologiaSelectP
   // Asegurar que value siempre sea string para evitar controlled/uncontrolled switching
   const safeValue = value || "0";
   
-  // 🔍 DEBUG CRÍTICO: Log para verificar valores de odontología
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🦷 OdontologiaSelect:', JSON.stringify({
-      originalValue: value,
-      safeValue,
-      optionsCount: options?.length || 0,
-      hasMatchingOption: options?.some(opt => opt.value === safeValue) || false,
-      availableOptions: options?.map(opt => ({ value: opt.value, label: opt.label })) || [],
-      timestamp: new Date().toISOString()
-    }, null, 2));
-  }
+  // OdontologiaSelect component
 
-  // 🔍 DEBUG ADICIONAL: useEffect para detectar cambios en value y options
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 OdontologiaSelect - EFFECT:', JSON.stringify({
-        effectTrigger: 'value or options changed',
-        value,
-        safeValue,
-        optionsLength: options?.length || 0,
-        hasMatchingOption: options?.some(opt => opt.value === safeValue) || false,
-        timestamp: new Date().toISOString()
-      }, null, 2));
-    }
-  }, [value, options, safeValue]);
+
   
   return (
     <Select

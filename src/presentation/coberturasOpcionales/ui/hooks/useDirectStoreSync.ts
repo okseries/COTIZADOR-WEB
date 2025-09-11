@@ -120,11 +120,6 @@ export const useDirectStoreSync = () => {
   // Sincronización DIRECTA store -> UI (solo una vez por edición)
   useEffect(() => {
     if (isEditMode && planes.length > 0 && !hasSynced) {
-      console.log('🔄 Direct sync: Store -> UI (ONE TIME)', {
-        planesCount: planes.length,
-        mode: mode
-      });
-
       const storeSelections = extractSelectionsFromStore();
       setUISelections(storeSelections);
       setHasSynced(true);

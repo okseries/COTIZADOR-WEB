@@ -21,7 +21,6 @@ export const authService = {
       // Verificar si la respuesta contiene un error, incluso con status 200/201
       if (data && typeof data === 'object' && 'ERROR' in data) {
         const errorMessage = (data as { ERROR: string }).ERROR;
-        console.log("Error detectado en respuesta exitosa:", errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -33,12 +32,8 @@ export const authService = {
 
       return data; // Retorna todo el objeto { token: "..." }
     } catch (error: unknown) {
-      console.log("=== ERROR EN AUTH SERVICE ===");
-      console.log("Error capturado:", error);
-      
       // Si el error ya es un Error object, simplemente re-lanzarlo
       if (error instanceof Error) {
-        console.log("Re-lanzando error existente:", error.message);
         throw error;
       }
 
@@ -46,7 +41,6 @@ export const authService = {
       let message = "Error al conectar con el servidor";
       if (typeof error === "object" && error !== null && "response" in error) {
         const response = (error as { response?: { data?: { ERROR?: string, message?: string, error?: string } } }).response;
-        console.log("Error response data:", response?.data);
         
         if (response?.data?.ERROR) {
           message = response.data.ERROR;
@@ -57,7 +51,6 @@ export const authService = {
         }
       }
       
-      console.log("Lanzando error final:", message);
       throw new Error(message);
     }
   },
