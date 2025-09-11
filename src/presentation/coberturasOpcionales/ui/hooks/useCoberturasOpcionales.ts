@@ -28,6 +28,7 @@ import { useCoverageQueries } from './useCoverageQueries';
 import { usePlanUpdater } from './usePlanUpdater';
 import { useInitializationEffects } from './useInitializationEffects';
 import { useCacheManager } from './useCacheManager';
+import { useDirectStoreSync } from './useDirectStoreSync';
 
 export const useCoberturasOpcionales = () => {
   const queryClient = useQueryClient();
@@ -150,6 +151,15 @@ export const useCoberturasOpcionales = () => {
     quotationId: typeof mode === "number" ? mode : undefined
   });
   
+  // 🆕 Hook DEFINITIVO: Sincronización directa store -> UI 
+  const { 
+    dynamicCoberturaSelections: storeDynamicCoberturaSelections,
+    dynamicCopagoSelections: storeDynamicCopagoSelections,
+    planSelections: storePlanSelections,
+    hasSynced,
+    isReady: syncReady
+  } = useDirectStoreSync();
+
   // Hook de inicialización y efectos
   const {
     initializedRef,
@@ -249,6 +259,36 @@ export const useCoberturasOpcionales = () => {
     isUpdating,
     setIsUpdating
   });
+
+  // 🆕 SINCRONIZACIÓN DIRECTA: Aplicar datos del store cuando estén listos
+  useEffect(() => {
+    if (isEditMode && syncReady && hasSynced && planes.length > 0) {
+      // Solo aplicar si las selecciones locales están vacías
+      const hasEmptySelections = Object.keys(dynamicCoberturaSelections).length === 0 ||
+                                 Object.keys(dynamicCoberturaSelections).length !== planes.length;
+      
+      if (hasEmptySelections) {
+        console.log('🔄 Direct store sync - applying selections', {
+          planesCount: planes.length,
+          storeSelectionsCount: Object.keys(storeDynamicCoberturaSelections).length
+        });
+        
+        // Aplicar selecciones directas del store
+        setDynamicCoberturaSelections(storeDynamicCoberturaSelections);
+        setDynamicCopagoSelections(storeDynamicCopagoSelections);
+        setPlanSelections(prev => ({
+          ...prev,
+          ...storePlanSelections
+        }));
+      }
+    }
+  }, [
+    isEditMode, 
+    syncReady, 
+    hasSynced,
+    planes.length
+    // Solo dependencias estables
+  ]);
 
   const handleCopagoHabitacionChange = (planName: string, value: string) => {
     if (isUpdating) return;
