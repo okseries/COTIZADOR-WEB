@@ -1,4 +1,4 @@
-import apiClient from "../../../../core/apiclient";
+import apiClient from "../../../core/apiclient";
 import { AuthResponse, loginPayload } from "../interface/auth.interface";
 
 /**

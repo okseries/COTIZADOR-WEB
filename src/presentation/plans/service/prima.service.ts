@@ -1,4 +1,4 @@
-import apiClient from "../../../../core/apiclient";
+import apiClient from "../../../core/apiclient";
 
 export interface PrimaPlanResponse {
   id: number;

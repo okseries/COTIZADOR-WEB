@@ -1,4 +1,4 @@
-import apiClient from "../../../../core/apiclient";
+import apiClient from "../../../core/apiclient";
 import { Quotations } from "../interface/createQuotation.interface";
 
 export interface QuotationListResponse {

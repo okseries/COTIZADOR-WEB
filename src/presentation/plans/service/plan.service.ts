@@ -1,4 +1,4 @@
-import apiClient from "../../../../core/apiclient";
+import apiClient from "../../../core/apiclient";
 import { Plan, PlansType, SubPlansType } from "../interface/plan.interface";
 
 
