@@ -8,15 +8,14 @@ import { usePaymentOptions, PeriodoPago } from './hooks/usePaymentOptions';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useQuotationStore } from '@/core';
-// import { useQuotationStore } from '@/core';
+
 // import { useQuotationStore } from '../quotations/store/useQuotationStore';
 // import { useAuth } from '../auth/store/useAuth.store';
 
 export const PaymentOptions: React.FC = () => {
 
   // //! Eliminar
-  const {getFinalObject} = useQuotationStore();
+  // const {getFinalObject} = useQuotationStore();
   // const { user: authUser } = useAuth();
   // const router = useRouter();
   const {
@@ -34,20 +33,11 @@ export const PaymentOptions: React.FC = () => {
   // };
 
   const handleSubmit = async () => {
-    const payload = getFinalObject();
-    
-    // console.log("🚀 PAYLOAD FINAL ANTES DEL ENVÍO:", JSON.stringify(payload, null, 2));
-    // console.log("🔍 VERIFICANDO ORIGINAL_OPT_ID EN OPCIONALES:");
-    // payload.planes?.forEach(plan => {
-    //   // console.log(`Plan ${plan.plan}:`, plan.opcionales?.map(opt => ({
-    //   //   nombre: opt.nombre,
-    //   //   originalOptId: opt.originalOptId || 'NO_PRESENTE',
-    //   //   id: opt.id,
     //   //   tipoOpcionalId: opt.tipoOpcionalId || 'NO_PRESENTE'
     //   // })));
     // });
     
-    debugger
+    // debugger
     await submitQuotation();
   };
 

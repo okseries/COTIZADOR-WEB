@@ -74,8 +74,6 @@ const ClientInformation = forwardRef<
     trigger,
     getValues,
     watch,
-    setError,
-    clearErrors,
   } = useForm<FormClienteValues>({
     resolver: zodResolver(clienteSchema),
     mode: "onSubmit", // Cambiar de onChange a onSubmit para evitar revalidaciones constantes
@@ -106,7 +104,7 @@ const ClientInformation = forwardRef<
   const [openAlertDialog, setOpenAlertDialog] = React.useState(false);
   const [alertDialogMessage, setAlertDialogMessage] = React.useState("");
   const [alertDialogTitle, setAlertDialogTitle] = React.useState("");
-  const [clientFound, setClientFound] = React.useState<any>(null);
+  const [clientFound, setClientFound] = React.useState<{NOMBRE_COMPLETO: string} | null>(null);
 
   // Función para validar email
   const validateEmail = React.useCallback((email: string) => {

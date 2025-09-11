@@ -141,9 +141,20 @@ export const useDirectStoreSync = () => {
 
   // Convertir a formato esperado por los hooks existentes
   const legacyFormat = useMemo(() => {
-    const dynamicCoberturaSelections: {[planName: string]: any} = {};
-    const dynamicCopagoSelections: {[planName: string]: any} = {};
-    const planSelections: {[planName: string]: any} = {};
+    const dynamicCoberturaSelections: {[planName: string]: {
+      altoCosto: string;
+      medicamentos: string;
+      habitacion: string;
+      odontologia: string;
+    }} = {};
+    const dynamicCopagoSelections: {[planName: string]: {
+      altoCosto: string;
+      medicamentos: string;
+      habitacion: string;
+    }} = {};
+    const planSelections: {[planName: string]: {
+      odontologia: string;
+    }} = {};
 
     Object.keys(uiSelections).forEach(planName => {
       const selections = uiSelections[planName];

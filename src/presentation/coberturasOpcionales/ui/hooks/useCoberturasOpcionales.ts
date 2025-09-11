@@ -95,7 +95,7 @@ export const useCoberturasOpcionales = () => {
   useEffect(() => {
     if (typeof mode === "number" && mode > 0) {
       // Usar el cache manager para limpiar
-      prepareForEdit(mode);
+      prepareForEdit();
     }
   }, [mode, prepareForEdit]);
 

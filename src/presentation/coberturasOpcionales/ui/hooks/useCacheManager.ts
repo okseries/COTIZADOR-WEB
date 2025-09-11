@@ -41,7 +41,7 @@ export const useCacheManager = () => {
    * Función para llamar antes de editar una cotización
    * Garantiza que no haya datos cacheados que interfieran
    */
-  const prepareForEdit = useCallback(async (_quotationId: number) => {
+  const prepareForEdit = useCallback(async () => {
     
     // Limpiar completamente el caché
     clearAllCache();
