@@ -14,7 +14,7 @@ apiClient.interceptors.request.use(
 
     if (token) {
       // AxiosHeaders es un objeto, solo modificamos la propiedad
-      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
 
     return config;
