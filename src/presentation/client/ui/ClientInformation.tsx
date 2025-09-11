@@ -404,18 +404,15 @@ const ClientInformation = forwardRef<
   return (
     <div className="space-y-4 lg:space-y-6">
       {/* Botón de limpiar datos */}
-      <Card className="mb-2 py-2 shadow-sm border border-border/50 bg-gradient-to-r from-red-500/5 to-orange-500/5">
-        <CardContent className="flex justify-between items-center p-4">
-          <div>
-            <h3 className="text-sm font-medium text-gray-700">Acciones Rápidas</h3>
-            <p className="text-xs text-gray-500">Limpiar todos los datos del formulario</p>
-          </div>
+      <Card className="mb-2 py-2 shadow-sm border border-border/50 bg-gradient-to-r ">
+        <CardContent className="flex justify-between items-center py-2 px-4">
+          
           <Button
             type="button"
             onClick={handleClearAll}
             variant="outline"
             size="sm"
-            className="bg-red-500 hover:bg-red-600 text-white border-red-500 hover:border-red-600"
+            className="bg-red-500 hover:bg-red-700 text-white  border-red-500 hover:border-red-600 hover:text-white"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Limpiar Datos
