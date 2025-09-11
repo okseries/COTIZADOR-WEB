@@ -7,8 +7,7 @@ import { useCallback } from 'react';
 import { useUnifiedQuotationStore } from '@/core';
 import { CoberturasOpcionaleColectivo, Copago } from '../../interface/Coberturaopcional.interface';
 import { ODONTOLOGIA_OPTIONS } from '../../constants/coverage.constants';
-import { Plan, Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
-import { Cliente } from '@/presentation/quotations/interface/quotation.interface';
+import { Plan, Cliente, Opcional } from '@/presentation/quotations/interface/createQuotation.interface';
 import { UseQueryResult } from '@tanstack/react-query';
 import { 
   DynamicCoberturaSelections, 

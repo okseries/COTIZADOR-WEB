@@ -1,6 +1,5 @@
 // Services exports
-export { ApiClient, defaultApiClient } from './apiClient';
-export * from './client';
-export * from './coverage';
-export * from './plans';
-export * from './quotation';
+// Note: Using simple apiClient from root core/apiclient.ts instead of complex ApiClient class
+
+// Placeholder export para mantener compatibilidad del módulo
+export const servicesPlaceholder = true;

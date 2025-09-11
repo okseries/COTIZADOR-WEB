@@ -3,8 +3,7 @@
  */
 
 import { useCallback } from 'react';
-import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
-import { Cliente } from '@/presentation/quotations/interface/quotation.interface';
+import { Plan, Cliente } from '@/presentation/quotations/interface/createQuotation.interface';
 import { 
   PlanSelections,
   DynamicCoberturaSelections,

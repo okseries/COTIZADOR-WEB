@@ -4,8 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { Plan } from '@/presentation/quotations/interface/createQuotation.interface';
-import { Cliente } from '@/presentation/quotations/interface/quotation.interface';
+import { Plan, Cliente } from '@/presentation/quotations/interface/createQuotation.interface';
 import { ODONTOLOGIA_OPTIONS } from '../../constants/coverage.constants';
 import { detectOptionalType, mapQuotationToOptId } from '../../utils/coverage.utils';
 import { UseQueryResult } from '@tanstack/react-query';

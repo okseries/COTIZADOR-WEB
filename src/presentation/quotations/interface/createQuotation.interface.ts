@@ -1,3 +1,19 @@
+// ============== INTERFACES PARA API RESPONSES ==============
+export interface Quotations {
+    id:           string;
+    user:         string;
+    cotizacion:   Cotizacion;
+    pdf:          string;
+    fecha_creado: string;
+}
+
+export interface Cotizacion {
+    user:    string;
+    cliente: Cliente;
+    planes:  Plan[]; // Usar Plan (no Plane) para consistencia
+}
+
+// ============== INTERFACES PRINCIPALES ==============
 export interface QuotationRequest {
   user: string | null;
 cliente: Cliente | null;

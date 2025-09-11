@@ -6,7 +6,7 @@ import {
   CoberturasOpcionaleColectivo,
   Copago,
 } from "../../interface/Coberturaopcional.interface";
-import { Plan } from "@/presentation/quotations/interface/createQuotation.interface";
+import { Plan, Cliente } from "@/presentation/quotations/interface/createQuotation.interface";
 import OdontologiaSelect, { OdontologiaOption } from "./OdontologiaSelect";
 import { CoberturaOption } from "./CoberturaSelect";
 import { CopagoOption } from "./CopagoSelect";
@@ -14,7 +14,6 @@ import DynamicCoberturaSelect from "./DynamicCoberturaSelect";
 import DynamicCopagoSelect from "./DynamicCopagoSelect";
 import { formatCurrency } from "@/presentation/helpers/FormattCurrency";
 import { useUnifiedQuotationStore } from "@/core";
-import { Cliente } from "@/presentation/quotations/interface/quotation.interface";
 import { Badge } from "@/components/ui/badge";
 
 // Tipo para las selecciones de cobertura

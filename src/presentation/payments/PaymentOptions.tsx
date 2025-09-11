@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export const PaymentOptions: React.FC = () => {
 
-  // //! Eliminar
+  // //! No eliminar estos comentarios
   // const {getFinalObject} = useQuotationStore();
   // const { user: authUser } = useAuth();
   // const router = useRouter();
@@ -33,6 +33,10 @@ export const PaymentOptions: React.FC = () => {
   // };
 
   const handleSubmit = async () => {
+    //!No eliminar estos comentarios
+    // const payload = getFinalObject();
+    // console.log(payload);
+    
     //   //   tipoOpcionalId: opt.tipoOpcionalId || 'NO_PRESENTE'
     //   // })));
     // });

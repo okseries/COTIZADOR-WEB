@@ -27,7 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Quotations } from "../../interface/quotation.interface";
+import { Quotations } from "../../interface/createQuotation.interface";
 import QuotationTableHeader from "./table-header";
 import Link from "next/link";
 import EmptyState from "./empty-table";

@@ -15,14 +15,7 @@ export const useAgentOptions = () => useQuotationStore((state) => state.agentOpt
 // Selectores para datos del stepper
 export const useClientData = () => useQuotationStore((state) => state.clientData);
 export const useSelectedPlans = () => useQuotationStore((state) => state.selectedPlans);
-export const useOptionalCoverages = () => useQuotationStore((state) => state.selectedOptionalCoverages);
 export const usePaymentPeriod = () => useQuotationStore((state) => state.paymentPeriod);
-
-// Hooks de validación optimizados que usan las funciones helper
-export const useIsStepValid = (step: string) => {
-  const state = useQuotationStore();
-  return useMemo(() => isStepValid(step, state), [step, state]);
-};
 
 export const useIsComplete = () => {
   const state = useQuotationStore();

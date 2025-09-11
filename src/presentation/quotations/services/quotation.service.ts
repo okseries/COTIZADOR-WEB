@@ -1,5 +1,5 @@
 import apiClient from "../../../../core/apiclient";
-import { Quotations } from "../interface/quotation.interface";
+import { Quotations } from "../interface/createQuotation.interface";
 
 export interface QuotationListResponse {
   data: Quotations[];
